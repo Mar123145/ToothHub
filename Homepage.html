@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Tooth Dae Dental Clinic</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .brand-bg { background-color: #03555E; }
+    .brand-text { color: #03555E; }
+    .star { color: #FBBF24; }
+
+    /* Global button styles */
+    .btn-solid {
+      background-color: #03555E;
+      color: #ffffff;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .btn-solid:hover {
+      background-color: #027990; /* different from header */
+      color: #ffffff;
+    }
+
+    .btn-outline-light {
+      background-color: #ffffff;
+      color: #374151; /* gray-700 */
+      border: 1px solid #e5e7eb; /* gray-200 */
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .btn-outline-light:hover {
+      background-color: #e0f2f5; /* light teal-ish */
+      color: #03555E;
+      border-color: #b9e3ea;
+    }
+
+    /* Scroll animations */
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .animate-on-scroll.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 flex flex-col">
+
+  <!-- Header -->
+  <header class="brand-bg text-white shadow-md sticky top-0 z-30">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center">
+          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold">ToothHub</h1>
+          <p class="text-xs md:text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex gap-6 text-sm">
+        <a href="#services" class="hover:underline">Services</a>
+        <a href="#gallery" class="hover:underline">Gallery</a>
+        <a href="#how" class="hover:underline">How It Works</a>
+        <a href="#reviews" class="hover:underline">Reviews</a>
+        <a href="#visit" class="hover:underline">Visit Us</a>
+      </nav>
+
+      <div class="flex gap-3">
+        <a href="login.html"
+           class="btn-outline-light px-4 py-2 rounded-lg text-sm">
+          Login
+        </a>
+        <a href="/Patient/Signup.html"
+           class="btn-outline-light px-4 py-2 rounded-lg text-sm">
+          Sign Up
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-r from-[#03555E]/5 to-blue-100 py-16">
+    <div class="container mx-auto px-4 grid md:grid-cols-2 gap-10 items-center">
+
+      <div class="animate-on-scroll">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+          A Simple Way to Manage Your Dental Appointments
+        </h2>
+
+        <p class="text-gray-700 text-base md:text-lg mb-6">
+          Book your visit, track your previous treatments, and view your records in one place.
+        </p>
+
+        <div class="flex gap-3 mb-6">
+          <a href="login.html"
+             class="btn-solid px-6 py-3 rounded-lg text-sm shadow-md">
+            Book Now
+          </a>
+          <a href="#services"
+             class="btn-outline-light px-6 py-3 rounded-lg text-sm">
+            View Services
+          </a>
+        </div>
+
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="ml-1">(Average rating from patient reviews)</span>
+        </div>
+      </div>
+
+      <!-- HERO IMAGE -->
+      <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[350px] animate-on-scroll">
+        <img src="/Image/4.jpg" class="w-full h-full object-cover" alt="Clinic interior" />
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Featured Service Slider -->
+  <section class="py-10 bg-white">
+    <div class="container mx-auto px-4 animate-on-scroll">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Featured Service</h2>
+          <p class="text-gray-600 text-sm">
+            Quick look at one service at a time. Use the arrows to switch.
+          </p>
+        </div>
+        <div class="flex gap-2 justify-end">
+          <button id="featuredPrev"
+                  class="btn-outline-light px-3 py-1 rounded-full text-sm">
+            ◀
+          </button>
+          <button id="featuredNext"
+                  class="btn-outline-light px-3 py-1 rounded-full text-sm">
+            ▶
+          </button>
+        </div>
+      </div>
+
+      <div id="featuredCard" class="bg-gray-50 border border-gray-100 rounded-xl shadow-sm p-6 md:flex md:items-center md:justify-between gap-6">
+        <!-- JS will fill this -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Services (6) -->
+  <section id="services" class="py-14 bg-white">
+    <div class="container mx-auto px-4 animate-on-scroll">
+
+      <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center">Services Offered</h2>
+      <p class="text-gray-600 text-center max-w-xl mx-auto mb-10">
+        Treatments available for general, preventive, and restorative dental care.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-6">
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Oral Prophylaxis</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            Cleaning, scaling, and polishing for maintenance and prevention.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱1,500 – ₱4,000</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Restoration</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            Tooth-colored fillings to restore function and shape.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱1,500 – ₱3,500</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Extraction</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            Removal of teeth that cannot be kept or are causing problems.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱1,500 – ₱6,000</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Root Canal Treatment</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            Treatment for infected pulp to help keep the tooth.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱6,000 – ₱10,000</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Odontectomy</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            Surgical removal of impacted or hard-to-reach teeth.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱8,000 – ₱15,000</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll">
+          <h3 class="text-lg font-bold mb-2">Whitening</h3>
+          <p class="text-gray-600 text-sm mb-4">
+            In-clinic whitening to lighten tooth shade.
+          </p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">₱8,000</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">
+              Book
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery" class="py-14 bg-gray-100">
+    <div class="container mx-auto px-4">
+
+      <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">Clinic Gallery</h2>
+      <p class="text-gray-600 text-center max-w-xl mx-auto mb-10 animate-on-scroll">
+        Photos from the clinic environment.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
+          <img src="/Image/3.jpg"
+               class="w-full h-auto max-h-[420px] object-contain"
+               alt="Clinic exterior" />
+        </div>
+        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
+          <img src="/Image/2.jpg"
+               class="w-full h-auto max-h-[420px] object-contain"
+               alt="Clinic interior chairs" />
+        </div>
+        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
+          <img src="/Image/1.jpg"
+               class="w-full h-auto max-h-[420px] object-contain"
+               alt="Clinic poster" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how" class="py-14 bg-white">
+    <div class="container mx-auto px-4">
+
+      <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">How It Works</h2>
+
+      <div class="grid md:grid-cols-3 gap-6 mt-10">
+        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">1</div>
+          <h3 class="font-semibold mb-2">Create an Account</h3>
+          <p class="text-sm text-gray-600">Sign up to start booking and viewing your records.</p>
+        </div>
+
+        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">2</div>
+          <h3 class="font-semibold mb-2">Book a Service</h3>
+          <p class="text-sm text-gray-600">Choose a service and an available time slot.</p>
+        </div>
+
+        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">3</div>
+          <h3 class="font-semibold mb-2">Visit the Clinic</h3>
+          <p class="text-sm text-gray-600">Your appointment and treatment details are stored in your account.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews (from Review table) -->
+  <section id="reviews" class="py-14 bg-gray-50">
+    <div class="container mx-auto px-4">
+
+      <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">Patient Reviews</h2>
+      <p class="text-gray-600 text-center max-w-xl mx-auto mb-10 animate-on-scroll">
+        
+      </p>
+
+      <div id="reviewsGrid" class="grid md:grid-cols-3 gap-6">
+        <!-- Filled by JS -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Visit + Map -->
+  <section id="visit" class="py-14">
+    <div class="container mx-auto px-4">
+
+      <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">Visit Us</h2>
+
+      <div class="grid md:grid-cols-3 gap-6 mt-10">
+        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">🕒</div>
+          <h3 class="font-semibold mb-2">Operating Hours</h3>
+          <p class="text-sm text-gray-600">Mon–Sat: 9:00 AM – 5:00 PM<br>Sunday: By appointment</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">📍</div>
+          <h3 class="font-semibold mb-2">Location</h3>
+          <p class="text-sm text-gray-600">
+            Unit C B1 L8 Sampaguita St.,<br>Maligaya Park Subd., Novaliches, QC
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+          <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">📞</div>
+          <h3 class="font-semibold mb-2">Contact</h3>
+          <p class="text-sm text-gray-600">0995 725 5676<br>0945 652 3674</p>
+        </div>
+      </div>
+
+      <!-- Map embed pinned by clinic name -->
+      <div class="mt-10 animate-on-scroll">
+        <div class="rounded-xl overflow-hidden shadow-lg border">
+          <iframe
+            src="https://www.google.com/maps?q=Happy+Tooth+Dae+Dental+Clinic&output=embed"
+            width="100%"
+            height="350"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="brand-bg text-white py-6 text-center mt-auto">
+    <p class="text-sm">&copy; 2025 Happy Tooth Dae Dental Clinic</p>
+  </footer>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ====== Supabase Reviews ======
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function renderStars(rating) {
+      let html = "";
+      const r = Number(rating || 0);
+      for (let i = 1; i <= 5; i++) {
+        html += i <= r ? "<span class='star'>★</span>" : "<span class='text-gray-300'>★</span>";
+      }
+      return html;
+    }
+
+    async function loadReviews() {
+      const grid = document.getElementById("reviewsGrid");
+      grid.innerHTML = "<p class='text-center text-gray-500 col-span-full text-sm'>Loading reviews…</p>";
+
+      const { data, error } = await supabaseClient
+        .from("Review")
+        .select("Rating, Comment, Appointment:AppointmentID(Service)")
+        .order("CreatedAt", { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error(error);
+        grid.innerHTML = "<p class='text-center text-gray-500 col-span-full text-sm'>Unable to load reviews.</p>";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        grid.innerHTML = "<p class='text-center text-gray-500 col-span-full text-sm'>No reviews yet.</p>";
+        return;
+      }
+
+      grid.innerHTML = data
+        .map(r => `
+          <div class="bg-white p-6 rounded-xl border shadow-sm flex flex-col gap-3 animate-on-scroll">
+            <div class="flex items-center justify-between">
+              <div class="flex gap-1">${renderStars(r.Rating)}</div>
+              <span class="text-xs text-gray-500">${r.Appointment?.Service || ""}</span>
+            </div>
+            <p class="text-sm text-gray-700">${r.Comment || ""}</p>
+          </div>
+        `)
+        .join("");
+
+      observeAnimatedElements(); // re-attach animations for new cards
+    }
+
+    // ====== Scroll Animations ======
+    function observeAnimatedElements() {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("in-view");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+
+      document.querySelectorAll(".animate-on-scroll").forEach((el) => {
+        if (!el.classList.contains("in-view")) {
+          observer.observe(el);
+        }
+      });
+    }
+
+    // ====== Featured Service Slider ======
+    const featuredServices = [
+      {
+        title: "Oral Prophylaxis",
+        price: "₱1,500 – ₱4,000",
+        description: "Cleaning, scaling, and polishing to maintain gum and tooth health.",
+        note: "Recommended regularly to control plaque and tartar."
+      },
+      {
+        title: "Restoration",
+        price: "₱1,500 – ₱3,500",
+        description: "Tooth-colored fillings for decayed or broken portions of a tooth.",
+        note: "Helps restore chewing and appearance."
+      },
+      {
+        title: "Extraction",
+        price: "₱1,500 – ₱6,000",
+        description: "Removal of teeth that can no longer be preserved or are causing pain.",
+        note: "Includes instructions for after-care."
+      },
+      {
+        title: "Root Canal Treatment",
+        price: "₱6,000 – ₱10,000",
+        description: "Treatment for infected pulp to retain the tooth.",
+        note: "Usually done in multiple visits."
+      },
+      {
+        title: "Odontectomy",
+        price: "₱8,000 – ₱15,000",
+        description: "Surgical removal of impacted or difficult teeth.",
+        note: "Often recommended for impacted wisdom teeth."
+      },
+      {
+        title: "Whitening",
+        price: "₱8,000",
+        description: "In-clinic procedure to lighten tooth shade.",
+        note: "Results vary depending on tooth condition."
+      }
+    ];
+
+    let featuredIndex = 0;
+
+    function renderFeatured() {
+      const card = document.getElementById("featuredCard");
+      const item = featuredServices[featuredIndex];
+      if (!card || !item) return;
+
+      card.innerHTML = `
+        <div class="flex-1 mb-4 md:mb-0">
+          <p class="text-xs text-gray-500 mb-2">Service ${featuredIndex + 1} of ${featuredServices.length}</p>
+          <h3 class="text-xl font-bold mb-2">${item.title}</h3>
+          <p class="text-gray-700 text-sm mb-3">${item.description}</p>
+          <p class="text-gray-500 text-xs mb-4">${item.note}</p>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl font-bold brand-text">${item.price}</span>
+            <a href="login.html" class="btn-solid px-4 py-1.5 rounded-lg text-xs">
+              Book this service
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function nextFeatured() {
+      featuredIndex = (featuredIndex + 1) % featuredServices.length;
+      renderFeatured();
+    }
+
+    function prevFeatured() {
+      featuredIndex = (featuredIndex - 1 + featuredServices.length) % featuredServices.length;
+      renderFeatured();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const btnPrev = document.getElementById("featuredPrev");
+      const btnNext = document.getElementById("featuredNext");
+      if (btnPrev) btnPrev.addEventListener("click", prevFeatured);
+      if (btnNext) btnNext.addEventListener("click", nextFeatured);
+      renderFeatured();
+
+      observeAnimatedElements();
+      loadReviews();
+    });
+  </script>
+
+</body>
+</html>

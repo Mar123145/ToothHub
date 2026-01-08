@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToothHub Secretary Dashboard</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Define custom theme color for consistency */
+        .bg-primary { background-color: #03555E; }
+        .text-primary { color: #03555E; }
+        .hover\:bg-primary-dark:hover { background-color: #024449; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        /* Custom scrollbar styling for the mobile menu drawer */
+        #mobile-menu-drawer {
+            scrollbar-width: thin;
+            scrollbar-color: #024449 #03555E;
+        }
+        #mobile-menu-drawer::-webkit-scrollbar {
+            width: 8px;
+        }
+        #mobile-menu-drawer::-webkit-scrollbar-thumb {
+            background-color: #024449;
+            border-radius: 10px;
+        }
+        #mobile-menu-drawer::-webkit-scrollbar-track {
+            background-color: #03555E;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+    <!-- Header & Mobile Menu -->
+   <header class="bg-primary text-white relative shadow-lg z-50">
+  <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+    
+    <!-- Left: Hamburger, Notifications, Profile -->
+    <div class="flex items-center gap-4">
+      <!-- Hamburger Menu -->
+      <button
+        id="menu-toggle-btn"
+        onclick="toggleMobileMenu()"
+        class="p-2 hover:bg-primary-dark rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+        aria-label="Toggle Menu"
+      >
+        <i id="menu-toggle-icon" data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Notifications -->
+      <div class="relative">
+        <i data-lucide="bell" class="w-6 h-6 cursor-pointer hover:text-yellow-300 transition-colors sm:block"></i>
+      </div>
+
+
+      <!-- Profile -->
+      <a href="Profile.html">
+        <i data-lucide="users" class="w-6 h-6 cursor-pointer hover:text-yellow-300 transition-colors hidden sm:block"></i>
+    </a>
+    </div>
+
+    <!-- Right: Logo / Title -->
+    <a href="#" class="flex items-center gap-3 transition-opacity hover:opacity-90">
+     <div class="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1">
+          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+        </div>
+      <div>
+        <h1 class="text-xl font-bold">ToothHub</h1>
+        <p class="text-sm opacity-80">Secretary Portal</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div
+    id="mobile-menu-overlay"
+    class="fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity duration-300 opacity-0 pointer-events-none"
+    onclick="closeMobileMenu()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Mobile Menu Drawer -->
+  <div
+    id="mobile-menu-drawer"
+    class="fixed top-0 left-0 h-full w-64 md:w-80 bg-primary text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl -translate-x-full overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mobile-menu-title"
+  >
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-8 border-b border-[#024449] pb-4">
+        <h2 id="mobile-menu-title" class="text-2xl font-bold">Menu</h2>
+        <button
+          onclick="closeMobileMenu()"
+          class="p-2 hover:bg-primary-dark rounded-lg transition-colors"
+          aria-label="Close Menu"
+        >
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <nav class="space-y-2 text-lg">
+        <a href="Dashboard.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Dashboard
+        </a>
+        <a href="Appointment.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="calendar" class="w-5 h-5"></i> Appointments
+        </a>
+        <a href="Billing.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="credit-card" class="w-5 h-5"></i> Billing & Transactions
+        </a>
+        <a href="Analytics.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Analytics & Reports
+        </a>
+        <a href="Notifications.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="bell" class="w-5 h-5"></i> Notifications
+        </a>
+        <a href="Profile.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="users" class="w-5 h-5"></i> Profile
+        </a>
+        <a href="Settings.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
+          <i data-lucide="settings" class="w-5 h-5"></i> Settings
+        </a>
+        <button onclick="logout()" class="ml-auto px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+          Logout
+        </button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Dashboard</h1>
+            <p class="text-gray-600">A centralized overview to manage clinic operations and patient appointments.</p>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Stat Card 1: Appointments -->
+           <div class="rounded-xl border bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-offset-2 hover:ring-primary hover:ring-opacity-50">
+                <div class="flex flex-col space-y-1.5 p-6 pb-3">
+                    <h3 class="text-sm font-medium text-gray-600 flex items-center justify-between">
+                        <span>Today's Appointments</span>
+                        <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
+                    </h3>
+                </div>
+                <div class="p-6 pt-0">
+                    <div id="todayAppointmentsCount" class="text-3xl font-bold text-gray-900">0</div>
+                    <p id="todayPendingCount" class="text-xs text-gray-500 mt-1">0 pending confirmations</p>
+                </div>
+            </div>
+            <!-- Stat Card 4: Revenue -->
+            <div class="rounded-xl border bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-offset-2 hover:ring-primary hover:ring-opacity-50">
+                <div class="flex flex-col space-y-1.5 p-6 pb-3">
+                    <h3 class="text-sm font-medium text-gray-600 flex items-center justify-between">
+                        <span>Revenue (This Month)</span>
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-primary"></i>
+                    </h3>
+                </div>
+                <div class="p-6 pt-0">
+                    <div id="monthlyRevenueAmount" class="text-3xl font-bold text-gray-900">₱0.00</div>
+                    <p id="monthlyRevenueSubtitle" class="text-xs text-gray-500 mt-1">
+                        Based on paid transactions this month
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Pending Confirmations Card -->
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="flex flex-col space-y-1.5 p-6">
+                    <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2 text-primary">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                        Pending Confirmations
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Upcoming appointments waiting for approval.
+                    </p>
+                </div>
+                <div class="p-6 pt-0 space-y-3">
+                    <!-- Scrollable list -->
+                    <div id="pendingList" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                        <!-- JS will render pending appointments here -->
+                    </div>
+
+                    <a href="Appointment.html" class="block mt-4">
+                        <button class="w-full inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-primary text-white hover:bg-primary-dark">
+                            View All Appointments
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Card -->
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="flex flex-col space-y-1.5 p-6">
+                    <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2 text-primary">
+                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                        Recent Transactions
+                    </h3>
+                </div>
+               <div class="p-6 pt-0 space-y-3">
+                    <div id="recentTransactionsList" class="space-y-2">
+                        <p class="text-sm text-gray-500">Loading recent transactions...</p>
+                    </div>
+
+                    <a href="Billing.html" class="block mt-6">
+                        <button class="w-full inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-primary text-white hover:bg-primary-dark">
+                            View All Transactions
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+                <!-- Today's Appointments (Detailed) -->
+    <div class="rounded-xl border bg-white shadow-lg lg:col-span-2">
+        <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2 text-primary">
+                <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                Today's Appointments
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">
+                All appointments scheduled for today, with patient and dentist details.
+            </p>
+        </div>
+        <div class="p-6 pt-0 space-y-3">
+            <div id="todayAppointmentsList" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <p class="text-sm text-gray-500">Loading today's appointments...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript for Mobile Menu Logic and Icon Rendering -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script>
+const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// --- Auth check function ---
+
+async function checkAuth(redirect = true) {
+    const storedFirstName = localStorage.getItem('userFirstName');
+    const storedRole = localStorage.getItem('userRole');
+    const storedEmail = localStorage.getItem('userEmail');
+
+    if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+    if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    localStorage.setItem('userFirstName', userData.FirstName);
+    localStorage.setItem('userRole', userData.Role);
+    localStorage.setItem('userEmail', userData.Email);
+    localStorage.setItem('userId', userData.UserAccountID);
+
+    return userData;
+}
+
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu-drawer');
+        const overlay = document.getElementById('mobile-menu-overlay');
+        const menuButtonIcon = document.getElementById('menu-toggle-icon');
+
+        const isOpen = menu.classList.contains('translate-x-0');
+        if (isOpen) {
+            closeMobileMenu();
+        } else {
+            menu.classList.add('translate-x-0');
+            menu.classList.remove('-translate-x-full'); // changed
+            overlay.classList.add('opacity-100', 'pointer-events-auto');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            menuButtonIcon.setAttribute('data-lucide', 'x');
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+  function closeMobileMenu() {
+    const menu = document.getElementById('mobile-menu-drawer');
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const menuButtonIcon = document.getElementById('menu-toggle-icon');
+
+    menu.classList.remove('translate-x-0');
+    menu.classList.add('-translate-x-full'); // changed
+    overlay.classList.remove('opacity-100', 'pointer-events-auto');
+    overlay.classList.add('opacity-0', 'pointer-events-none');
+    menuButtonIcon.setAttribute('data-lucide', 'menu');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+ async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+        }
+    // --- Auth check function (kept for context, but separate) ---
+    async function checkAuth(redirect = true) {
+        // ... (Your existing checkAuth logic) ...
+        const storedFirstName = localStorage.getItem('userFirstName');
+        const storedRole = localStorage.getItem('userRole');
+        const storedEmail = localStorage.getItem('userEmail');
+
+        if (storedFirstName && storedRole) {
+            return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+        }
+
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) console.error(sessionError);
+
+        if (!session?.user) {
+            if (redirect) window.location.href = "/Login.html";
+            return null;
+        }
+
+        const { data: userData, error } = await supabaseClient
+            .from('UserAccount')
+            .select('*')
+            .eq('Email', session.user.email)
+            .maybeSingle();
+
+        if (error || !userData) {
+            console.error(error || "No user data found");
+            if (redirect) window.location.href = "/Login.html";
+            return null;
+        }
+
+        localStorage.setItem('userFirstName', userData.FirstName);
+        localStorage.setItem('userRole', userData.Role);
+        localStorage.setItem('userEmail', userData.Email);
+        localStorage.setItem('userId', session.user.id);
+
+        return userData;
+    }
+
+function getTypeBadgeSmall(typeLabel) {
+    const isDown = typeLabel.toLowerCase().includes('down');
+    const baseClass = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium";
+    if (isDown) {
+        return `<span class="${baseClass} bg-blue-50 text-blue-700">${typeLabel}</span>`;
+    }
+    return `<span class="${baseClass} bg-emerald-50 text-emerald-700">${typeLabel}</span>`;
+}
+
+function getMethodBadgeSmall(method) {
+    if (!method) return '';
+    const m = method.toUpperCase();
+    let colorClass = "bg-gray-100 text-gray-800";
+
+    if (m === "GCASH") colorClass = "bg-sky-100 text-sky-800";
+    else if (m === "CASH") colorClass = "bg-emerald-100 text-emerald-800";
+    else if (m === "CARD") colorClass = "bg-purple-100 text-purple-800";
+
+    return `
+      <span class="${colorClass} text-[11px] font-semibold px-2 py-0.5 rounded-full">
+        ${m}
+      </span>
+    `;
+}
+
+async function loadRecentTransactions() {
+    const listEl = document.getElementById('recentTransactionsList');
+    if (!listEl) return;
+
+    const { data, error } = await supabaseClient
+        .from('Billing')
+        .select(`
+            BillingID,
+            Amount,
+            PaymentType,
+            PaymentMethod,
+            PaymentStatus,
+            DateIssued,
+            Appointment:AppointmentID (
+                Service,
+                AppointmentSchedule,
+                User:UserAccountID (
+                    FirstName,
+                    LastName
+                )
+            )
+        `)
+        .eq('PaymentStatus', 'PAID')
+        .order('DateIssued', { ascending: false })
+        .limit(3);
+
+    if (error) {
+        console.error('Error loading recent transactions:', error);
+        listEl.innerHTML = `<p class="text-sm text-red-500">Failed to load recent transactions.</p>`;
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        listEl.innerHTML = `<p class="text-sm text-gray-500">No transactions recorded yet.</p>`;
+        return;
+    }
+
+    const itemsHtml = data.map(row => {
+        const appt = row.Appointment || {};
+        const user = appt.User || null;
+
+        const patientName = user
+            ? `${user.FirstName || ''} ${user.LastName || ''}`.trim() || 'Unknown'
+            : 'Unknown';
+
+        const typeLabel =
+            row.PaymentType === 'DOWNPAYMENT'
+                ? 'Downpayment'
+                : row.PaymentType === 'FINAL_PAYMENT'
+                ? 'Full Payment'
+                : row.PaymentType;
+
+        const dt = row.DateIssued ? new Date(row.DateIssued) : null;
+        const dateStr = dt
+            ? dt.toLocaleDateString('en-PH', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+              })
+            : '';
+
+        const timeStr = dt
+            ? dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+
+        return `
+          <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-gray-800">${patientName}</span>
+              <span class="text-[11px] text-gray-500">
+                ${dateStr} · ${timeStr}
+              </span>
+              ${appt.Service
+                ? `<span class="text-[11px] text-gray-400 mt-0.5 truncate max-w-[220px]">${appt.Service}</span>`
+                : ''
+              }
+            </div>
+            <div class="text-right space-y-1">
+              <div class="text-sm font-semibold text-gray-900">
+                ${formatCurrency(row.Amount)}
+              </div>
+              <div class="flex items-center justify-end gap-1">
+                ${getTypeBadgeSmall(typeLabel)}
+                ${getMethodBadgeSmall(row.PaymentMethod)}
+              </div>
+            </div>
+          </div>
+        `;
+    }).join('');
+
+    listEl.innerHTML = itemsHtml;
+}
+
+function getStatusBadgeSmall(status) {
+    const s = (status || "").toLowerCase();
+    const base =
+      "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold";
+
+    if (s === "pending") {
+        return `<span class="${base} bg-yellow-100 text-yellow-800">Pending</span>`;
+    }
+    if (s === "approved") {
+        return `<span class="${base} bg-blue-100 text-blue-700">Approved</span>`;
+    }
+    if (s === "rescheduled") {
+        return `<span class="${base} bg-purple-100 text-purple-700">Rescheduled</span>`;
+    }
+    if (s === "finished") {
+        return `<span class="${base} bg-emerald-100 text-emerald-700">Finished</span>`;
+    }
+    if (s === "cancelled") {
+        return `<span class="${base} bg-red-100 text-red-700">Cancelled</span>`;
+    }
+
+    return `<span class="${base} bg-gray-100 text-gray-700">${status || "Unknown"}</span>`;
+}
+
+   async function loadNotifications() {
+    // Wait for Lucide to render icons
+    await new Promise(r => setTimeout(r, 100));
+
+    // Lucide replaces <i> with <svg>, so select via data-lucide attribute or parent container
+    const bellContainer = document.querySelector('div > svg[data-lucide="bell"]')?.parentElement
+                          || document.querySelector('i[data-lucide="bell"]')?.parentElement;
+
+    if (!bellContainer) {
+        console.warn("Bell icon container not found yet");
+        return;
+    }
+
+    // The bell itself (SVG)
+    const bellIcon = bellContainer.querySelector('svg[data-lucide="bell"]')
+                     || bellContainer.querySelector('i[data-lucide="bell"]');
+
+    if (!bellIcon) {
+        console.warn("Bell icon SVG not found");
+        return;
+    }
+
+    // Now your previous notification logic works
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    const { data: notifications, error } = await supabaseClient
+        .from('Notifications')
+        .select('*')
+        .eq('UserAccountID', userId)
+        .eq('Status', 'Unread')
+        .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full';
+        badge.style.transform = 'translate(50%, -50%)';
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    // Toggle dropdown
+    bellIcon.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className ='absolute left-full ml-2 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '300px';
+
+        if (notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-3 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'p-3 border-b last:border-b-0 hover:bg-gray-100 cursor-pointer text-gray-900';
+                item.textContent = n.Message;
+
+                item.addEventListener('click', async () => {
+                    await supabaseClient.from('Notifications').update({ Status: 'Read' }).eq('NotificationID', n.NotificationID);
+                    loadNotifications(); // refresh badge
+                });
+
+                dropdown.appendChild(item);
+            });
+        }
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+function formatCurrency(amount) {
+    const num = Number(amount) || 0;
+    return "₱" + num.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
+function getCurrentMonthRangeISO() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return {
+        startISO: start.toISOString(),
+        endISO: end.toISOString(),
+    };
+}
+
+async function loadMonthlyRevenue() {
+    const { startISO, endISO } = getCurrentMonthRangeISO();
+
+    const { data, error } = await supabaseClient
+        .from('Billing')
+        .select('Amount, PaymentStatus, DateIssued')
+        .eq('PaymentStatus', 'PAID')
+        .gte('DateIssued', startISO)
+        .lt('DateIssued', endISO);
+
+    if (error) {
+        console.error('Error fetching monthly revenue:', error);
+        const amountEl = document.getElementById('monthlyRevenueAmount');
+        const subtitleEl = document.getElementById('monthlyRevenueSubtitle');
+        if (amountEl) amountEl.textContent = '₱0.00';
+        if (subtitleEl) subtitleEl.textContent = 'Failed to load revenue data';
+        return;
+    }
+
+    const totalRevenue = (data || []).reduce(
+        (sum, row) => sum + Number(row.Amount || 0),
+        0
+    );
+
+    const amountEl = document.getElementById('monthlyRevenueAmount');
+    const subtitleEl = document.getElementById('monthlyRevenueSubtitle');
+
+    if (amountEl) amountEl.textContent = formatCurrency(totalRevenue);
+    if (subtitleEl) {
+        subtitleEl.textContent = `Based on ${data.length} paid transaction${data.length === 1 ? '' : 's'} this month`;
+    }
+}
+
+function getTodayRangeISO() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return {
+        startISO: start.toISOString(),
+        endISO: end.toISOString(),
+    };
+}
+
+async function loadTodayStats() {
+    const { startISO, endISO } = getTodayRangeISO();
+
+    // Secretary sees all appointments for today (no UserAccountID filter)
+    const { data: appointments, error } = await supabaseClient
+        .from('Appointment')
+        .select('Status')
+        .gte('AppointmentSchedule', startISO)
+        .lt('AppointmentSchedule', endISO);
+
+    if (error) {
+        console.error('Error fetching today stats:', error);
+        return;
+    }
+
+    const total = appointments.length;
+    const pending = appointments.filter(a => a.Status === 'Pending').length;
+
+    const totalEl = document.getElementById('todayAppointmentsCount');
+    const pendingEl = document.getElementById('todayPendingCount');
+
+    if (totalEl) totalEl.textContent = total;
+    if (pendingEl) pendingEl.textContent = `${pending} pending confirmations`;
+}
+
+async function loadTodayAppointmentsDetailed() {
+    const listEl = document.getElementById("todayAppointmentsList");
+    const totalEl = document.getElementById("todayAppointmentsCount");
+    const pendingEl = document.getElementById("todayPendingCount");
+
+    if (!listEl) return;
+
+    const { startISO, endISO } = getTodayRangeISO();
+
+    // Secretary sees ALL today's appointments, with patient + dentist info
+    const { data, error } = await supabaseClient
+        .from("Appointment")
+        .select(`
+            AppointmentID,
+            AppointmentSchedule,
+            Service,
+            Status,
+            AppointmentNotes,
+            TransactionID,
+            UserAccountID,
+            DentistID,
+            User:UserAccountID ( FirstName, LastName ),
+            Dentist:DentistID ( FirstName, LastName )
+        `)
+        .gte("AppointmentSchedule", startISO)
+        .lt("AppointmentSchedule", endISO)
+        .order("AppointmentSchedule", { ascending: true });
+
+    if (error) {
+        console.error("Error fetching today's appointments:", error);
+        listEl.innerHTML = `
+            <p class="text-sm text-red-500">
+              Failed to load today's appointments.
+            </p>
+        `;
+        if (totalEl) totalEl.textContent = "0";
+        if (pendingEl) pendingEl.textContent = "0 pending confirmations";
+        return;
+    }
+
+    const appts = data || [];
+
+    // ✅ Update the top "Today's Appointments" card using THIS data
+    const total = appts.length;
+    const pendingCount = appts.filter(a => a.Status === "Pending").length;
+
+    if (totalEl) totalEl.textContent = total;
+    if (pendingEl) pendingEl.textContent = `${pendingCount} pending confirmations`;
+
+    if (appts.length === 0) {
+        listEl.innerHTML = `
+            <p class="text-sm text-gray-500">
+              No appointments scheduled for today.
+            </p>
+        `;
+        return;
+    }
+
+    const itemsHtml = appts.map(a => {
+        const dt = new Date(a.AppointmentSchedule);
+        const timeStr = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        const user = a.User || {};
+        const dentist = a.Dentist || {};
+
+        const patientName =
+          `${user.FirstName || ""} ${user.LastName || ""}`.trim() || "Unknown patient";
+        const dentistName = dentist.FirstName
+          ? `Dr. ${dentist.FirstName} ${dentist.LastName || ""}`.trim()
+          : "Unassigned";
+
+        return `
+          <div class="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50">
+            <div class="pr-2">
+              <p class="text-sm font-semibold text-gray-800">
+                ${patientName}
+              </p>
+              <p class="text-xs text-gray-500">
+                ${timeStr} · ${a.Service || "No service specified"}
+              </p>
+              <p class="text-[11px] text-gray-500 mt-0.5">
+                Dentist: ${dentistName}
+              </p>
+              ${a.AppointmentNotes
+                ? `<p class="text-[11px] text-gray-400 mt-1 truncate max-w-[260px]">
+                     ${a.AppointmentNotes}
+                   </p>`
+                : ""
+              }
+              ${a.TransactionID
+                ? `<p class="text-[11px] text-gray-400 mt-1">
+                     Ref: ${a.TransactionID}
+                   </p>`
+                : ""
+              }
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              ${getStatusBadgeSmall(a.Status)}
+            </div>
+          </div>
+        `;
+    }).join("");
+
+    listEl.innerHTML = itemsHtml;
+}
+
+async function loadPendingConfirmations() {
+    const pendingListEl = document.getElementById('pendingList');
+    if (!pendingListEl) return;
+
+    const { startISO } = getTodayRangeISO();
+
+    // Get upcoming PENDING appointments starting today onwards
+    const { data: appointments, error } = await supabaseClient
+        .from('Appointment')
+        .select('AppointmentSchedule, Service, Status, AppointmentNotes, AppointmentID, UserAccountID, TransactionID')
+        .eq('Status', 'Pending')
+        .gte('AppointmentSchedule', startISO)
+        .order('AppointmentSchedule', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching pending confirmations:', error);
+        pendingListEl.innerHTML = `
+            <p class="text-sm text-red-500">Failed to load pending confirmations.</p>
+        `;
+        return;
+    }
+
+    if (!appointments || appointments.length === 0) {
+        pendingListEl.innerHTML = `
+            <p class="text-sm text-gray-500">No pending confirmations at the moment.</p>
+        `;
+        return;
+    }
+
+    // Show first 5 pending, scroll for more
+    const toShow = appointments.slice(0, 5);
+
+    pendingListEl.innerHTML = toShow.map(a => {
+        const dt = new Date(a.AppointmentSchedule);
+        const dateStr = dt.toLocaleDateString();
+        const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        return `
+            <div class="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <div class="pr-2">
+                    <p class="text-sm font-semibold text-gray-800">
+                        ${a.Service}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        ${dateStr} · ${timeStr}
+                    </p>
+                    ${a.AppointmentNotes
+                        ? `<p class="text-xs text-gray-400 mt-1 truncate max-w-[200px]">
+                             ${a.AppointmentNotes}
+                           </p>`
+                        : ''
+                    }
+                    ${a.TransactionID
+                        ? `<p class="text-[11px] text-gray-400 mt-1">
+                             Ref: ${a.TransactionID}
+                           </p>`
+                        : ''
+                    }
+                </div>
+                <span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5">
+                    Pending
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+
+    // --- Run on page load ---
+    window.addEventListener('DOMContentLoaded', async () => {
+    const user = await checkAuth();
+    if (!user) return;
+
+    if (user.Role !== 'secretary') {
+        window.location.href = "/Login.html";
+        return;
+    }
+
+    // Initial icon rendering
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Load dashboard data
+        await loadTodayAppointmentsDetailed();   // 🔹 today stats + detailed list (one query)
+        await loadPendingConfirmations();        // 🔹 pending confirmations list
+        await loadNotifications();               // 🔔 notifications badge & dropdown
+        await loadMonthlyRevenue();              // 🔹 revenue from Billing
+        await loadRecentTransactions();          // 🔹 recent transactions list
+
+    // Refresh notifications every 15s
+    setInterval(loadNotifications, 15000);
+});
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Confirmation | ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .brand-bg { background-color: #03555E; }
+    .brand-text { color: #03555E; }
+    .brand-hover:hover { background-color: #02464e; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 flex flex-col">
+
+  <!-- Header -->
+  <header class="brand-bg text-white">
+    <div class="container mx-auto px-4 py-4 flex items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+          <span class="brand-text font-bold text-xl">TD</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Confirmation Card -->
+  <main class="flex-grow flex items-center justify-center py-16 px-4">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+      <h2 id="confirmMessage" class="text-2xl font-bold text-gray-700 mb-6">
+        Confirming your email...
+      </h2>
+
+      <div class="space-y-4">
+        <a id="loginBtn" href="login.html" class="block hidden">
+          <button class="w-full h-12 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+            Go to Login
+          </button>
+        </a>
+
+        <a href="/" class="block">
+          <button class="w-full h-12 bg-transparent border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+            Back to Homepage
+          </button>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // Replace with your Supabase anon key
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const hash = window.location.hash.substring(1); // remove #
+      const params = new URLSearchParams(hash);
+      const access_token = params.get('access_token');
+      const confirmMessage = document.getElementById('confirmMessage');
+      const loginBtn = document.getElementById('loginBtn');
+
+      if (access_token) {
+        try {
+          const { error } = await supabase.auth.setSession({ access_token });
+          if (error) {
+            confirmMessage.textContent = "Email confirmation failed: " + error.message;
+            confirmMessage.classList.replace('text-gray-700', 'text-red-600');
+            loginBtn.classList.add('hidden');
+          } else {
+            confirmMessage.textContent = "Your email has been successfully confirmed! You can now log in.";
+            confirmMessage.classList.replace('text-gray-700', 'text-green-600');
+            loginBtn.classList.remove('hidden');
+          }
+        } catch (err) {
+          confirmMessage.textContent = "Unexpected error occurred.";
+          confirmMessage.classList.replace('text-gray-700', 'text-red-600');
+          loginBtn.classList.add('hidden');
+          console.error(err);
+        }
+      } else {
+        confirmMessage.textContent = "No confirmation token found in the URL.";
+        confirmMessage.classList.replace('text-gray-700', 'text-red-600');
+        loginBtn.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

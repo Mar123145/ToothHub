@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Theme Colors */
+        .bg-primary { background-color: #03555E; }
+        .text-primary { color: #03555E; }
+        .hover\:bg-primary-dark:hover { background-color: #024449; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        /* --- Filter button styles (NEW) --- */
+        .filter-group {
+            display: flex;
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            padding: 0.25rem; /* p-1 */
+        }
+        .filter-button {
+            padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+            border-radius: 0.25rem; /* rounded-sm */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+            white-space: nowrap; /* Prevent text wrapping */
+            text-align: center;
+        }
+        .filter-active {
+            background-color: #03555E; /* Primary color for active state */
+            color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* subtle shadow */
+        }
+        .filter-inactive {
+            background-color: transparent;
+            color: #4b5563; /* text-gray-700 */
+        }
+        .filter-inactive:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+    <header class="bg-primary text-white shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+            <a href="Dashboard.html">
+                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                    Back
+                </button>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold">Notifications</h1>
+                <p class="text-sm opacity-90">Stay updated with clinic operations</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid gap-6 max-w-4xl mx-auto">
+            
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b flex justify-between items-center">
+                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
+                        Recent Notifications
+                    </h2>
+                    
+                    <div class="filter-group" id="filter-buttons">
+                        <button id="filter-all" class="filter-button" data-status="">All</button>
+                        <button id="filter-unread" class="filter-button" data-status="Unread">Unread</button>
+                        <button id="filter-read" class="filter-button" data-status="Read">Read</button>
+                    </div>
+                </div>
+                <div class="p-6" id="recent-notifications-content">
+                    <div id="empty-state" class="text-center py-12 text-gray-500">
+                        <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                        <h3 class="text-lg font-medium mb-2">No recent notifications</h3>
+                        <p class="text-sm">You're all caught up! New notifications will appear here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50">
+                </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script>
+const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentFilter = ''; // '' for All, 'Unread', or 'Read'
+
+async function checkAuth(redirect = true) {
+    const storedFirstName = localStorage.getItem('userFirstName');
+    const storedRole = localStorage.getItem('userRole');
+    const storedEmail = localStorage.getItem('userEmail');
+
+    if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+    if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    localStorage.setItem('userFirstName', userData.FirstName);
+    localStorage.setItem('userRole', userData.Role);
+    localStorage.setItem('userEmail', userData.Email);
+    localStorage.setItem('userId', userData.UserAccountID);
+
+    return userData;
+}
+
+// Function to update the appearance of filter buttons (NEW)
+function updateFilterButtons(newFilter) {
+    document.querySelectorAll('.filter-button').forEach(btn => {
+        const btnStatus = btn.getAttribute('data-status');
+        if (btnStatus === newFilter) {
+            btn.classList.add('filter-active');
+            btn.classList.remove('filter-inactive');
+        } else {
+            btn.classList.remove('filter-active');
+            btn.classList.add('filter-inactive');
+        }
+    });
+}
+
+// Function to set up filter button event listeners (NEW)
+function setupFilterListeners() {
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const newFilter = e.currentTarget.getAttribute('data-status');
+            if (newFilter !== currentFilter) {
+                currentFilter = newFilter;
+                updateFilterButtons(currentFilter);
+                renderNotifications(); // Re-render notifications with the new filter
+            }
+        });
+    });
+}
+
+async function fetchNotifications() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return [];
+
+let query = supabaseClient
+  .from('Notifications')
+  .select(`
+    NotificationID,
+    AppointmentID,
+    Status,
+    DateSent,
+    Message,
+    Appointment:AppointmentID (
+      AppointmentID,
+      UserAccountID,
+      User:UserAccountID (
+        UserAccountID,
+        FirstName,
+        LastName
+      )
+    )
+  `)
+  .eq('UserAccountID', userId)
+  .order('DateSent', { ascending: false });
+
+    // Apply the current filter (UPDATED LOGIC)
+    if (currentFilter) {
+        // Supabase query expects the exact value, e.g., 'Unread' or 'Read'
+        query = query.eq('Status', currentFilter);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        console.error("Error fetching notifications:", error);
+        return [];
+    }
+
+    return data;
+}
+
+async function renderNotifications() {
+    const container = document.getElementById('recent-notifications-content');
+    
+    // Clear the container before re-rendering
+    container.innerHTML = '';
+    
+    const notifications = await fetchNotifications();
+
+    if (!notifications || notifications.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12 text-gray-500">
+                <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                <h3 class="text-lg font-medium mb-2">No notifications</h3>
+                <p class="text-sm">You're all caught up! New notifications will appear here.</p>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    notifications.forEach(n => {
+        const item = document.createElement('div');
+        const first = n.Appointment?.User?.FirstName ?? '';
+        const last  = n.Appointment?.User?.LastName ?? '';
+        const fullName = `${first} ${last}`.trim() || 'Unknown user';
+        item.className = `
+            flex items-start gap-4 p-3 rounded-lg cursor-pointer border
+            ${n.Status.toLowerCase() === 'unread' ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}
+            hover:bg-gray-100
+        `;
+
+item.innerHTML = `
+  <div class="flex-shrink-0 pt-1">
+    <i data-lucide="bell" class="w-5 h-5 ${n.Status.toLowerCase() === 'unread' ? 'text-blue-600' : 'text-gray-400'}"></i>
+  </div>
+  <div class="flex-grow">
+    <p class="font-medium text-gray-800">${fullName}</p>
+    <p class="font-medium text-gray-800">${formatNotificationMessage(n)}</p>
+    <p class="text-xs text-gray-500 mt-0.5">
+      <span class="font-semibold">${n.Status}</span>
+    </p>
+  </div>
+`;
+
+
+        // Click to mark as Read
+        item.addEventListener('click', async () => {
+            if (n.Status.toLowerCase() !== 'read') {
+                const { error } = await supabaseClient
+                    .from('Notifications')
+                    .update({ Status: 'Read' })
+                    .eq('NotificationID', n.NotificationID);
+
+                if (error) {
+                    console.error("Error updating notification:", error);
+                    return;
+                }
+
+                // Update DOM and re-render if needed
+                n.Status = 'Read';
+                renderNotifications(); // refresh entire list
+            }
+        });
+
+        container.appendChild(item);
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function formatNotificationMessage(n) {
+  const msg = n.Message ?? '';
+
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const fullName = `${first} ${last}`.trim();
+
+  // Replace: "patient ID <anything>" with "patient <Full Name>"
+  // (keeps the rest like date/time untouched)
+  if (fullName) {
+    return msg.replace(/patient\s+ID\s+[a-f0-9-]{8,}/i, `patient ${fullName}`);
+  }
+
+  return msg; // fallback: keep original if no name found
+}
+
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    setupFilterListeners(); // Initialize filter button event listeners
+    updateFilterButtons(currentFilter); // Set 'All' as active initially
+    renderNotifications();
+});
+
+    </script>
+</body>
+</html>

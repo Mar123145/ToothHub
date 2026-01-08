@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Transactions</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Theme Colors */
+        .bg-primary { background-color: #03555E; }
+        .text-primary { color: #03555E; }
+        .hover\:bg-primary-dark:hover { background-color: #024449; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        /* Input Styling to mimic Shadcn/ui */
+        .input-style {
+            padding-left: 2.5rem;
+            height: 2.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .input-style:focus {
+            outline: none;
+            border-color: #03555E;
+            box-shadow: 0 0 0 1px #03555E;
+        }
+
+        /* Responsive Table Styling */
+        th, td {
+            white-space: nowrap; /* Prevent wrapping in cells */
+        }
+        .hr-soft { border-top: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+            <!-- Link replacement -->
+            <a href="Dashboard.html">
+                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                    Back
+                </button>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold">Billing & Transactions</h1>
+                <p class="text-sm opacity-90">Manage payments and financial records</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Summary Stats Container -->
+        <div id="summary-stats" class="grid md:grid-cols-3 gap-6 mb-8">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Search + Filters -->
+        <div class="mb-6 space-y-3">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                <input
+                    id="search-input"
+                    type="text"
+                    placeholder="Search by patient name or service..."
+                    class="input-style"
+                    oninput="handleSearch(this.value)"
+                />
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex flex-wrap gap-3 text-xs items-center">
+                    <span class="text-gray-500 mr-1">Filters:</span>
+
+                    
+
+                    <select
+                        id="filter-status"
+                        class="border rounded-lg px-3 py-1.5 text-xs"
+                        onchange="setStatusFilter(this.value)"
+                    >
+                        <option value="all">All statuses</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="paid">Paid</option>
+                        <option value="void">Void</option>
+                    </select>
+                </div>
+
+                <!-- Date filters -->
+                <div class="flex flex-wrap gap-2 items-center text-xs">
+                    <span class="text-gray-500 mr-1">Date:</span>
+
+                    <input
+                        type="date"
+                        id="filter-date-from"
+                        class="border rounded-lg px-2 py-1.5 text-xs"
+                        onchange="setDateFilter('from', this.value)"
+                    />
+                    <span class="text-gray-400">to</span>
+                    <input
+                        type="date"
+                        id="filter-date-to"
+                        class="border rounded-lg px-2 py-1.5 text-xs"
+                        onchange="setDateFilter('to', this.value)"
+                    />
+                    <button
+                        type="button"
+                        class="px-3 py-1.5 rounded-lg border text-xs text-gray-600 hover:bg-gray-100"
+                        onclick="clearDateFilters()"
+                    >
+                        Clear date
+                    </button>
+                </div>
+            </div>
+        </div>
+    
+
+<!-- Tabs -->
+<div class="mb-4">
+    <div class="inline-flex rounded-xl border bg-white p-1 shadow-sm">
+        <button id="tab-to-issue"
+            class="px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white"
+            onclick="setTab('toIssue')">
+            To Issue
+        </button>
+        <button id="tab-issued"
+            class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50"
+            onclick="setTab('issued')">
+            Issued Bills
+        </button>
+    </div>
+    <p id="tab-hint" class="text-xs text-gray-500 mt-2">
+        To Issue: finished appointments with dentist-set price that don't have a bill yet.
+    </p>
+</div>
+
+        <!-- Transactions Table Card -->
+        <div class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold tracking-tight flex items-center gap-2">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    Billing
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                    <tr class="border-b bg-gray-50 text-gray-700 uppercase">
+                        <th class="text-left py-3 px-4 font-semibold rounded-tl-xl">Patient</th>
+                        <th class="text-left py-3 px-4 font-semibold">Type</th>
+                        <th class="text-left py-3 px-4 font-semibold">Amount</th>
+                        <th class="text-left py-3 px-4 font-semibold">Date</th>
+                        <th class="text-left py-3 px-4 font-semibold">Method</th>
+                        <th class="text-left py-3 px-4 font-semibold">Status</th>
+                        <th class="text-right py-3 px-4 font-semibold rounded-tr-xl">Action</th>
+                        
+                    </tr>
+                    </thead>
+                    <tbody id="transactions-table-body">
+                        <!-- Transaction rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settle Remaining Balance Modal -->
+    <div id="settle-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative">
+            <button
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                onclick="closeSettleModal()"
+            >
+                ✕
+            </button>
+
+            <h2 class="text-lg font-semibold mb-4">Settle Remaining Balance</h2>
+
+            <div id="settle-modal-content" class="space-y-3 text-sm">
+                <!-- Filled dynamically -->
+            </div>
+
+            <div class="mt-5 flex justify-end gap-3">
+                <button
+                    class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                    onclick="closeSettleModal()"
+                >
+                    Cancel
+                </button>
+                <button
+                    id="settle-confirm-btn"
+                    class="px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark"
+                    onclick="confirmSettlement()"
+                >
+                    Confirm Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- Issue Bill Modal -->
+<div id="issue-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-6 relative">
+    <button
+      class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      onclick="closeIssueModal()"
+      aria-label="Close"
+    >
+      ✕
+    </button>
+
+    <div class="flex items-start gap-3 mb-4">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <i data-lucide="file-text" class="w-5 h-5 text-primary"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold">Issue Bill</h2>
+        <p class="text-xs text-gray-500">Review details before creating the bill.</p>
+      </div>
+    </div>
+
+    <div id="issue-modal-content" class="space-y-4 text-sm">
+      <!-- Filled dynamically -->
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button
+        class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="closeIssueModal()"
+      >
+        Cancel
+      </button>
+      <button
+        id="issue-confirm-btn"
+        class="px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark"
+        onclick="confirmIssueBill()"
+      >
+        Issue Bill
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+    <!-- JavaScript Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAuth(redirect = true) {
+        const storedFirstName = localStorage.getItem('userFirstName');
+        const storedRole = localStorage.getItem('userRole');
+        const storedEmail = localStorage.getItem('userEmail');
+
+        if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+        const { data: userData } = await supabaseClient
+            .from('UserAccount')
+            .select('*')
+            .eq('Email', session.user.email)
+            .maybeSingle();
+
+        if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+        localStorage.setItem('userFirstName', userData.FirstName);
+        localStorage.setItem('userRole', userData.Role);
+        localStorage.setItem('userEmail', userData.Email);
+        localStorage.setItem('userId', userData.UserAccountID);
+
+        return userData;
+    }
+
+    // --- STATE ---
+    let issuedBills = [];     // rows from Billing
+    let toIssue = [];         // rows from Appointment
+    let currentSearchTerm = "";
+    let filterStatus = "all";
+    let issueContext = null; 
+
+    // date filters
+    let filterDateFrom = null;
+    let filterDateTo = null;
+
+    // tabs: 'toIssue' | 'issued'
+    let currentTab = "toIssue";
+
+    function setTab(tab) {
+        currentTab = tab;
+
+        const btnToIssue = document.getElementById('tab-to-issue');
+        const btnIssued = document.getElementById('tab-issued');
+        const hint = document.getElementById('tab-hint');
+
+        if (tab === 'toIssue') {
+            btnToIssue.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white";
+            btnIssued.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
+            hint.textContent = "To Issue: finished appointments with dentist-set price that don't have a bill yet.";
+        } else {
+            btnIssued.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white";
+            btnToIssue.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
+            hint.textContent = "Issued Bills: bills created by the secretary.";
+        }
+
+        // status filter only makes sense for issued bills; disable for To Issue
+        const statusSel = document.getElementById('filter-status');
+        if (statusSel) {
+            statusSel.disabled = (tab === 'toIssue');
+            statusSel.classList.toggle('opacity-50', tab === 'toIssue');
+        }
+
+        renderTable();
+    }
+
+    function setStatusFilter(value) {
+        filterStatus = value;
+        renderTable();
+    }
+
+    function setDateFilter(which, value) {
+        if (which === 'from') {
+            if (value) {
+                const d = new Date(value);
+                d.setHours(0, 0, 0, 0);
+                filterDateFrom = d;
+            } else {
+                filterDateFrom = null;
+            }
+        } else if (which === 'to') {
+            if (value) {
+                const d = new Date(value);
+                d.setHours(23, 59, 59, 999);
+                filterDateTo = d;
+            } else {
+                filterDateTo = null;
+            }
+        }
+        renderTable();
+    }
+
+    function clearDateFilters() {
+        filterDateFrom = null;
+        filterDateTo = null;
+        const fromInput = document.getElementById('filter-date-from');
+        const toInput = document.getElementById('filter-date-to');
+        if (fromInput) fromInput.value = '';
+        if (toInput) toInput.value = '';
+        renderTable();
+    }
+
+    function handleSearch(term) {
+        currentSearchTerm = term || "";
+        renderTable();
+    }
+    function showMessage(message, type = "info") {
+  // Simple fallback for now (no crash):
+  console.log(`[${type}] ${message}`);
+  alert(message);
+}
+
+
+    // --- UTILITY FUNCTIONS ---
+    function formatCurrency(amount) {
+        const n = Number(amount || 0);
+        return `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 0 })}`;
+    }
+
+    function peso(amount) { return formatCurrency(amount); }
+
+    function getStatusBadge(status) {
+        let colorClass;
+        const s = (status || '').toLowerCase();
+
+        if (s === "paid") colorClass = "bg-green-100 text-green-800";
+        else if (s === "unpaid") colorClass = "bg-yellow-100 text-yellow-800";
+        else if (s === "pending") colorClass = "bg-yellow-100 text-yellow-800";
+        else if (s === "void") colorClass = "bg-gray-200 text-gray-700";
+        else colorClass = "bg-gray-100 text-gray-800";
+
+        const label = s ? (s.charAt(0).toUpperCase() + s.slice(1)) : "—";
+        return `<span class="${colorClass} text-xs font-semibold px-2.5 py-0.5 rounded-full">${label}</span>`;
+    }
+
+    function getTypeBadge(type) {
+        return `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${type}</span>`;
+    }
+
+    function getMethodBadge(method) {
+        if (!method) return '<span class="text-xs text-gray-500">—</span>';
+
+        const m = String(method).toUpperCase();
+        let colorClass = "bg-gray-100 text-gray-800";
+
+        if (m === "GCASH") colorClass = "bg-sky-100 text-sky-800";
+        else if (m === "CASH") colorClass = "bg-emerald-100 text-emerald-800";
+        else if (m === "CARD") colorClass = "bg-purple-100 text-purple-800";
+
+        return `
+            <span class="${colorClass} text-[11px] font-semibold px-2 py-0.5 rounded-full">
+            ${m}
+            </span>
+        `;
+    }
+
+    function formatDateTime(value) {
+        if (!value) return '—';
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function calculateSummaryForIssued(rows) {
+        const totalRevenue = rows
+            .filter(r => (r.PaymentStatus || '').toUpperCase() === 'PAID')
+            .reduce((sum, r) => sum + Number(r.Amount || 0), 0);
+
+        const paidCount = rows.filter(r => (r.PaymentStatus || '').toUpperCase() === 'PAID').length;
+
+        const pendingAmount = rows
+            .filter(r => (r.PaymentStatus || '').toUpperCase() === 'UNPAID')
+            .reduce((sum, r) => sum + Number(r.Amount || 0), 0);
+
+        return { totalRevenue, completedTransactionsCount: paidCount, pendingAmount };
+    }
+
+    function calculateSummaryForToIssue(rows) {
+        const totalToIssue = rows.reduce((sum, r) => sum + Number(r.TotalAmount || 0), 0);
+        return {
+            totalRevenue: 0,
+            completedTransactionsCount: rows.length,
+            pendingAmount: totalToIssue
+        };
+    }
+
+    function renderSummaryStats(summary, mode = "issued") {
+        const container = document.getElementById('summary-stats');
+
+        // Reuse the same 3 cards but rename based on mode
+        if (mode === "toIssue") {
+            container.innerHTML = `
+                <div class="rounded-xl border bg-white shadow-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-600 pb-3">To Issue (Count)</h3>
+                    <div class="text-3xl font-bold text-primary">${summary.completedTransactionsCount}</div>
+                    <p class="text-xs text-gray-500 mt-2">Finished appointments ready for billing</p>
+                </div>
+
+                <div class="rounded-xl border bg-white shadow-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-600 pb-3">Total To Issue</h3>
+                    <div class="text-3xl font-bold text-yellow-600">${formatCurrency(summary.pendingAmount)}</div>
+                    <p class="text-xs text-gray-500 mt-2">Sum of dentist-set prices</p>
+                </div>
+
+                <div class="rounded-xl border bg-white shadow-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-600 pb-3">Issued Bills</h3>
+                    <div class="text-3xl font-bold text-green-600">${issuedBills.length}</div>
+                    <p class="text-xs text-gray-500 mt-2">Bills already created</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="rounded-xl border bg-white shadow-lg p-6">
+                <h3 class="text-sm font-medium text-gray-600 pb-3">Total Revenue</h3>
+                <div class="text-3xl font-bold text-primary">${formatCurrency(summary.totalRevenue)}</div>
+                <p class="text-xs text-gray-500 mt-2">From PAID bills</p>
+            </div>
+
+            <div class="rounded-xl border bg-white shadow-lg p-6">
+                <h3 class="text-sm font-medium text-gray-600 pb-3">Paid Bills</h3>
+                <div class="text-3xl font-bold text-green-600">${summary.completedTransactionsCount}</div>
+                <p class="text-xs text-gray-500 mt-2">Successfully processed</p>
+            </div>
+
+            <div class="rounded-xl border bg-white shadow-lg p-6">
+                <h3 class="text-sm font-medium text-gray-600 pb-3">Unpaid Amount</h3>
+                <div class="text-3xl font-bold text-yellow-600">${formatCurrency(summary.pendingAmount)}</div>
+                <p class="text-xs text-gray-500 mt-2">Awaiting payment</p>
+            </div>
+        `;
+    }
+
+    // --- LOAD DATA ---
+    async function loadIssuedBills() {
+        const { data, error } = await supabaseClient
+            .from('Billing')
+            .select(`
+                BillingID,
+                UserAccountID,
+                AppointmentID,
+                Amount,
+                PaymentType,
+                PaymentMethod,
+                PaymentStatus,
+                DateIssued,
+                Appointment:AppointmentID (
+                    AppointmentID,
+                    AppointmentSchedule,
+                    Service,
+                    UserAccount:UserAccountID ( FirstName, LastName )
+                )
+            `)
+            .order('DateIssued', { ascending: false });
+
+        if (error) {
+            console.error('Error loading Billing data:', error);
+            showMessage('Failed to load issued bills.', 'error');
+            issuedBills = [];
+            return;
+        }
+
+        issuedBills = data || [];
+    }
+
+    async function loadToIssue() {
+        // Get billing appointment IDs to exclude
+        const { data: billRows, error: billErr } = await supabaseClient
+        .from('Billing')
+        .select('AppointmentID, PaymentType')
+        .eq('PaymentType', 'BILL');
+
+        if (billErr) {
+            console.error('Error loading Billing IDs:', billErr);
+            showMessage('Failed to load billing references.', 'error');
+            toIssue = [];
+            return;
+        }
+
+        const billedIds = new Set((billRows || []).map(r => r.AppointmentID).filter(Boolean));
+
+        // Load finished appointments with dentist-set price
+        const { data: appts, error } = await supabaseClient
+            .from('Appointment')
+            .select(`
+                AppointmentID,
+                UserAccountID,
+                AppointmentSchedule,
+                Service,
+                Status,
+                TotalAmount,
+                UserAccount:UserAccountID ( FirstName, LastName )
+            `)
+            .eq('Status', 'Finished')
+            .gt('TotalAmount', 0)
+            .order('AppointmentSchedule', { ascending: false });
+
+        if (error) {
+            console.error('Error loading appointments:', error);
+            showMessage('Failed to load appointments to issue.', 'error');
+            toIssue = [];
+            return;
+        }
+
+        toIssue = (appts || []).filter(a => !billedIds.has(a.AppointmentID));
+    }
+
+    async function refreshAll() {
+        await Promise.all([loadIssuedBills(), loadToIssue()]);
+        renderTable();
+    }
+
+    // --- ACTION: ISSUE BILL ---
+async function issueBill(appointmentId) {
+  try {
+    const appt = toIssue.find(a => a.AppointmentID === appointmentId);
+    if (!appt) {
+      showMessage("Appointment not found in To Issue list.", "error");
+      return;
+    }
+
+    // Sum PAID downpayments for this appointment
+    const { data: dpRows, error: dpErr } = await supabaseClient
+      .from("Billing")
+      .select("Amount")
+      .eq("AppointmentID", appt.AppointmentID)
+      .eq("PaymentType", "DOWNPAYMENT")
+      .eq("PaymentStatus", "PAID");
+
+    if (dpErr) {
+      console.error(dpErr);
+      showMessage("Failed to compute downpayment.", "error");
+      return;
+    }
+
+    const downpaymentTotal = (dpRows || []).reduce((sum, r) => sum + Number(r.Amount || 0), 0);
+    const total = Number(appt.TotalAmount || 0);
+    const remaining = total;
+
+    const patientName =
+      ((appt.UserAccount?.FirstName || "") + " " + (appt.UserAccount?.LastName || "")).trim() || "Unknown";
+
+    openIssueModal({ appt, patientName, total, downpaymentTotal, remaining });
+  } catch (e) {
+    console.error(e);
+    showMessage("Unexpected error while preparing bill.", "error");
+  }
+}
+
+
+function openIssueModal(context) {
+    
+  issueContext = context;
+
+  const { appt, patientName, total, downpaymentTotal } = context;
+
+  const content = document.getElementById("issue-modal-content");
+  content.innerHTML = `
+    <div class="rounded-xl border bg-gray-50 p-4 space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Patient</div>
+        <div class="font-semibold text-gray-900">${patientName}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Service</div>
+        <div class="font-medium text-gray-800">${appt.Service || "—"}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Schedule</div>
+        <div class="text-gray-700">${formatDateTime(appt.AppointmentSchedule)}</div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border p-4">
+  <div class="font-semibold text-gray-900 mb-2">Payment Method</div>
+
+  <label class="block text-xs text-gray-500 mb-1">Select method</label>
+  <select
+    id="issue-payment-method"
+    class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+  >
+    <option value="">-- Choose payment method --</option>
+    <option value="CASH">Cash</option>
+    <option value="GCASH">GCash</option>
+    <option value="CARD">Card</option>
+  </select>
+
+  <p class="text-xs text-gray-500 mt-2">
+    This will be saved to the bill record.
+  </p>
+</div>
+
+<div class="mt-3 flex items-center gap-2">
+  <input id="issue-mark-paid" type="checkbox" class="w-4 h-4 accent-[#03555E]" />
+  <label for="issue-mark-paid" class="text-sm text-gray-700">
+    Mark as <span class="font-semibold">PAID</span> now
+  </label>
+</div>
+<p class="text-xs text-gray-500 mt-1">
+  If unchecked, the bill will be issued as UNPAID.
+</p>
+
+    <div class="rounded-xl border p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-semibold text-gray-900">Billing Summary</div>
+        <span class="text-[11px] px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-semibold">
+          Full Bill
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">Service Price</span>
+          <span class="font-semibold">${peso(total)}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">Downpayment (Already Paid)</span>
+          <span class="font-semibold text-green-700">${peso(downpaymentTotal)}</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-3">
+        Downpayment is recorded separately and does not reduce the final bill.
+      </p>
+    </div>
+  `;
+
+  const modal = document.getElementById("issue-modal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+
+function closeIssueModal() {
+  issueContext = null;
+  const modal = document.getElementById("issue-modal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+async function confirmIssueBill() {
+  if (!issueContext) return;
+
+  const btn = document.getElementById("issue-confirm-btn");
+  btn.disabled = true;
+  btn.classList.add("opacity-70", "cursor-not-allowed");
+
+  try {
+    const { appt, total } = issueContext;
+
+    const billAmount = Number(total || 0);
+
+    const methodEl = document.getElementById("issue-payment-method");
+    const paymentMethod = (methodEl?.value || "").trim();
+
+    if (!paymentMethod) {
+      showMessage("Please select a payment method (Cash, GCash, or Card).", "error");
+      return;
+    }
+
+    const paidEl = document.getElementById("issue-mark-paid");
+    const isPaidNow = !!paidEl?.checked;
+
+    const { error } = await supabaseClient
+      .from("Billing")
+      .insert({
+        AppointmentID: appt.AppointmentID,
+        UserAccountID: appt.UserAccountID,
+        PaymentType: "BILL",
+        Amount: billAmount,
+        PaymentStatus: isPaidNow ? "PAID" : "UNPAID",  // ✅ NOW DYNAMIC
+        PaymentMethod: paymentMethod,
+        DateIssued: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error(error);
+      showMessage(error.message || "Failed to issue bill.", "error");
+      return;
+    }
+
+    showMessage(isPaidNow ? "Bill issued and marked PAID." : "Bill issued successfully.", "success");
+    closeIssueModal();
+    await refreshAll();
+  } catch (e) {
+    console.error(e);
+    showMessage("Unexpected error while issuing bill.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("opacity-70", "cursor-not-allowed");
+  }
+}
+
+function showMessage(message, type = "info") {
+  const container = document.getElementById("toast-container");
+  if (!container) {
+    alert(message);
+    return;
+  }
+
+  const color =
+    type === "success" ? "bg-green-600" :
+    type === "error" ? "bg-red-600" :
+    "bg-gray-800";
+
+  const el = document.createElement("div");
+  el.className = `${color} text-white text-sm px-4 py-3 rounded-xl shadow-lg flex items-start gap-3`;
+  el.innerHTML = `
+    <div class="font-semibold">${type.toUpperCase()}</div>
+    <div class="flex-1">${message}</div>
+    <button class="opacity-80 hover:opacity-100" aria-label="Close">✕</button>
+  `;
+
+  el.querySelector("button").onclick = () => el.remove();
+  container.appendChild(el);
+
+  // auto remove after 3 seconds
+  setTimeout(() => { el.remove(); }, 3000);
+}
+
+
+    // --- RENDER TABLE ---
+    function renderTable() {
+        const tableBody = document.getElementById('transactions-table-body');
+        const term = (currentSearchTerm || "").toLowerCase();
+
+        if (currentTab === 'toIssue') {
+            let rows = toIssue.slice();
+
+            // Search: patient or service
+            if (term) {
+                rows = rows.filter(a => {
+                    const patient = `${a.UserAccount?.FirstName || ''} ${a.UserAccount?.LastName || ''}`.toLowerCase();
+                    const service = String(a.Service || '').toLowerCase();
+                    return patient.includes(term) || service.includes(term);
+                });
+            }
+
+            // Date filters based on AppointmentSchedule
+            rows = rows.filter(a => {
+                const dv = a.AppointmentSchedule ? new Date(a.AppointmentSchedule).getTime() : null;
+                if (!dv) return true;
+                if (filterDateFrom && dv < filterDateFrom.getTime()) return false;
+                if (filterDateTo && dv > filterDateTo.getTime()) return false;
+                return true;
+            });
+
+            renderSummaryStats(calculateSummaryForToIssue(rows), "toIssue");
+
+            if (rows.length === 0) {
+                tableBody.innerHTML =
+                    '<tr><td colspan="7" class="text-center text-gray-500 py-8">No appointments ready to issue.</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = rows.map(a => {
+                const patientName = `${a.UserAccount?.FirstName || ''} ${a.UserAccount?.LastName || ''}`.trim() || 'Unknown';
+                return `
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="py-3 px-4 font-medium">${patientName}</td>
+                        <td class="py-3 px-4">${getTypeBadge(a.Service || 'Service')}</td>
+                        <td class="py-3 px-4 font-semibold text-gray-800">${formatCurrency(a.TotalAmount || 0)}</td>
+                        <td class="py-3 px-4 text-sm text-gray-600">${formatDateTime(a.AppointmentSchedule)}</td>
+                        <td class="py-3 px-4">${getMethodBadge(null)}</td>
+                        <td class="py-3 px-4">${getStatusBadge('unpaid')}</td>
+                        <td class="py-3 px-4 text-right space-x-2">
+                            <button
+                                class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-dark"
+                                onclick="issueBill('${a.AppointmentID}')"
+                            >
+                                Issue Bill
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
+        // issued bills tab
+        let rows = issuedBills.map(row => {
+            const appt = row.Appointment || {};
+            const user = appt.UserAccount || null;
+            const patientName = user ? `${user.FirstName || ''} ${user.LastName || ''}`.trim() || 'Unknown' : 'Unknown';
+            const service = appt.Service || '—';
+            const status = (row.PaymentStatus || '').toLowerCase();
+            const dv = row.DateIssued ? new Date(row.DateIssued).getTime() : null;
+
+            return {
+            BillingID: row.BillingID,
+            AppointmentID: row.AppointmentID,                 // ✅ FIX (was ppointmentID)
+            patient: patientName,
+            service,
+            apptWhen: appt.AppointmentSchedule
+                ? formatDateTime(appt.AppointmentSchedule)
+                : '—',                                         // ✅ show appointment schedule
+            apptShort: row.AppointmentID
+                ? row.AppointmentID.slice(0, 8) + '…'
+                : '—',                                         // ✅ short id display
+            paymentType: (row.PaymentType || '').toUpperCase() || '—', // ✅ IMPORTANT
+            amount: Number(row.Amount || 0),
+            method: row.PaymentMethod,
+            status,
+            dateValue: dv,
+            dateText: formatDateTime(row.DateIssued),
+            };
+
+        });
+
+        // Search: patient or service
+        if (term) {
+            rows = rows.filter(r => r.patient.toLowerCase().includes(term) || r.service.toLowerCase().includes(term));
+        }
+
+        // Status filter (issued only)
+        if (filterStatus !== 'all') {
+            rows = rows.filter(r => r.status === filterStatus);
+        }
+
+        // Date filter based on DateIssued
+        rows = rows.filter(r => {
+            if (!r.dateValue) return true;
+            if (filterDateFrom && r.dateValue < filterDateFrom.getTime()) return false;
+            if (filterDateTo && r.dateValue > filterDateTo.getTime()) return false;
+            return true;
+        });
+
+        renderSummaryStats(calculateSummaryForIssued(issuedBills), "issued");
+
+        if (rows.length === 0) {
+            tableBody.innerHTML =
+                '<tr><td colspan="7" class="text-center text-gray-500 py-8">No issued bills found.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = rows.map(r => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4 font-medium">${r.patient}</td>
+                <td class="py-3 px-4">
+                    <div class="relative group inline-block">
+                        <!-- Badge -->
+                        ${getTypeBadge(r.paymentType)}
+
+                        <!-- Compact line -->
+                        <div class="text-[11px] text-gray-600 leading-tight mt-0.5">
+                        ${r.service} • ${r.apptWhen.split(',')[0]}
+                        </div>
+
+                        <!-- Tooltip (RIGHT SIDE) -->
+                        <div
+                        class="absolute left-full top-1/2 ml-3 -translate-y-1/2
+                                hidden group-hover:block
+                                w-64 bg-gray-900 text-white text-xs
+                                rounded-lg p-3 shadow-xl z-50"
+                        >
+                        <div class="mb-2">
+                            <span class="text-gray-400">Service</span><br>
+                            <span class="font-semibold">${r.service}</span>
+                        </div>
+
+                        <div>
+                            <span class="text-gray-400">Schedule</span><br>
+                            ${r.apptWhen}
+                        </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td class="py-3 px-4 font-semibold text-gray-800">${formatCurrency(r.amount)}</td>
+                <td class="py-3 px-4 text-sm text-gray-600">${r.dateText}</td>
+                <td class="py-3 px-4">${getMethodBadge(r.method)}</td>
+                <td class="py-3 px-4">${getStatusBadge(r.status)}</td>
+                <td class="py-3 px-4 text-right">
+                    <span class="text-xs text-gray-400">—</span>
+                </td>
+            </tr>
+        `).join('');
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function getTypeBadge(type) {
+  const t = String(type || '').toUpperCase();
+
+  if (t === 'DOWNPAYMENT') {
+    return `<span class="text-[11px] px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">DOWNPAYMENT</span>`;
+  }
+  if (t === 'BILL') {
+    return `<span class="text-[11px] px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-semibold">BILL</span>`;
+  }
+  return `<span class="text-[11px] px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">${t || '—'}</span>`;
+}
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+        refreshAll();
+        setTab('toIssue');
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    };
+    </script>
+    <div id="toast-container" class="fixed top-4 right-4 z-[9999] space-y-2"></div>
+</body>
+</html>

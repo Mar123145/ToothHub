@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .brand-bg { background-color: #03555E; }
+    .brand-text { color: #03555E; }
+    .brand-hover:hover { background-color: #02464e; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="brand-bg text-white">
+    <div class="container mx-auto px-4 py-4 flex items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Form -->
+  <div class="flex items-center justify-center py-16 px-4">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold brand-text mb-2">Happy Tooth Dae</h2>
+        <p class="text-gray-500">Sign in to your account</p>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-xl">
+        <div class="p-6">
+          <h3 class="text-2xl font-bold text-center brand-text mb-6">Log in</h3>
+
+          <form id="loginForm" class="space-y-4">
+            <div class="space-y-2">
+              <label for="email" class="brand-text font-medium">Email or Username</label>
+              <input id="email" type="text" placeholder="Enter your email or username"
+                class="w-full h-12 px-3 border rounded-lg focus:outline-none focus:ring-2"
+                style="border-color:#03555E; focus:ring-color:#03555E;" required />
+            </div>
+
+            <div class="space-y-2">
+              <label for="password" class="brand-text font-medium">Password</label>
+              <input id="password" type="password" placeholder="Enter your password"
+                class="w-full h-12 px-3 border rounded-lg focus:outline-none focus:ring-2"
+                style="border-color:#03555E; focus:ring-color:#03555E;" required />
+            </div>
+
+            <div class="text-right">
+              <a href="/Send_Email.html" class="brand-text hover:underline text-sm">Forgot Password</a>
+            </div>
+
+            <button type="submit"
+              class="w-full h-12 text-lg font-medium text-white rounded-lg brand-bg brand-hover">
+              Log in
+            </button>
+          </form>
+
+          <!-- Message box -->
+          <div id="loginMessage" class="hidden p-4 mt-4 rounded text-white text-center"></div>
+
+          <div class="text-center mt-6">
+            <p class="text-gray-500">
+              Don't have an account?
+              <a href="/Patient/Signup.html" class="brand-text hover:underline font-medium">Sign Up</a>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-8">
+        <a href="Homepage.html" class="brand-text hover:underline flex items-center justify-center gap-2">
+          <span>←</span> Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+
+  // ✅ IMPORTANT: Use a different variable name than "supabase"
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showMessage(message, type = "error") {
+    const box = document.getElementById("loginMessage");
+    box.textContent = message;
+    box.className = "p-4 mt-4 rounded text-white text-center";
+    if (type === "success") box.classList.add("bg-green-500");
+    else if (type === "error") box.classList.add("bg-red-500");
+    else if (type === "info") box.classList.add("bg-blue-500");
+    box.classList.remove("hidden");
+    setTimeout(() => box.classList.add("hidden"), 3000);
+  }
+
+  const loginForm = document.getElementById("loginForm");
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const identifier = document.getElementById("email").value.trim(); // username or email
+    const password = document.getElementById("password").value;
+
+    if (!identifier || !password) {
+      return showMessage("Please enter both email/username and password.", "error");
+    }
+
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+
+    try {
+      // Show loading
+      showMessage("Logging in... please wait", "info");
+      submitBtn.disabled = true;
+
+      // 1️⃣ Fetch user by email or username (quoted for safety)
+      let { data: userData, error: fetchError } = await supabaseClient
+        .from("UserAccount")
+        .select("*")
+        .or(`Email.eq."${identifier}",Username.eq."${identifier}"`)
+        .maybeSingle();
+
+      if (fetchError) {
+        submitBtn.disabled = false;
+        return showMessage("Error fetching user info: " + fetchError.message, "error");
+      }
+
+      if (!userData) {
+        submitBtn.disabled = false;
+        return showMessage("No account found with that email or username.", "error");
+      }
+
+      const email = userData.Email;
+
+      // 2️⃣ Supabase Auth sign-in (email only)
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        submitBtn.disabled = false;
+        return showMessage("Login failed: " + error.message, "error");
+      }
+
+      // 3️⃣ Check if email is confirmed
+      if (!data.user.email_confirmed_at) {
+        submitBtn.disabled = false;
+        return showMessage("Please verify your email before logging in.", "error");
+      }
+
+      // 4️⃣ Save user info
+      localStorage.setItem("userFirstName", userData.FirstName);
+      localStorage.setItem("userRole", userData.Role);
+      localStorage.setItem("userId", userData.UserAccountID);
+
+      console.log("Auth ID:", data.user.id);
+      console.log("UserAccountID:", userData.UserAccountID);
+
+      showMessage("Login successful! Redirecting...", "success");
+
+      // 5️⃣ Redirect based on role (✅ use relative paths if you're using Live Server)
+      setTimeout(() => {
+        if (userData.Role === "secretary") window.location.href = "Secretary/Dashboard.html";
+        else if (userData.Role === "dentist") window.location.href = "Dentist/Dashboard.html";
+        else window.location.href = "Patient/Dashboard.html";
+      }, 1000);
+
+    } catch (err) {
+      console.error(err);
+      showMessage("Unexpected error occurred.", "error");
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Records Management</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide icons (ESM) -->
+  <script type="module">
+    import { createIcons, icons } from 'https://unpkg.com/lucide@latest/dist/esm/lucide.js';
+    window.renderLucideIcons = () => createIcons({ icons });
+  </script>
+
+  <style>
+    :root {
+      --primary-color: #03555E;
+      --hover-color: #024449;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top left, #e0f2fe 0, #f9fafb 45%, #f3f4f6 100%);
+      min-height: 100vh;
+    }
+    .card {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      background-color: white;
+      box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.08),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .card:hover {
+      box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .input {
+      display: block;
+      width: 100%;
+      border: 1px solid #d1d5db;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(3, 85, 94, 0.15);
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container" class="min-h-screen"></div>
+
+  <div id="messageBox"
+       class="hidden fixed bottom-6 right-6 px-4 py-3 rounded-lg text-sm text-white font-medium shadow-lg z-50 transition-opacity duration-300">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const PRIMARY_COLOR = 'bg-[#03555E]';
+    const HOVER_COLOR = 'hover:bg-[#024449]';
+
+    let state = {
+        searchTerm: '',
+        showAddForm: false,
+    };
+
+    function showMessage(message, type = "error") {
+      const box = document.getElementById("messageBox");
+      if (!box) return;
+
+      box.textContent = message;
+      box.classList.remove("hidden", "bg-red-500", "bg-green-500");
+      box.classList.add(type === "success" ? "bg-green-500" : "bg-red-500");
+      box.style.opacity = "1";
+
+      setTimeout(() => {
+        box.style.opacity = "0";
+        setTimeout(() => box.classList.add("hidden"), 250);
+      }, 3500);
+    }
+
+    // --- Auth ---
+    async function checkAuth(requiredRole = null, redirect = true) {
+      let storedRole = localStorage.getItem('userRole');
+      let storedUserId = localStorage.getItem('userId');
+      let storedFirstName = localStorage.getItem('userFirstName');
+
+      if (storedRole && storedUserId) {
+        if (requiredRole && storedRole !== requiredRole) {
+          if (redirect) window.location.href = "/Login.html";
+          return null;
+        }
+        return { Role: storedRole, UserAccountID: storedUserId, FirstName: storedFirstName };
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) {
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      const { data: userData, error } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+      if (error || !userData) {
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userId', userData.UserAccountID);
+
+      if (requiredRole && userData.Role !== requiredRole) {
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      return { Role: userData.Role, UserAccountID: userData.UserAccountID, FirstName: userData.FirstName };
+    }
+
+    // --- Data ---
+    async function fetchPatients() {
+  const { data, error } = await supabaseClient
+    .from('UserAccount')
+    .select('*')
+    .eq('Role', 'patient')
+    .order('FirstName', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching patients:', error);
+    return [];
+  }
+
+  return data.map(p => ({
+    id: p.UserAccountID,
+    firstName: p.FirstName || '',
+    lastName: p.LastName || '',
+    email: p.Email || '',
+    phone: p.ContactNumber || '',
+    lastVisit: p.LastVisit || 'N/A',
+  }));
+}
+
+
+    // --- Navigation helpers ---
+    function goToViewPage(patientId) {
+      window.location.href = `/Dentist/View.html?userId=${patientId}`;
+    }
+    function goToEditPage(patientId) {
+      window.location.href = `/Dentist/View.html?userId=${patientId}`;
+    }
+
+    // --- Render pieces ---
+    function renderHeader() {
+      return `
+      <header class="bg-[#03555E] text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+          <a href="/dentist/Dashboard.html">
+            <button class="h-10 px-4 py-2 rounded-lg text-sm font-medium bg-transparent text-white hover:bg-[#024449] flex items-center">
+              <i data-lucide="arrow-left" class="w-4 h-4 sm:mr-2"></i>
+              <span class="hidden sm:inline">Back</span>
+            </button>
+          </a>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold">Patient Records</h1>
+            <p class="text-xs sm:text-sm opacity-90">Review and manage your patients for Happy Tooth Dae</p>
+          </div>
+        </div>
+      </header>
+      `;
+    }
+
+ function renderPatientControls() {
+  return `
+    <div class="card mb-6">
+      <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 class="text-xl font-semibold text-gray-900">Patient Directory</h2>
+        <button
+          id="toggle-add-form"
+          class="bg-[#03555E] text-white hover:bg-[#024449] h-10 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          ${state.showAddForm ? 'Hide Form' : 'Add New Patient'}
+        </button>
+      </div>
+
+      <div class="p-6 flex gap-3 flex-col sm:flex-row">
+        <div class="flex-1 relative">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search by name, email, or phone..."
+            value="${state.searchTerm || ''}"
+            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 pl-10"
+          />
+        </div>
+
+        <button
+          id="search-button"
+          type="button"
+          class="border border-gray-300 bg-white text-[#03555E] hover:bg-gray-50 h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-1"
+        >
+          <i data-lucide="filter" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Search</span>
+          <span class="sm:hidden">Go</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+
+
+    function renderAddForm() {
+      if (!state.showAddForm) return '';
+      return `
+      <div class="card mb-6 border-2 border-[#03555E]/20">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-900">Add New Patient</h2>
+          <span class="text-xs text-gray-500">All fields are required</span>
+        </div>
+        <div class="p-6">
+          <form id="add-patient-form" onsubmit="savePatient(event)">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label for="firstName" class="text-sm font-medium block mb-1 text-gray-700">First Name</label>
+                <input id="firstName" name="firstName" type="text" placeholder="First name" class="input" required>
+              </div>
+              <div>
+                <label for="middleName" class="text-sm font-medium block mb-1 text-gray-700">Middle Name</label>
+                <input id="middleName" name="middleName" type="text" placeholder="Middle name" class="input">
+              </div>
+              <div>
+                <label for="lastName" class="text-sm font-medium block mb-1 text-gray-700">Last Name</label>
+                <input id="lastName" name="lastName" type="text" placeholder="Last name" class="input" required>
+              </div>
+              <div>
+                <label for="email" class="text-sm font-medium block mb-1 text-gray-700">Email</label>
+                <input id="email" name="email" type="email" placeholder="Email address" class="input" required>
+              </div>
+              <div>
+                <label for="phone" class="text-sm font-medium block mb-1 text-gray-700">Contact Number</label>
+                <input id="phone" name="phone" type="text" placeholder="Phone number" class="input" required>
+              </div>
+              <div>
+                <label for="birthDate" class="text-sm font-medium block mb-1 text-gray-700">Date of Birth</label>
+                <input id="birthDate" name="birthDate" type="date" class="input" required>
+              </div>
+              <div>
+                <label for="gender" class="text-sm font-medium block mb-1 text-gray-700">Gender</label>
+                <select id="gender" name="gender" class="input" required>
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-6 flex gap-3 justify-end">
+              <button
+                type="button"
+                onclick="setState({ showAddForm:false })"
+                class="border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 h-10 px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="bg-[#03555E] hover:bg-[#024449] text-white h-10 px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
+              >
+                Save Patient
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      `;
+    }
+
+    function renderPatientList(patients) {
+      let patientListContent;
+
+      if (patients.length === 0) {
+        patientListContent = `
+          <div class="text-center py-12 text-gray-500">
+            <i data-lucide="users" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+            <h3 class="text-lg font-medium mb-2">No patients found</h3>
+            <p class="text-sm mb-4">
+              ${state.searchTerm
+                ? "Try adjusting or clearing your search."
+                : "Add your first patient record to get started."}
+            </p>
+            ${!state.searchTerm ? `
+              <button
+                onclick="setState({ showAddForm: true })"
+                class="${PRIMARY_COLOR} ${HOVER_COLOR} text-white h-10 px-4 py-2 rounded-lg text-sm font-medium shadow-md flex items-center mx-auto"
+              >
+                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                Add Patient
+              </button>
+            ` : ''}
+          </div>
+        `;
+      } else {
+        patientListContent = `
+          <div class="space-y-3">
+            ${patients.map(p => `
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-xl bg-white hover:bg-gray-50 transition-colors shadow-sm">
+                <div class="flex items-start gap-3 min-w-0 mb-3 sm:mb-0">
+                  <div class="hidden sm:flex w-10 h-10 rounded-full bg-[#03555E]/10 text-[#03555E] items-center justify-center font-semibold text-sm uppercase">
+                    ${p.firstName?.[0] || '?'}${p.lastName?.[0] || ''}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-800 text-base sm:text-lg truncate">
+                      ${p.firstName} ${p.lastName}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-600 truncate">
+                      <span class="font-medium">Email:</span> ${p.email || '-'}
+                    </p>
+                    <p class="text-xs sm:text-sm text-gray-600">
+                      <span class="font-medium">Contact:</span> ${p.phone || '-'}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span class="text-xs text-gray-400">
+                    Last visit: ${p.lastVisit || 'N/A'}
+                  </span>
+                  <div class="flex gap-2">
+                    <button
+                      onclick="goToViewPage('${p.id}')"
+                      class="border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 h-9 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1"
+                    >
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                      <span>View</span>
+                    </button>
+                    <button
+                      onclick="goToEditPage('${p.id}')"
+                      class="${PRIMARY_COLOR} ${HOVER_COLOR} text-white h-9 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1 shadow-sm"
+                    >
+                      <i data-lucide="edit-2" class="w-4 h-4"></i>
+                      <span>Edit</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900">All Patients (${patients.length})</h2>
+          </div>
+          <div class="p-6">
+            ${patientListContent}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Save new patient ---
+    async function savePatient(event) {
+      event.preventDefault();
+      const form = event.target;
+
+      const firstName  = form.firstName.value.trim();
+      const middleName = form.middleName.value.trim();
+      const lastName   = form.lastName.value.trim();
+      const email      = form.email.value.trim();
+      const phone      = form.phone.value.trim();
+      const dob        = form.birthDate.value;
+      const gender     = form.gender.value;
+
+      if (!firstName || !lastName || !email || !phone || !dob || !gender) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      try {
+        // check duplicate email
+        const { data: existing, error: checkError } = await supabaseClient
+          .from('UserAccount')
+          .select('UserAccountID')
+          .eq('Email', email)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+        if (existing) {
+          showMessage('A patient with this email already exists.', 'error');
+          return;
+        }
+
+        const newPatientID = crypto.randomUUID();
+
+        const { data, error } = await supabaseClient
+          .from('UserAccount')
+          .insert([{
+            UserAccountID: newPatientID,
+            FirstName: firstName,
+            MiddleName: middleName || null,
+            LastName: lastName,
+            Email: email,
+            ContactNumber: phone,
+            BirthDate: dob,
+            Gender: gender,
+            Role: 'patient',
+            CreatedAt: new Date().toISOString(),
+          }])
+          .select();
+
+        if (error) throw error;
+
+        showMessage('Patient added successfully!', 'success');
+
+        // reset form visually
+        form.reset();
+
+        // close form + re-render (this will refetch patients)
+        setState({ showAddForm: false });
+
+      } catch (err) {
+        console.error('Error saving patient:', err);
+        showMessage('Error saving patient: ' + err.message, 'error');
+      }
+    }
+
+    // --- Main render ---
+   async function renderApp() {
+  await checkAuth();
+
+  const patients = await fetchPatients();
+
+  const normalizedSearchTerm = (state.searchTerm || '').toLowerCase().trim();
+
+  const filteredPatients = patients.filter(p => {
+    if (!normalizedSearchTerm) return true; // no search → show all
+
+    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+    const email = (p.email || '').toLowerCase();
+    const phoneDigits = (p.phone || '').replace(/[^0-9]/g, '');
+    const searchDigits = normalizedSearchTerm.replace(/[^0-9]/g, '');
+
+    return (
+      fullName.includes(normalizedSearchTerm) ||
+      email.includes(normalizedSearchTerm) ||
+      (searchDigits && phoneDigits.includes(searchDigits))
+    );
+  });
+
+  const app = document.getElementById('app-container');
+  app.innerHTML = `
+    ${renderHeader()}
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      ${renderPatientControls()}
+      ${renderAddForm()}
+      ${renderPatientList(filteredPatients)}
+    </div>
+  `;
+
+  // render lucide icons
+  if (window.renderLucideIcons) window.renderLucideIcons();
+  console.log('searchTerm:', state.searchTerm, 'filtered:', filteredPatients.length);
+
+
+  // wire events
+  setupEventListeners();
+}
+
+
+   function setupEventListeners() {
+  // toggle add form
+  const toggleButton = document.getElementById('toggle-add-form');
+  if (toggleButton) {
+    toggleButton.onclick = () => setState({ showAddForm: !state.showAddForm });
+  }
+
+  const searchInput = document.getElementById('search-input');
+  const searchButton = document.getElementById('search-button');
+
+  // Run search when clicking the button
+  if (searchButton && searchInput) {
+    searchButton.onclick = () => {
+      const term = searchInput.value.trim();
+      setState({ searchTerm: term });
+    };
+  }
+
+  // Run search when pressing Enter in the box
+  if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const term = searchInput.value.trim();
+        setState({ searchTerm: term });
+      }
+    });
+  }
+}
+
+
+
+
+    function setState(newState) {
+      state = { ...state, ...newState };
+      renderApp();
+    }
+
+    // Expose savePatient to global scope (for inline onsubmit)
+    window.savePatient = savePatient;
+    window.setState = setState;
+
+    document.addEventListener('DOMContentLoaded', renderApp);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Appointment - ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#03555E',
+            'primary-foreground': '#FFFFFF',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    .card {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    .card-header {
+      padding: 1.5rem 1.5rem 0 1.5rem;
+    }
+    .card-content {
+      padding: 1.5rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="app-root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // --- Supabase client (replace with your values) ---
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co"; // <- replace
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; // <- replace
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function checkAuth(redirect = true) {
+  const storedFirstName = localStorage.getItem('userFirstName');
+  const storedRole = localStorage.getItem('userRole');
+  const storedEmail = localStorage.getItem('userEmail');
+
+  if (storedFirstName && storedRole) {
+    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+  }
+
+  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) console.error(sessionError);
+
+  if (!session?.user) {
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  const { data: userData, error } = await supabaseClient
+    .from('UserAccount')
+    .select('*')
+    .eq('Email', session.user.email)
+    .maybeSingle();
+
+  if (error || !userData) {
+    console.error(error || "No user data found");
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  localStorage.setItem('userFirstName', userData.FirstName);
+  localStorage.setItem('userRole', userData.Role);
+  localStorage.setItem('userEmail', userData.Email);
+  localStorage.setItem('userId', session.user.id);
+
+  return userData;
+}
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return; // stops script if no user
+
+      // store userId in state so confirmBooking can use it
+      state.currentUserId = user.id;
+
+      // Optional: show welcome message
+      const welcomeEl = document.getElementById('welcomeMessage');
+      if (welcomeEl) welcomeEl.textContent = `Welcome, ${user.user_metadata?.firstName || 'Patient'}!`;
+
+      render(); // your existing render function
+    });
+
+        // ---------- REPLACE getBookedTimes WITH getBookedAppointments ----------
+async function getBookedAppointments(dentistUserAccountId, dateYmd) {
+  if (!dentistUserAccountId || !dateYmd) return [];
+
+  // start and end of day in Manila
+  const startUTC = new Date(`${dateYmd}T00:00:00+08:00`).toISOString();
+  const endUTC = new Date(`${dateYmd}T23:59:59+08:00`).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from('Appointment')
+    .select('AppointmentID, AppointmentSchedule, endschedule, ServiceType, Status')
+    .eq('DentistID', dentistUserAccountId)
+    .in('Status', [
+      'Pending',
+      'Approved',
+      'Finished',
+      'Rescheduled',
+      'RescheduleRequested',
+      'CancelRequested'
+    ])
+    .gte('AppointmentSchedule', startUTC)
+    .lte('AppointmentSchedule', endUTC);
+
+  if (error) {
+    console.error('Error fetching booked appointments:', error);
+    return [];
+  }
+
+  // normalize: each item => { appointmentId, startISO, endISO, displayStart }
+  return (data || []).map(row => {
+    const startISO = row.AppointmentSchedule;
+const startDt = new Date(startISO);
+
+// ✅ prefer real endschedule from DB
+let endDt = row.endschedule ? new Date(row.endschedule) : null;
+
+// fallback if missing/invalid
+if (!endDt || isNaN(endDt) || +endDt <= +startDt) {
+  // fallback estimate from ServiceType ids
+  const ids = (row.ServiceType || "")
+    .toString()
+    .split(',')
+    .map(x => parseInt(x))
+    .filter(Boolean);
+
+  let durationMinutes = 0;
+  if (ids.length) {
+    ids.forEach(id => {
+      const svc = getServiceById(id);
+      if (svc) durationMinutes += svc.durationMinutes || 0;
+    });
+  } else {
+    durationMinutes = 60;
+  }
+
+  endDt = new Date(startDt.getTime() + durationMinutes * 60000);
+}
+
+return {
+  appointmentId: row.AppointmentID,
+  startISO,
+  endISO: endDt.toISOString(),
+  startDt,
+  endDt,
+  status: row.Status
+};
+
+  });
+}
+// -------------------------------------------------------
+
+        function formatTimeSlot(dt) {
+        // Convert Date to "h:mm AM/PM" in PH timezone
+        const options = { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' };
+        return dt.toLocaleTimeString('en-US', options).replace(/\u202F/g, '').replace(/\s+/g,' '); 
+      }
+
+     // ---------- REPLACE renderTimeSlots ----------
+function renderTimeSlots() {
+  const { selectedDate, selectedDentist, bookedAppointments, selectedTime } = state;
+
+  const totalMinutes =
+    computeTotalDurationMinutes(state.selectedServices) +
+    (state.selectedAddOns || []).reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+
+  // Manila "today" in YYYY-MM-DD
+  const todayYmd = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  const isToday = selectedDate === todayYmd;
+
+  // current time in Manila (+ 1 hour rule)
+  const nowManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const nowPlusOneHourManila = new Date(nowManila.getTime() + 60 * 60000);
+
+  return timeSlots.map(time => {
+    let candidateStart = null;
+    let candidateEnd = null;
+
+    if (selectedDate && totalMinutes > 0) {
+      candidateStart = makeManilaDateTime(selectedDate, time);
+      candidateEnd = new Date(candidateStart.getTime() + totalMinutes * 60000);
+    }
+
+    // overlap check vs bookedAppointments (dentist-specific list)
+    let isBooked = false;
+    if (bookedAppointments && candidateStart && candidateEnd) {
+      for (const appt of bookedAppointments) {
+        if (intervalsOverlap(candidateStart, candidateEnd, appt.startDt, appt.endDt)) {
+          isBooked = true;
+          break;
+        }
+      }
+    }
+
+    // "today" lead-time rule
+    let isTooSoonToday = false;
+    if (isToday && candidateStart && candidateStart <= nowPlusOneHourManila) {
+      isTooSoonToday = true;
+    }
+
+    const disabled =
+      !(state.selectedServices && state.selectedServices.length) ||   // ✅ at least one service
+      !selectedDentist ||
+      !selectedDate ||
+      totalMinutes <= 0 ||
+      isBooked ||
+      isTooSoonToday;
+
+    const isActive = selectedTime === time;
+
+    return `
+      <button
+        class="p-3 border rounded-lg text-sm
+          ${isActive && !disabled ? "border-primary bg-primary text-white" : ""}
+          ${!isActive && !disabled ? "border-gray-200 hover:border-primary/50" : ""}
+          ${disabled ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200" : ""}"
+        ${disabled ? "disabled" : `onclick="setSelectedTime('${time}')"`}>
+        ${time}
+      </button>
+    `;
+  }).join("");
+}
+
+// -------------------------------------------------------
+
+    // --- Data ---
+// --- MAIN SERVICES (choose ONE) ---
+const mainServices = [
+  { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [101,104,105] },
+  { id: 2, name: "Tooth Extraction (Simple)", durationMinutes: 30, basePrice: 2500, allowedAddOnIds: [101,102,106] },
+  { id: 3, name: "Restoration (Composite Filling - 1 Surface)", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [101,102,107] },
+  { id: 4, name: "Root Canal (Anterior / Single Canal)", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [101,102,107] },
+  { id: 5, name: "Orthodontic Adjustment / Check-up", durationMinutes: 30, basePrice: 800, allowedAddOnIds: [101] },
+  { id: 6, name: "Whitening (In-clinic Session)", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [104,105] },
+];
+const services = mainServices.map(s => ({
+  id: s.id,
+  name: s.name,
+  durationMinutes: s.durationMinutes,
+  price: s.basePrice, // IMPORTANT: old code uses s.price
+  allowedAddOnIds: s.allowedAddOnIds || []
+}));
+// --- ADD-ONS (optional, multi-select) ---
+const addOns = [
+  { id: 101, name: "X-ray", durationMinutes: 10, price: 500, description: "Estimated imaging fee (if needed)" },
+  { id: 102, name: "Local Anesthesia", durationMinutes: 5, price: 300, description: "If required for comfort" },
+  { id: 104, name: "Fluoride Treatment", durationMinutes: 10, price: 400, description: "Protective treatment after cleaning" },
+  { id: 105, name: "Desensitizing Gel", durationMinutes: 5, price: 250, description: "For sensitivity protection" },
+  { id: 106, name: "Extraction Medication Pack", durationMinutes: 0, price: 600, description: "Optional meds pack (estimate)" },
+  { id: 107, name: "Temporary Filling / Build-up", durationMinutes: 15, price: 700, description: "If required during procedure" },
+];
+
+// Fixed downpayment (NOT %)
+const FIXED_DOWNPAYMENT = 100;
+
+// helpers
+function getMainById(id){ return mainServices.find(s=>s.id===id); }
+function getAddOnById(id){ return addOns.find(a=>a.id===id); }
+
+// ---------- INCOMPATIBILITY MAP & HELPERS ----------
+const incompatibleById = {
+  2: [6, 5, 1, 3, 4], // Tooth Extraction
+  // Odontectomy -> add later when you create it, e.g. 7: [1,3,2,6,4,5]
+  4: [6, 5, 1],      // Root Canal
+  6: [5]             // Whitening
+};
+// helper: find service by id
+function getServiceById(id) {
+  return mainServices.find(s => s.id === id) || addOns.find(a => a.id === id) || null;
+}
+function getIncompatibleServiceIds(selectedServices) {
+  const incompatibleIds = new Set();
+  const selectedIds = (selectedServices || []).map(s => s.id);
+
+  for (const svc of services) {
+    if (selectedIds.includes(svc.id)) continue;
+
+    for (const selId of selectedIds) {
+      const a = incompatibleById[selId] || [];
+      const b = incompatibleById[svc.id] || [];
+      if (a.includes(svc.id) || b.includes(selId)) {
+        incompatibleIds.add(svc.id);
+        break;
+      }
+    }
+  }
+  return incompatibleIds;
+}
+
+// compute total minutes for currently selected services
+function computeTotalDurationMinutes(selectedServices) {
+  return (selectedServices || []).reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+}
+
+// given YYYY-MM-DD and time string like "9:00 AM", return a Date in Manila timezone
+function makeManilaDateTime(dateYmd, timeStr) {
+  const [hours, minutes] = timeStringTo24h(timeStr).split(':').map(Number);
+  // create a base at midnight Manila by building with UTC then offsetting
+  const parts = dateYmd.split('-').map(Number); // [YYYY,MM,DD]
+  const year = parts[0], month = parts[1] - 1, day = parts[2];
+  // construct a Date in Manila by interpreting as local to Manila: use Date.UTC then subtract timezone difference
+  const dt = new Date(Date.UTC(year, month, day, hours - 8, minutes, 0)); // convert Manila (UTC+8) to UTC by subtracting 8 hours
+  return dt;
+}
+
+// overlap check for two intervals [s1,e1) and [s2,e2)
+function intervalsOverlap(s1, e1, s2, e2) {
+  return (s1 < e2) && (e1 > s2);
+}
+// -------------------------------------------------------
+
+    const timeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"];
+
+    // IMPORTANT: add real UserAccountID values for dentist.userAccountId
+    const dentists = [
+      { id: 1, userAccountId: "c2466c5f-4ef2-4998-8579-64f8449acc6c", name: "Daemarie Nicomedes", specialty: "General Dentistry", experience: "8 years", image: "https://via.placeholder.com/64x64?text=F" },
+      { id: 2, userAccountId: "e0d777c4-6e23-4816-8056-8132da8b5cf9", name: "Kate de Chavez", specialty: "Orthodontics", experience: "12 years", image: "https://via.placeholder.com/64x64?text=M" },
+      { id: 3, userAccountId: "abd23f38-21a9-429d-971c-65741e0bb9e7", name: "Julius Silo", specialty: "Oral Surgery", experience: "10 years", image: "https://via.placeholder.com/64x64?text=FS" },
+    ];
+
+    const iconMap = {
+      Tooth: 'fas fa-tooth',
+      Calendar: 'fas fa-calendar-alt',
+      Clock: 'fas fa-clock',
+      User: 'fas fa-user-md',
+      CreditCard: 'fas fa-credit-card',
+      ArrowLeft: 'fas fa-arrow-left',
+      ArrowRight: 'fas fa-arrow-right',
+      Check: 'fas fa-check',
+      ChevronLeft: 'fas fa-chevron-left',
+      ChevronRight: 'fas fa-chevron-right',
+    };
+
+    const steps = [
+      { number: 1, title: "Select Service", icon: iconMap.Tooth },
+      { number: 2, title: "Choose Dentist", icon: iconMap.User },
+      { number: 3, title: "Date & Time", icon: iconMap.Clock },
+      { number: 4, title: "Payment", icon: iconMap.CreditCard },
+    ];
+
+    // --- State ---
+let state = {
+  currentStep: 1,
+
+  // NEW FLOW
+  selectedServices: [],     // ✅ multiple MAIN services
+  selectedAddOns: [],       // ✅ add-ons (still multi-select)
+
+  // Scheduling
+  selectedDate: "",
+  selectedTime: "",
+  selectedDentist: null,
+  currentMonth: new Date(),
+  bookedAppointments: [],
+
+  // Calendar availability cache (for greying out full days)
+  monthAvailability: {},
+
+  // Payment
+  receiptFile: null,
+  appointmentNotes: "",
+};
+
+    function setState(newState) {
+      state = { ...state, ...newState };
+      render();
+    }
+
+    function getAllowedAddOnIdsForSelectedServices(selectedServices) {
+  if (!selectedServices?.length) return new Set();
+  // union of allowedAddOnIds across selected services
+  const union = new Set();
+  selectedServices.forEach(s => (s.allowedAddOnIds || []).forEach(id => union.add(id)));
+  return union;
+}
+    // --- Simple message UI (top) ---
+    function showMessage(text, type = "info", timeout = 3500) {
+      let msg = document.getElementById("globalMessage");
+      if (!msg) {
+        msg = document.createElement("div");
+        msg.id = "globalMessage";
+        msg.className = "fixed top-6 right-6 z-50 p-3 rounded shadow";
+        document.body.appendChild(msg);
+      }
+      msg.textContent = text;
+      msg.style.background = type === "success" ? "#16a34a" : type === "error" ? "#dc2626" : "#3b82f6";
+      msg.style.color = "#fff";
+      msg.style.display = "block";
+      clearTimeout(msg._t);
+      msg._t = setTimeout(() => { msg.style.display = "none"; }, timeout);
+    }
+
+    // --- Helpers ---
+    function timeStringTo24h(timeStr) {
+      // e.g. "9:00 AM" -> "09:00:00"
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+      return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:00`;
+    }
+
+    // --- Logic ---
+    const nextStep = () => {
+      if (state.currentStep < 4 && canProceed()) {
+        setState({ currentStep: state.currentStep + 1 });
+      }
+    };
+
+    const prevStep = () => {
+      if (state.currentStep > 1) {
+        setState({ currentStep: state.currentStep - 1 });
+      }
+    };
+
+    const canProceed = () => {
+      switch (state.currentStep) {
+        case 1: return (state.selectedServices?.length || 0) > 0;
+        case 2: return state.selectedDentist !== null;
+        case 3: return state.selectedDate && state.selectedTime;
+        case 4: return true;
+        default: return false;
+      }
+    };
+
+const goToPreviousMonth = () => {
+const newMonth = new Date(state.currentMonth);
+newMonth.setMonth(newMonth.getMonth() + 1);
+setState({ currentMonth: newMonth });
+if (state.selectedDentist) refreshMonthAvailability(newMonth);
+
+};
+
+const goToNextMonth = () => {
+const newMonth = new Date(state.currentMonth);
+newMonth.setMonth(newMonth.getMonth() + 1);
+setState({ currentMonth: newMonth });
+if (state.selectedDentist) refreshMonthAvailability(newMonth);
+};
+
+const generateCalendarDays = (currentMonth) => {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  const firstDayLocal = new Date(year, month, 1);
+  const lastDayLocal = new Date(year, month + 1, 0);
+  const daysInMonth = lastDayLocal.getDate();
+  const startingDayOfWeek = firstDayLocal.getDay(); // 0=Sun
+
+  // Manila "today" as YYYY-MM-DD string
+  const todayYmd = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+
+  const days = [];
+  for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    // Always build a real Date object for this day, then compute Manila strings from it
+    const dateObjUTC = new Date(Date.UTC(year, month, d));
+    const dateYmd = dateObjUTC.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" }); // YYYY-MM-DD
+
+    const isPast = dateYmd < todayYmd;
+    const isToday = dateYmd === todayYmd;
+
+    days.push({
+      day: d,
+      date: dateYmd,
+      isPast,
+      isToday,
+      fullDate: dateObjUTC.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "Asia/Manila",
+      }),
+    });
+  }
+
+  return days;
+};
+
+    // --- Render UI (unchanged structure) ---
+    function renderHeader() {
+      return `
+        <div class="bg-primary text-white p-4">
+          <div class="max-w-4xl mx-auto flex items-center gap-4">
+            <a href="Dashboard.html" class="text-white hover:text-gray-200">
+              <i class="${iconMap.ArrowLeft}"></i>
+            </a>
+            <div>
+              <h1 class="text-xl font-semibold">Book Appointment</h1>
+              <p class="text-primary-foreground/80">Schedule your dental visit</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProgressBar() {
+      const { currentStep } = state;
+      return `
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-4">
+            ${steps.map((step, index) => `
+              <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                  currentStep > step.number
+                    ? "bg-primary border-primary text-white"
+                    : currentStep === step.number
+                      ? "border-primary text-primary bg-white"
+                      : "border-gray-300 text-gray-400 bg-white"
+                }">
+                  ${currentStep > step.number ? `<i class="${iconMap.Check}"></i>` : `<i class="${step.icon}"></i>`}
+                </div>
+                <span class="ml-2 text-sm font-medium ${currentStep >= step.number ? "text-primary" : "text-gray-400"}">
+                  ${step.title}
+                </span>
+                ${index < steps.length - 1 ? `<div class="w-16 h-0.5 mx-4 ${currentStep > step.number ? "bg-primary" : "bg-gray-300"}"></div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+function renderStep1() {
+  const selectedServices = state.selectedServices || [];
+  const incompatibleIds = getIncompatibleServiceIds(selectedServices);
+
+  // Add-ons availability depends on selected services (union)
+  const allowedSet = getAllowedAddOnIdsForSelectedServices(selectedServices);
+  const allowedAddOns = addOns.filter(a => allowedSet.has(a.id));
+
+  // remove add-ons that are no longer allowed
+  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowedSet.has(a.id));
+  if (cleanedAddOns.length !== (state.selectedAddOns || []).length) {
+    state.selectedAddOns = cleanedAddOns; // direct update to avoid render loop
+  }
+
+  const totalMinutes = computeTotalDurationMinutes(selectedServices) +
+    cleanedAddOns.reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+
+  const totalEstimate =
+    selectedServices.reduce((sum,s)=>sum+(s.price||0),0) +
+    cleanedAddOns.reduce((sum,a)=>sum+(a.price||0),0);
+
+  const durationLabel = totalMinutes
+    ? `${Math.floor(totalMinutes/60) ? Math.floor(totalMinutes/60) + " hr " : ""}${totalMinutes%60 ? (totalMinutes%60) + " min" : ""}`.trim()
+    : "—";
+
+  return `
+        <div class="p-4 mb-4 text-sm text-amber-800 bg-amber-100 border border-amber-300 rounded-lg">
+      <div class="flex gap-2">
+        <i class="fas fa-exclamation-triangle mt-0.5"></i>
+        <div>
+          <p class="font-semibold">Service Combination Notice</p>
+          <p class="mt-1">
+            Some dental services cannot be booked together in one appointment.
+            Incompatible services will be automatically disabled once you select a service.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg border border-blue-300">
+      <span class="font-bold"><i class="fas fa-info-circle mr-2"></i>Pricing Notice:</span>
+      Prices shown are estimates only and may change after assessment and actual treatment.
+    </div>
+
+    <div class="mb-4 grid gap-2">
+      <div class="inline-flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-full text-xs text-primary font-medium w-fit">
+        <i class="fas fa-clock"></i>
+        Estimated duration: ${durationLabel}
+      </div>
+      <div class="text-sm text-gray-700">
+        <strong>Estimated Total:</strong> ₱${totalEstimate.toLocaleString()}
+        <p class="text-xs text-gray-500 mt-1">Final price may vary depending on procedures performed.</p>
+      </div>
+    </div>
+    <h3 class="font-semibold text-lg mb-3">Choose Service(s) (multiple allowed)</h3>
+    <div class="grid gap-4 md:grid-cols-2 mb-8">
+      ${services.map(svc => {
+        const isSelected = selectedServices.some(x => x.id === svc.id);
+        const isIncompatible = incompatibleIds.has(svc.id);
+
+        const disabled = !isSelected && isIncompatible;
+
+        return `
+          <div class="p-4 border rounded-lg transition-all cursor-pointer
+              ${isSelected ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"}
+              ${disabled ? "opacity-50 cursor-not-allowed" : ""}"
+              ${disabled ? "" : `onclick="toggleService(${svc.id})"`}>
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-semibold">${svc.name}</h4>
+                <p class="text-xs text-gray-500">Duration: ${svc.durationMinutes} min</p>
+                ${disabled ? `<p class="text-xs text-red-500 mt-1">Not compatible with selected service(s)</p>` : ""}
+              </div>
+              <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
+                ₱${svc.price.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+
+    <h3 class="font-semibold text-lg mb-3">Optional Add-ons</h3>
+    ${!selectedServices.length ? `
+      <p class="text-sm text-gray-500">Select at least one service to view available add-ons.</p>
+    ` : `
+      <div class="grid gap-4 md:grid-cols-2">
+        ${allowedAddOns.map(a => {
+          const isChecked = cleanedAddOns.some(x=>x.id===a.id);
+          return `
+            <div class="p-4 border rounded-lg ${isChecked ? "border-primary bg-primary/5" : "border-gray-200"}">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleAddOn(${a.id})" class="mt-1">
+                <div class="flex-1">
+                  <div class="flex justify-between">
+                    <span class="font-semibold">${a.name}</span>
+                    <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
+                      ₱${a.price.toLocaleString()}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-500">+${a.durationMinutes} min • ${a.description || ""}</p>
+                </div>
+              </label>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `}
+  `;
+}
+
+function renderStep2() {
+  const { currentMonth, selectedDate } = state;
+  const calendarDays = generateCalendarDays(currentMonth);
+  const monthYear = currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const selectedDayDetails = calendarDays.find(d => d && d.date === selectedDate);
+
+  return `
+    <div class="space-y-6">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-semibold text-lg">Select Date</h3>
+          <div class="flex items-center gap-4">
+            <button class="p-2 hover:bg-gray-100 rounded-lg" onclick="goToPreviousMonth()">
+              <i class="${iconMap.ChevronLeft}"></i>
+            </button>
+            <span class="font-semibold text-lg min-w-[200px] text-center">${monthYear}</span>
+            <button class="p-2 hover:bg-gray-100 rounded-lg" onclick="goToNextMonth()">
+              <i class="${iconMap.ChevronRight}"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border rounded-lg p-4">
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+              .map(day => `<div class="text-center text-sm font-semibold text-gray-600 p-3">${day}</div>`)
+              .join("")}
+          </div>
+
+          <div class="grid grid-cols-7 gap-1">
+            ${calendarDays.map(day => {
+              if (!day) {
+                return `<div class="aspect-square"><div></div></div>`;
+              }
+
+              // ✅ NEW: gray out day if fully booked (dentist-dependent)
+              // monthAvailability[YYYY-MM-DD] = { anyAvailable: true/false }
+            const fullyBooked =
+              !!state.selectedDentist &&
+              !!state.monthAvailability &&
+              !!state.monthAvailability[day.date] &&
+              state.monthAvailability[day.date].anyAvailable === false;
+
+              const disabled = day.isPast || fullyBooked;
+
+              const btnClass = disabled
+                ? "text-gray-300 cursor-not-allowed"
+                : (selectedDate === day.date
+                    ? "bg-primary text-white"
+                    : day.isToday
+                      ? "bg-primary/10 text-primary border border-primary"
+                      : "hover:bg-primary/5 text-gray-700");
+
+              // Optional: add a subtle ring for fully booked dates
+              const extraClass = fullyBooked ? "bg-gray-100 border border-gray-200" : "";
+
+              return `
+                <div class="aspect-square">
+                  <button
+                    class="w-full h-full flex items-center justify-center text-sm font-medium rounded-lg ${btnClass}"
+                    ${disabled ? "disabled" : `onclick="setSelectedDate('${day.date}')"`}
+                    title="${fullyBooked ? "Fully booked for selected dentist" : ""}"
+                  >
+                    ${day.day}
+                  </button>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        ${selectedDate ? `
+          <p class="mt-4 text-sm text-primary font-medium bg-primary/5 p-3 rounded-lg">
+            Selected: ${selectedDayDetails?.fullDate || selectedDate}
+          </p>
+        ` : ""}
+
+        ${
+          state.selectedDentist ? `
+            <p class="mt-2 text-xs text-gray-500">
+              Gray dates mean <strong>fully booked</strong> for the selected dentist.
+            </p>
+          ` : `
+            <p class="mt-2 text-xs text-gray-500">
+              Select a dentist to check availability accurately.
+            </p>
+          `
+        }
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-4">Select Time</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          ${renderTimeSlots()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+    function renderStep3() {
+      const { selectedDentist } = state;
+      return `
+        <div class="grid gap-4 max-w-2xl mx-auto">
+          ${dentists.map(dentist => `
+            <div class="p-4 border rounded-lg cursor-pointer transition-all ${
+              selectedDentist?.id === dentist.id ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"
+            }" onclick="setSelectedDentist(${dentist.id})">
+              <div class="flex items-center gap-4">
+                <img src="${dentist.image}" alt="${dentist.name}" class="w-16 h-16 rounded-full object-cover"/>
+                <div class="flex-1">
+                  <h3 class="font-semibold text-lg">${dentist.name}</h3>
+                  <p class="text-primary font-medium">${dentist.specialty}</p>
+                  <p class="text-gray-600 text-sm">${dentist.experience} experience</p>
+                </div>
+                ${selectedDentist?.id === dentist.id ? `<i class="${iconMap.Check} text-primary"></i>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+   function renderStep4() {
+  const { selectedServices, selectedDate, selectedTime, selectedDentist, currentMonth } = state;
+  
+const addSel = state.selectedAddOns || [];
+const totalServicePrice = (selectedServices || []).reduce((sum,s)=>sum+(s.price||0),0);
+const addOnPrice = addSel.reduce((sum,a)=>sum+(a.price||0),0);
+const estimatedTotal = totalServicePrice + addOnPrice;
+const downpaymentAmount = FIXED_DOWNPAYMENT;
+const remainingBalance = Math.max(estimatedTotal - downpaymentAmount, 0);
+
+const main = state.selectedMainService;
+const addons = state.selectedAddOns || [];
+  const calendarDays = generateCalendarDays(currentMonth);
+  const selectedDayDetails = calendarDays.find(d => d && d.date === selectedDate);
+
+  // Duration
+  const totalDurationMinutes = computeTotalDurationMinutes(selectedServices);
+  const durationHours = Math.floor(totalDurationMinutes / 60);
+  const durationMinutes = totalDurationMinutes % 60;
+  const durationLabel = totalDurationMinutes
+    ? `${durationHours ? durationHours + " hr " : ""}${durationMinutes ? durationMinutes + " min" : ""}`.trim()
+    : "N/A";
+
+  // Downpayment & remaining
+
+  return `
+    <div class="max-w-md mx-auto text-center space-y-6">
+      <!-- Summary card -->
+      <div class="bg-gray-50 p-6 rounded-lg">
+        <h3 class="font-semibold text-lg mb-4">Appointment Summary</h3>
+        <div class="space-y-2 text-left">
+          <div class="flex justify-between">
+            <span>Services:</span>
+            <div class="text-right">
+              ${selectedServices.map(s => `<div>${s.name}</div>`).join('')}
+              ${addSel.length ? `<div class="mt-2 text-xs text-gray-500">Add-ons:</div>` : ""}
+              ${addSel.map(a => `<div>Add-on: ${a.name}</div>`).join('')}
+            </div>
+          </div>
+          <div class="flex justify-between">
+            <span>Estimated Duration:</span>
+            <span>${durationLabel}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Date:</span>
+            <span>${selectedDayDetails?.fullDate || 'N/A'}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Time:</span>
+            <span>${selectedTime || 'N/A'}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Dentist:</span>
+            <span>${selectedDentist?.name || 'N/A'}</span>
+          </div>
+          <div class="flex justify-between">
+          <span>Estimated Total:</span>
+          <span>₱${estimatedTotal.toLocaleString()}</span>
+          </div>
+          <hr class="my-3 border-gray-300"/>
+          <div class="flex justify-between">
+            <span class="font-semibold">Downpayment (Fixed):</span>
+            <span class="font-semibold">₱${downpaymentAmount.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment + upload -->
+      <div class="space-y-4 text-left">
+        <div class="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg">
+          <h4 class="font-semibold mb-2">Downpayment via GCash</h4>
+          <p class="text-sm text-gray-600 mb-3">
+            Please send a ₱${downpaymentAmount.toLocaleString()} downpayment using the GCash QR below.
+            Then upload a clear screenshot or photo of the payment receipt.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+            <div class="border rounded-lg p-2 bg-white">
+              <!-- TODO: replace src with your real QR image URL -->
+              <img
+                src="/Image/qr.jpg"
+                alt="GCash QR"
+                class="w-40 h-40 object-contain"
+              />
+            </div>
+            <div class="text-sm text-gray-600">
+              <p><span class="font-semibold">Account Name:</span> Happy Tooth Dae Dental Clinic</p>
+              <p><span class="font-semibold">Amount:</span> ₱${downpaymentAmount.toLocaleString()}</p>
+              <p class="mt-2">After paying, upload the receipt below.</p>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Upload GCash Receipt</label>
+            <input id="receiptInput" type="file" accept="image/*" onchange="onReceiptChange(event)" />
+          </div>
+
+          <div id="receiptPreview" class="mb-4"></div>
+
+          <label class="block text-sm font-medium mb-2">Notes (optional)</label>
+          <textarea id="appointmentNotes" rows="3" class="w-full border rounded p-2" placeholder="Optional notes..."></textarea>
+        </div>
+
+        <!-- Policies -->
+        <div class="bg-gray-50 border rounded-lg p-4">
+          <h4 class="font-semibold mb-2">Booking & Cancellation Policy</h4>
+          <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>A fixed downpayment of ₱${FIXED_DOWNPAYMENT.toLocaleString()} is required to confirm your appointment.</li>
+          <li>Displayed prices are estimates only; final charges may vary after treatment.</li>
+            <li>Free reschedule at least 12 hours before your appointment time.</li>
+            <li>Cancellations within 12 hours or no-shows may result in forfeited downpayment.</li>
+            <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues).</li>
+          </ul>
+          <label class="mt-3 flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" id="policyAgree" class="h-4 w-4">
+            <span>I have read and agree to the clinic policies.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Confirm button -->
+      <button
+        onclick="confirmBooking()"
+        id="confirmBookingBtn"
+        class="w-full px-4 py-3 text-lg font-medium rounded-md text-white bg-primary hover:bg-primary/90">
+        Confirm Payment & Book Appointment
+      </button>
+    </div>
+  `;
+}
+
+
+
+    function renderStepContent() {
+      switch (state.currentStep) {
+        case 1: return renderStep1(); // Service
+        case 2: return renderStep3(); // Dentist
+        case 3: return renderStep2(); // Date & Time
+        case 4: return renderStep4(); // Payment
+      }
+    }
+
+function isAnySlotAvailableForDateDentistOnly(dateYmd, bookedAppointments) {
+  if (!state.selectedDentist) return true;
+
+  // ✅ bookedAppointments already has startDt/endDt from getBookedAppointments()
+  const intervals = (bookedAppointments || [])
+    .filter(a => a.startDt && a.endDt && !isNaN(a.startDt) && !isNaN(a.endDt))
+    .map(a => ({ start: a.startDt, end: a.endDt }));
+
+  const nowManila = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
+  const nowPlus1h = new Date(nowManila.getTime() + 60 * 60000);
+  const todayYmd = nowManila.toLocaleDateString("en-CA");
+  const isToday = dateYmd === todayYmd;
+
+  // For each slot, check if its START TIME is free (not inside any booked interval)
+  for (const label of timeSlots) {
+    const slotStart = makeManilaDateTime(dateYmd, label);
+
+    // block "too soon" slots for today
+    if (isToday && slotStart <= nowPlus1h) continue;
+
+    const startIsBlocked = intervals.some(b =>
+      slotStart >= b.start && slotStart < b.end
+    );
+
+    if (!startIsBlocked) return true; // at least one free slot start time
+  }
+
+  return false; // every slot start is blocked
+}
+
+    function renderNavigationButtons() {
+  const { currentStep } = state;
+  const canProceedStatus = canProceed();
+
+  const prevButton = `
+    <button onclick="prevStep()" ${currentStep === 1 ? 'disabled' : ''} class="px-4 py-2 border rounded-md ${currentStep===1?"opacity-50":""}">
+      <i class="${iconMap.ArrowLeft}"></i> Previous
+    </button>`;
+
+  let nextSection = '';
+  if (currentStep < 4) {
+    nextSection = `
+      <button onclick="nextStep()" ${!canProceedStatus ? 'disabled' : ''} class="px-4 py-2 text-white bg-primary rounded-md ${!canProceedStatus?"opacity-50":""}">
+        Next <i class="${iconMap.ArrowRight}"></i>
+      </button>`;
+  } else {
+    // Step 4: Confirm button is inside Step 4 content, so no extra button here
+    nextSection = `<div></div>`;
+  }
+
+  return `<div class="flex justify-between mt-8">${prevButton}${nextSection}</div>`;
+}
+
+
+    function render() {
+      const appRoot = document.getElementById("app-root");
+      appRoot.innerHTML = `
+        ${renderHeader()}
+        <div class="max-w-4xl mx-auto px-4 py-8">
+          <div class="card">
+            <div class="card-header">${renderProgressBar()}</div>
+            <div class="card-content">${renderStepContent()}</div>
+            <div class="px-6 pb-6">${renderNavigationButtons()}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPaymentSection(downpayment) {
+  return `
+    <div class="space-y-4 text-left">
+      <div class="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg">
+        <h4 class="font-semibold mb-2">Downpayment via GCash</h4>
+        <p class="text-sm text-gray-600 mb-3">
+          Please send a ₱${downpayment.toLocaleString()} downpayment using the GCash QR below.
+          Then upload a clear screenshot or photo of the payment receipt.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+          <div class="border rounded-lg p-2 bg-white">
+            <!-- TODO: replace src with your real QR image URL -->
+            <img
+              src="/Image/qr.jpg"
+              alt="GCash QR"
+              class="w-40 h-40 object-contain"
+            />
+          </div>
+          <div class="text-sm text-gray-600">
+            <p><span class="font-semibold">Account Name:</span> Your Clinic Name</p>
+            <p><span class="font-semibold">Amount:</span> ₱${downpayment.toLocaleString()}</p>
+            <p class="mt-2">After paying, upload the receipt below.</p>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1">Upload GCash Receipt</label>
+          <input id="receiptInput" type="file" accept="image/*" onchange="onReceiptChange(event)" />
+        </div>
+
+        <div id="receiptPreview" class="mb-4"></div>
+
+        <label class="block text-sm font-medium mb-2">Notes (optional)</label>
+        <textarea id="appointmentNotes" rows="3" class="w-full border rounded p-2" placeholder="Optional notes..."></textarea>
+      </div>
+
+      <div class="bg-gray-50 border rounded-lg p-4">
+        <h4 class="font-semibold mb-2">Booking & Cancellation Policy</h4>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>A fixed downpayment of ₱${FIXED_DOWNPAYMENT.toLocaleString()} is required to confirm your appointment.</li>
+          <li>Downpayment is applied to your total bill on the day of your visit.</li>
+          <li>Free reschedule at least 12 hours before your appointment time.</li>
+          <li>Cancellations within 12 hours or no-shows may result in forfeited downpayment.</li>
+          <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues).</li>
+        </ul>
+        <label class="mt-3 flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" id="policyAgree" class="h-4 w-4">
+          <span>I have read and agree to the clinic policies.</span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+function isAnySlotAvailableForDate(dateYmd, bookedAppointments) {
+  const totalMinutes =
+  computeTotalDurationMinutes(state.selectedServices) +
+  (state.selectedAddOns || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+  if (!state.selectedDentist || !dateYmd || !totalMinutes) return true; // don't block calendar yet
+
+  // today lead time handling
+  const todayYmd = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  const isToday = dateYmd === todayYmd;
+  const nowManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const nowPlusOneHourManila = new Date(nowManila.getTime() + 60 * 60000);
+
+  for (const time of timeSlots) {
+    const start = makeManilaDateTime(dateYmd, time);
+    const end = new Date(start.getTime() + totalMinutes * 60000);
+
+    if (isToday && start <= nowPlusOneHourManila) continue;
+
+    let booked = false;
+    for (const appt of (bookedAppointments || [])) {
+      if (intervalsOverlap(start, end, appt.startDt, appt.endDt)) {
+        booked = true;
+        break;
+      }
+    }
+    if (!booked) return true;
+  }
+  return false;
+}
+
+async function refreshMonthAvailability(monthDate = state.currentMonth) {
+  if (!state.selectedDentist) {
+    setState({ monthAvailability: {} });
+    return;
+  }
+
+  const y = monthDate.getFullYear();
+  const m = monthDate.getMonth();
+
+  // Month start/end in Manila calendar
+  const monthStartUTC = new Date(Date.UTC(y, m, 1, 0, 0, 0));
+  const monthEndUTC = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
+
+  // ✅ One query for the whole month
+  const { data, error } = await supabaseClient
+    .from("Appointment")
+    .select("AppointmentID, AppointmentSchedule, endschedule, Status")
+    .eq("DentistID", state.selectedDentist.userAccountId)
+    .in("Status", [
+      "Pending",
+      "Approved",
+      "Finished",
+      "Rescheduled",
+      "RescheduleRequested",
+      "CancelRequested"
+    ])
+    .gte("AppointmentSchedule", monthStartUTC.toISOString())
+    .lte("AppointmentSchedule", monthEndUTC.toISOString());
+
+  if (error) {
+    console.error("refreshMonthAvailability error:", error);
+    setState({ monthAvailability: {} });
+    return;
+  }
+
+  // Group appointments by Manila date YYYY-MM-DD
+  const grouped = {};
+  (data || []).forEach(row => {
+    const startDt = new Date(row.AppointmentSchedule);
+    let endDt = row.endschedule ? new Date(row.endschedule) : null;
+    if (!endDt || isNaN(endDt) || +endDt <= +startDt) {
+      endDt = new Date(startDt.getTime() + 60 * 60000);
+    }
+
+    const dateYmd = startDt.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+    if (!grouped[dateYmd]) grouped[dateYmd] = [];
+    grouped[dateYmd].push({ startDt, endDt });
+  });
+
+  const nowManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const nowPlus1h = new Date(nowManila.getTime() + 60 * 60000);
+  const todayYmd = nowManila.toLocaleDateString("en-CA");
+
+  // Build availability map for all days in month
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const availMap = {};
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObjUTC = new Date(Date.UTC(y, m, day));
+    const dateYmd = dateObjUTC.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+
+    const intervals = grouped[dateYmd] || [];
+    const isToday = dateYmd === todayYmd;
+
+    let anyAvailable = false;
+
+    for (const label of timeSlots) {
+      const slotStart = makeManilaDateTime(dateYmd, label);
+
+      if (isToday && slotStart <= nowPlus1h) continue;
+
+      const blocked = intervals.some(b => slotStart >= b.startDt && slotStart < b.endDt);
+      if (!blocked) {
+        anyAvailable = true;
+        break;
+      }
+    }
+
+    availMap[dateYmd] = { anyAvailable };
+  }
+
+  setState({ monthAvailability: availMap });
+}
+
+
+// ---------- REPLACE toggleService (UPDATED for better state management) ----------
+window.toggleService = (serviceId) => {
+  const fullService = services.find(s => s.id === serviceId);
+  if (!fullService) return;
+
+  const selected = state.selectedServices || [];
+  const isSelected = selected.some(s => s.id === fullService.id);
+
+  let updatedServices;
+
+  if (isSelected) {
+    // remove
+    updatedServices = selected.filter(s => s.id !== fullService.id);
+  } else {
+    // add with compatibility check (ID-based)
+    for (const sel of selected) {
+      const a = incompatibleById[sel.id] || [];
+      const b = incompatibleById[fullService.id] || [];
+      if (a.includes(fullService.id) || b.includes(sel.id)) {
+        showMessage(`${fullService.name} cannot be booked with ${sel.name}.`, "error", 4000);
+        return;
+      }
+    }
+    updatedServices = [...selected, fullService];
+  }
+
+  // ✅ clean add-ons that are no longer allowed after service change
+  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
+  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
+
+  // ✅ update state ONCE (reset time because duration changed)
+  setState({
+    selectedServices: updatedServices,
+    selectedAddOns: cleanedAddOns,
+    selectedTime: ""
+  });
+
+  // ✅ refresh dentist-specific bookings if dentist+date already chosen
+  if (state.selectedDentist && state.selectedDate) {
+    getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
+      .then(booked => setState({ bookedAppointments: booked }));
+  }
+};
+
+// -------------------------------------------------------
+    window.setSelectedDate = async (date) => {
+  setState({ selectedDate: date, selectedTime: "" });
+
+  // only fetch if dentist selected
+  if (state.selectedDentist) {
+    const bookedAppointments = await getBookedAppointments(state.selectedDentist.userAccountId, date);
+    setState({ bookedAppointments });
+  } else {
+    setState({ bookedAppointments: [] });
+  }
+};
+
+// helper to check overlap
+function intervalsOverlap(startA, endA, startB, endB) {
+  return startA < endB && endA > startB;
+}
+
+// -------------------------------------------------------
+
+window.setSelectedDentist = async (dentistId) => {
+  const fullDentist = dentists.find(d => d.id === dentistId);
+  if (!fullDentist) return;
+
+  setState({ selectedDentist: fullDentist, selectedTime: "" });
+
+  if (state.selectedDate) {
+    const bookedAppointments = await getBookedAppointments(fullDentist.userAccountId, state.selectedDate);
+    setState({ bookedAppointments });
+  } else {
+    setState({ bookedAppointments: [] });
+  }
+
+  await refreshMonthAvailability();
+};
+
+    // handle receipt file change
+    window.onReceiptChange = (event) => {
+  const file = event.target.files[0];
+  state.receiptFile = file || null;
+
+  const preview = document.getElementById("receiptPreview");
+  if (!file) {
+    preview.innerHTML = "";
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  preview.innerHTML = `<img src="${url}" alt="Receipt preview" class="w-40 h-40 object-cover rounded-lg" />`;
+};
+
+window.toggleAddOn = (addOnId) => {
+  if (!state.selectedServices || !state.selectedServices.length) {
+    showMessage("Please select at least one service first.", "error");
+    return;
+  }
+
+  const allowed = getAllowedAddOnIdsForSelectedServices(state.selectedServices);
+  if (!allowed.has(addOnId)) {
+    showMessage("This add-on is not available for your selected service(s).", "error");
+    return;
+  }
+
+  const addon = addOns.find(a => a.id === addOnId);
+  if (!addon) return;
+
+  const exists = (state.selectedAddOns || []).some(a => a.id === addOnId);
+  const updated = exists
+    ? state.selectedAddOns.filter(a => a.id !== addOnId)
+    : [...state.selectedAddOns, addon];
+
+  setState({ selectedAddOns: updated, selectedTime: "" }); // reset time because duration changed
+};
+
+
+window.setSelectedTime = (time) => {
+  if (!state.selectedDentist || !state.selectedDate) {
+    showMessage("Please select a dentist and date first.", "error");
+    return;
+  }
+
+  if (!state.selectedServices || !state.selectedServices.length) {
+    showMessage("Please select at least one service first.", "error");
+    return;
+  }
+
+  const totalMinutes =
+    computeTotalDurationMinutes(state.selectedServices) +
+    (state.selectedAddOns || []).reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+
+  if (!totalMinutes || totalMinutes <= 0) {
+    showMessage("Invalid service duration. Please reselect your services.", "error");
+    return;
+  }
+
+  const candidateStart = makeManilaDateTime(state.selectedDate, time);
+  const candidateEnd = new Date(candidateStart.getTime() + totalMinutes * 60000);
+
+  for (const appt of (state.bookedAppointments || [])) {
+    if (intervalsOverlap(candidateStart, candidateEnd, appt.startDt, appt.endDt)) {
+      showMessage("Selected time conflicts with an existing appointment. Please choose another time.", "error");
+      return;
+    }
+  }
+
+  setState({ selectedTime: time });
+};
+
+function generateTransactionId() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const h = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `TXN-${y}${m}${d}-${h}${min}${s}-${rand}`;
+}
+
+// Open Modal
+function openTransactionModal(data) {
+  document.getElementById("modalTransactionId").textContent = data.transactionId;
+  document.getElementById("modalDate").textContent = data.date;
+  document.getElementById("modalTime").textContent = data.time;
+  document.getElementById("modalDentist").textContent = data.dentist;
+
+  document.getElementById("modalServices").innerHTML =
+    data.services.map(s => `<div>• ${s}</div>`).join('');
+
+  // ✅ NEW → Update downpayment amount
+  if (document.getElementById("modalDownpayment")) {
+    document.getElementById("modalDownpayment").textContent =
+      (data.downpayment ?? 0).toLocaleString();
+  }
+
+  document.getElementById("transactionModal").classList.remove("hidden");
+  document.getElementById("transactionModal").classList.add("flex");
+}
+
+// Close Modal
+function closeTransactionModal() {
+  const modal = document.getElementById("transactionModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+function computeEstimatedDurationMinutes(mainSvc, addOnList) {
+  const main = mainSvc ? (mainSvc.durationMinutes || 0) : 0;
+  const add = (addOnList || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+  return main + add;
+}
+
+function computeEstimatedTotal(mainSvc, addOnList) {
+  const main = mainSvc ? (mainSvc.basePrice || 0) : 0;
+  const add = (addOnList || []).reduce((sum,a)=>sum+(a.price||0),0);
+  return main + add;
+}
+
+    // --- Booking handler (upload + insert) ---
+window.confirmBooking = async () => {
+  // 🔹 1. Ensure user is logged in
+  let userId = localStorage.getItem('userId');
+
+  if (!userId) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user?.id) userId = session.user.id;
+  }
+
+  if (!userId) {
+    showMessage("You must be logged in to book an appointment.", "error");
+    return;
+  }
+
+  // 🔹 2. Policy checkbox validation
+  const agreeEl = document.getElementById("policyAgree");
+  if (!agreeEl || !agreeEl.checked) {
+    showMessage("Please read and agree to the clinic policies before confirming your booking.", "error");
+    return;
+  }
+
+  // 🔹 3. Receipt upload validation
+  const receiptInput = document.getElementById("receiptInput");
+  const hasFileInState = !!state.receiptFile;
+  const hasFileInDom = receiptInput && receiptInput.files && receiptInput.files.length > 0;
+
+  if (!hasFileInState && !hasFileInDom) {
+    showMessage("Please upload a photo or screenshot of your GCash payment receipt.", "error");
+    return;
+  }
+
+  // 🔹 4. Basic booking validations (NEW FLOW)
+if (!state.selectedServices || !state.selectedServices.length) {
+  showMessage("Please select at least one service.", "error");
+  return;
+}
+  if (!state.selectedDentist) {
+    showMessage("Please select a dentist.", "error");
+    return;
+  }
+  if (!state.selectedDate || !state.selectedTime) {
+    showMessage("Please select date and time.", "error");
+    return;
+  }
+
+  // 🔹 5. Compute ESTIMATED totals + FIXED downpayment
+const selectedServices = state.selectedServices || [];
+const addons = state.selectedAddOns || [];
+
+const estimatedTotalAmount =
+  selectedServices.reduce((sum, s) => sum + (s.price || 0), 0) +
+  addons.reduce((sum, a) => sum + (a.price || 0), 0);
+
+const downpaymentAmount = FIXED_DOWNPAYMENT;
+
+const totalDurationMinutes =
+  selectedServices.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) +
+  addons.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+
+
+  const confirmBtn = document.getElementById('confirmBookingBtn') || document.getElementById('confirmBookingBottom');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    showMessage("Uploading receipt and submitting appointment...", "info", 5000);
+
+    // 🔹 6. Upload receipt
+    let receiptPath = null;
+    if (state.receiptFile) {
+      const file = state.receiptFile;
+      const timestamp = Date.now();
+      const cleanName = file.name.replace(/\s+/g, '_');
+      const path = `receipts/${userId}/${timestamp}_${cleanName}`;
+
+      const { data: uploadData, error: uploadError } = await supabaseClient.storage
+        .from('receipts')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) {
+        console.error(uploadError);
+        showMessage("Receipt upload failed: " + uploadError.message, "error");
+        if (confirmBtn) confirmBtn.disabled = false;
+        return;
+      }
+
+      receiptPath = uploadData.path;
+    }
+
+    // 🔹 7. Build start datetime (Manila -> UTC ISO)
+    const [hours, minutes] = timeStringTo24h(state.selectedTime).split(':').map(Number);
+    const appointmentStart = new Date(`${state.selectedDate}T00:00:00+08:00`);
+    appointmentStart.setHours(hours, minutes, 0, 0);
+
+    const startIsoUTC = appointmentStart.toISOString();
+
+    // ✅ Build endSchedule based on estimated duration
+    const appointmentEnd = new Date(appointmentStart.getTime() + totalDurationMinutes * 60000);
+    const endIsoUTC = appointmentEnd.toISOString();
+
+    // 🔹 8. Build ServiceType CSV (main + addons) and readable Service string
+    const selectedIds = [
+      ...(state.selectedServices || []).map(s => s.id),
+      ...(state.selectedAddOns || []).map(a => a.id)
+    ].filter(Boolean);
+
+    const serviceType = selectedIds.join(',');
+
+    const serviceNames = [
+      ...(state.selectedServices || []).map(s => s.name),
+      ...(state.selectedAddOns || []).map(a => `Add-on: ${a.name}`)
+    ].join(', ');
+
+    // 🔹 9. Dentist mapping
+    const dentistRecord = dentists.find(d => d.id === state.selectedDentist.id);
+    const dentistUserAccountId = dentistRecord?.userAccountId || null;
+
+    if (!dentistRecord) {
+      showMessage("Invalid dentist selected.", "error");
+      if (confirmBtn) confirmBtn.disabled = false;
+      return;
+    }
+
+    const transactionId = generateTransactionId();
+
+    // 🔹 10. Insert Appointment (Estimated Total only)
+    const { data: insertedAppointments, error: insertError } = await supabaseClient
+      .from('Appointment')
+      .insert([{
+        UserAccountID: userId,
+        DentistID: dentistUserAccountId,
+        ServiceType: serviceType,
+        Service: serviceNames,
+        AppointmentSchedule: startIsoUTC,
+        endschedule: endIsoUTC,
+        Status: 'Pending',
+        ReceiptImage: receiptPath,
+        AppointmentNotes: document.getElementById('appointmentNotes')?.value || '',
+        TransactionID: transactionId,
+        DownpaymentAmount: downpaymentAmount,
+        TotalAmount: estimatedTotalAmount, // ✅ estimated only
+        PaymentState: 'DOWNPAYMENT PENDING REVIEW'
+      }])
+      .select();
+
+    if (insertError) {
+      console.error(insertError);
+      showMessage("Failed to save appointment: " + insertError.message, "error");
+      if (confirmBtn) confirmBtn.disabled = false;
+      return;
+    }
+
+    const appointmentId = insertedAppointments?.[0]?.AppointmentID;
+
+    // 🔹 10b. Insert Billing row for downpayment
+    if (appointmentId) {
+      const { error: billingError } = await supabaseClient
+        .from('Billing')
+        .insert([{
+          UserAccountID: userId,
+          AppointmentID: appointmentId,
+          Amount: downpaymentAmount,
+          PaymentType: 'DOWNPAYMENT',
+          PaymentMethod: 'GCASH',
+          PaymentStatus: 'PENDING',
+          DateIssued: new Date().toISOString()
+        }]);
+
+      if (billingError) {
+        console.error("Failed to insert billing record:", billingError);
+        showMessage("Appointment saved, but failed to record billing. Please contact the clinic.", "error");
+      }
+    }
+
+    // 🔹 11. Notify secretary
+    try {
+      const secretaryUserId = "57199cb6-de16-42ae-a693-a919a8a08c85";
+      const message = `New appointment requested by ${localStorage.getItem('userFirstName') || 'a patient'}.`;
+
+      if (appointmentId) {
+        await supabaseClient.from('Notifications').insert([{
+          AppointmentID: appointmentId,
+          UserAccountID: secretaryUserId,
+          Message: message,
+          DateSent: new Date().toISOString(),
+          Status: 'Unread',
+          NotificationNotes: ''
+        }]);
+      }
+    } catch (notifError) {
+      console.error("Failed to send notification to secretary:", notifError);
+    }
+
+    // 🔹 12. Success UI & reset
+    showMessage("Appointment request sent successfully! Secretary will review the downpayment.", "success", 5000);
+
+    openTransactionModal({
+      transactionId,
+      date: state.selectedDate,
+      time: state.selectedTime,
+      dentist: state.selectedDentist?.name,
+      services: [
+  ...selectedServices.map(s => s.name),
+  ...addons.map(a => `Add-on: ${a.name}`)
+],
+      downpayment: downpaymentAmount
+    });
+
+setState({
+  currentStep: 1,
+  selectedServices: [],
+  selectedAddOns: [],
+  selectedDate: "",
+  selectedTime: "",
+  selectedDentist: null,
+  receiptFile: null,
+  appointmentNotes: ""
+});
+
+
+    const preview = document.getElementById('receiptPreview');
+    if (preview) preview.innerHTML = '';
+
+    const notes = document.getElementById('appointmentNotes');
+    if (notes) notes.value = '';
+
+    if (confirmBtn) confirmBtn.disabled = false;
+
+  } catch (err) {
+    console.error(err);
+    showMessage("Unexpected error occurred while booking.", "error");
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+};
+
+    // Initial render
+    render();
+  </script>
+
+<div id="transactionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
+    <h2 class="text-xl font-bold mb-4 text-center">Booking Successful</h2>
+
+    <div class="space-y-2 text-sm">
+      <div><strong>Transaction Reference:</strong> <span id="modalTransactionId"></span></div>
+      <div><strong>Date:</strong> <span id="modalDate"></span></div>
+      <div><strong>Time:</strong> <span id="modalTime"></span></div>
+      <div><strong>Dentist:</strong> <span id="modalDentist"></span></div>
+      <div><strong>Services:</strong>
+        <div id="modalServices" class="ml-4"></div>
+      </div>
+      <div>
+      <strong>Downpayment:</strong>
+      ₱<span id="modalDownpayment"></span>
+    </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button onclick="closeTransactionModal()" class="px-4 py-2 rounded bg-gray-300">Close</button>
+      <a href="/Patient/MyBooking.html" class="px-4 py-2 rounded bg-primary text-white">View Appointments</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

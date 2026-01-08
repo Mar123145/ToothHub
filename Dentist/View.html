@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Record Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-color: #03555E; 
+            --hover-color: #024449; 
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh; 
+            background-color: #f3f4f6; 
+        }
+        .card { 
+            background-color: white; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06); 
+            border: 1px solid #e5e7eb; 
+            transition: all 0.2s ease-in-out;
+        }
+        .card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.06);
+        }
+        .input-disabled:disabled { 
+            background-color: #f3f4f6 !important;
+            cursor: default; 
+            color: #4b5563;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.15rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+    
+/* --- Tooth Chart (same design as TreatmentRecords) --- */
+.tooth-chart-container {
+    display: grid;
+    grid-template-columns: repeat(17, minmax(0, 1fr)); /* 8 + 1 (gap) + 8 */
+    gap: 0.25rem;
+}
+.tooth-chart-container > div:nth-child(9) {
+    grid-column: 9 / span 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #d1d5db; /* gray-300 */
+}
+.quadrant-grid { display: contents; }
+
+.tooth-shape {
+    border-radius: 60% 60% 15% 15% / 60% 60% 15% 15%;
+}
+.upper-arch .tooth-shape {
+    transform: scaleY(-1);
+    transform-origin: center center;
+}
+.tooth-button-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+.upper-arch .tooth-button-inner {
+    transform: scaleY(-1);
+}
+
+    </style>
+</head>
+<body>
+    <div id="app-container" class="min-h-screen flex flex-col">
+        <!-- Initial loading state -->
+        <div id="loading-spinner" class="flex-grow flex items-center justify-center p-8 text-gray-500">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#03555E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading patient data...
+        </div>
+    </div>
+
+    <!-- Toast / message box -->
+    <div id="messageBox"
+        class="hidden fixed bottom-6 right-6 p-4 rounded text-white font-medium shadow-lg z-50 transition-all duration-300">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.259.0/dist/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- Utils ---
+    function formatDateForInput(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr; 
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getUserIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('userId');
+    }
+
+    function computeAge(birthDateStr) {
+        if (!birthDateStr) return null;
+        const dob = new Date(birthDateStr);
+        if (isNaN(dob.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    // --- State ---
+   let state = {
+    isEditing: false,
+    patient: null,
+    medicalRecord: {},
+    appointments: []   // 🔹 appointment history for this patient
+};
+
+
+    function setState(newState) {
+        state = { ...state, ...newState };
+        renderApp();
+    }
+
+    // --- Fetch data ---
+    async function fetchPatientData() {
+        const userId = getUserIdFromUrl();
+        const appContainer = document.getElementById('app-container');
+
+        if (!userId) {
+            appContainer.innerHTML = `
+                <div class="flex-grow flex items-center justify-center p-8 text-red-600 font-semibold">
+                    Error: No patient ID specified.
+                </div>`;
+            return;
+        }
+
+        const { data: patientData, error: patientError } = await supabaseClient
+            .from('UserAccount')
+            .select('*')
+            .eq('UserAccountID', userId)
+            .maybeSingle();
+
+        if (patientError || !patientData) {
+            console.error("Error fetching patient:", patientError);
+            appContainer.innerHTML = `
+                <div class="flex-grow flex items-center justify-center p-8 text-red-600 font-semibold">
+                    Error: Patient not found or data fetching failed.
+                </div>`;
+            return;
+        }
+
+        // 🔹 Fetch appointment history for this patient
+        const { data: appointmentData, error: appointmentError } = await supabaseClient
+            .from('Appointment')
+            .select(`
+                AppointmentID,
+                AppointmentSchedule,
+                Service,
+                Status,
+                Dentist:DentistID (
+                    FirstName,
+                    LastName
+                )
+            `)
+            .eq('UserAccountID', userId)
+            .order('AppointmentSchedule', { ascending: false });
+
+        if (appointmentError) {
+            console.warn("Appointment history not found/error:", appointmentError);
+        }
+
+        setState({ 
+            patient: patientData, 
+            medicalRecord: {},
+            appointments: appointmentData || []   // 🔹 save in state
+        });
+    }
+
+    // --- Field render helpers ---
+    function renderInputField(label, name, value = '', type = 'text', span = 1) {
+        const isDisabled = !state.isEditing;
+        const gridSpan = span > 1 ? `lg:col-span-${span}` : '';
+        const disabledClass = isDisabled ? "input-disabled" : '';
+        const val = (type === 'date') ? formatDateForInput(value) : (value || '');
+        return `
+            <div class="${gridSpan}">
+                <label for="${name}" class="text-xs font-medium text-gray-600 block mb-1">${label}</label>
+                <input type="${type}" id="${name}" name="${name}" value="${val}" 
+                    ${isDisabled ? 'disabled' : ''} 
+                    class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${disabledClass}" />
+            </div>`;
+    }
+
+    function renderTextareaField(label, name, value = '', rows = 3, span = 1) {
+        const isDisabled = !state.isEditing;
+        const gridSpan = span > 1 ? `lg:col-span-${span}` : '';
+        const disabledClass = isDisabled ? "input-disabled" : '';
+        return `
+            <div class="${gridSpan}">
+                <label for="${name}" class="text-xs font-medium text-gray-600 block mb-1">${label}</label>
+                <textarea id="${name}" name="${name}" rows="${rows}" ${isDisabled ? 'disabled' : ''} 
+                    class="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${disabledClass}">${value || ''}</textarea>
+            </div>`;
+    }
+
+    // --- Edit / Save ---
+    async function handleEditToggle() {
+        if (!state.patient) return;
+        if (state.isEditing) {
+            await savePatient();
+        } else {
+            setState({ isEditing: true });
+        }
+    }
+
+async function savePatient() {
+    const form = document.getElementById('patient-form');
+    const formData = new FormData(form);
+    const patientID = state.patient.UserAccountID;
+
+    // 1) Update UserAccount
+    const { error: patientError } = await supabaseClient
+        .from('UserAccount')
+        .update({
+            FirstName: formData.get('firstName'),
+            MiddleName: formData.get('middleName'),
+            LastName: formData.get('lastName'),
+            Email: formData.get('email'),
+            ContactNumber: formData.get('phone'),
+            BirthDate: formData.get('dateOfBirth'),
+            Gender: formData.get('gender'),
+            Address: formData.get('address')
+        })
+        .eq('UserAccountID', patientID);
+
+    if (patientError) {
+        return showMessage("Error updating patient: " + patientError.message, "error");
+    }
+
+    // 2) Prepare MedicalRecord data
+    const heightRaw = (formData.get('height') || '').trim();
+    const weightRaw = (formData.get('weight') || '').trim();
+
+    let height = null;
+    let weight = null;
+
+    if (heightRaw !== '') {
+        const n = Number(heightRaw);
+        if (Number.isNaN(n)) {
+            showMessage("Height must be a valid number.", "error");
+            return;
+        }
+        height = n;
+    }
+
+    if (weightRaw !== '') {
+        const n = Number(weightRaw);
+        if (Number.isNaN(n)) {
+            showMessage("Weight must be a valid number.", "error");
+            return;
+        }
+        weight = n;
+    }
+
+    const mrUpdate = {
+        UserAccountID: patientID,
+        Height: height,
+        Weight: weight,
+        BloodType: formData.get('bloodType') || null,
+        Allergies: formData.get('allergies') || null,
+        Medication: formData.get('medication') || null,
+        MedicalConditions: formData.get('medicalConditions') || null,
+        MedicalRecordNotes: formData.get('medicalRecordNotes') || null,
+        EmergencyContactName: formData.get('emergencyContactName') || null,
+        EmergencyContactNumber: formData.get('emergencyContactNumber') || null,
+    };
+
+    // 3) Check if a medical record already exists for this user (by PK = UserAccountID)
+    const { data: existingRecord, error: existingError } = await supabaseClient
+        .from('MedicalRecord')
+        .select('UserAccountID')
+        .eq('UserAccountID', patientID)
+        .maybeSingle();
+
+    if (existingError) {
+        return showMessage("Error checking medical record: " + existingError.message, "error");
+    }
+
+    let mrData, mrError;
+
+    if (existingRecord) {
+        // ✅ Update existing medical record
+        const { data, error } = await supabaseClient
+            .from('MedicalRecord')
+            .update(mrUpdate)
+            .eq('UserAccountID', patientID)  // PK in Option B
+            .select()
+            .single();
+
+        mrData = data;
+        mrError = error;
+    } else {
+        // ✅ Insert new medical record
+        const { data, error } = await supabaseClient
+            .from('MedicalRecord')
+            .insert(mrUpdate)
+            .select()
+            .single();
+
+        mrData = data;
+        mrError = error;
+    }
+
+    if (mrError) {
+        return showMessage("Error updating medical record: " + mrError.message, "error");
+    }
+
+    // 4) Update local state
+    const updatedPatient = {
+        ...state.patient,
+        FirstName: formData.get('firstName') || '',
+        MiddleName: formData.get('middleName') || '',
+        LastName: formData.get('lastName') || '',
+        Email: formData.get('email') || '',
+        ContactNumber: formData.get('phone') || '',
+        BirthDate: formData.get('dateOfBirth') || '',
+        Gender: formData.get('gender') || '',
+        Address: formData.get('address') || '',
+    };
+
+    setState({
+        patient: updatedPatient,
+        medicalRecord: mrData,   // row keyed by UserAccountID
+        isEditing: false,
+    });
+
+    showMessage("Patient and Medical Record saved successfully!", "success");
+}
+
+
+    
+// --- Open appointment history (VIEW ONLY modal) ---
+async function openAppointmentRecord(appointmentId) {
+    if (!appointmentId) return;
+
+    const modal = document.getElementById('history-modal');
+    const body = document.getElementById('history-modal-body');
+    const title = document.getElementById('history-modal-title');
+    const subtitle = document.getElementById('history-modal-subtitle');
+
+    // show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // loading state
+    title.textContent = 'Loading...';
+    subtitle.textContent = '';
+    body.innerHTML = `
+        <div class="p-6 text-sm text-gray-500">Loading appointment record...</div>
+    `;
+
+    // Fetch appointment (for header info)
+    const { data: appt, error: apptErr } = await supabaseClient
+        .from('Appointment')
+        .select(`
+            AppointmentID,
+            AppointmentSchedule,
+            Service,
+            Status,
+            Dentist:DentistID ( FirstName, LastName ),
+            UserAccountID,
+            TotalAmount
+        `)
+        .eq('AppointmentID', appointmentId)
+        .maybeSingle();
+
+    if (apptErr || !appt) {
+        title.textContent = 'Record not found';
+        body.innerHTML = `<div class="p-6 text-sm text-red-600 font-semibold">Failed to load appointment.</div>`;
+        return;
+    }
+
+    const dentistName = appt.Dentist ? `Dr. ${(appt.Dentist.FirstName || '')} ${(appt.Dentist.LastName || '')}`.trim() : 'N/A';
+    title.textContent = appt.Service || 'Appointment Record';
+    subtitle.textContent = `${formatDateTimeFriendly(appt.AppointmentSchedule)} • ${dentistName}`;
+
+    // Fetch MedicalRecord by AppointmentID
+    const { data: mr } = await supabaseClient
+        .from('MedicalRecord')
+        .select('*')
+        .eq('AppointmentID', appointmentId)
+        .maybeSingle();
+
+    // Fetch TreatmentRecord by AppointmentID
+    const { data: tr } = await supabaseClient
+        .from('TreatmentRecord')
+        .select('*')
+        .eq('AppointmentID', appointmentId)
+        .maybeSingle();
+
+    // Fetch ToothChart by TreatmentRecordID (if any)
+    let teethStatus = null;
+    if (tr?.TreatmentRecordID) {
+        const { data: tc } = await supabaseClient
+            .from('ToothChart')
+            .select('TeethStatus')
+            .eq('TreatmentRecordID', tr.TreatmentRecordID)
+            .maybeSingle();
+        teethStatus = tc?.TeethStatus || null;
+    }
+
+    // Render view-only sections
+    body.innerHTML = `
+        <div class="p-6 space-y-6">
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl border bg-gray-50">
+                    <p class="text-xs font-semibold text-gray-600">Status</p>
+                    <div class="mt-1">${getStatusPill(appt.Status)}</div>
+                </div>
+                <div class="p-4 rounded-xl border bg-gray-50">
+                    <p class="text-xs font-semibold text-gray-600">Total Amount</p>
+                    <p class="mt-1 text-sm font-semibold text-gray-900">${appt.TotalAmount ? `₱${Number(appt.TotalAmount).toLocaleString('en-PH')}` : '—'}</p>
+                </div>
+            </div>
+
+            <section class="border rounded-xl overflow-hidden">
+                <div class="px-5 py-3 bg-white border-b">
+                    <h3 class="text-sm font-semibold text-gray-900">Medical Record</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">View-only snapshot for this appointment</p>
+                </div>
+                <div class="p-5 bg-white">
+                    ${renderMedicalView(mr)}
+                </div>
+            </section>
+
+            <section class="border rounded-xl overflow-hidden">
+                <div class="px-5 py-3 bg-white border-b">
+                    <h3 class="text-sm font-semibold text-gray-900">Treatment Record</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Notes and details for this appointment</p>
+                </div>
+                <div class="p-5 bg-white space-y-4">
+                    ${renderTreatmentView(tr)}
+                    ${renderToothChartView(teethStatus)}
+                </div>
+            </section>
+        </div>
+    `;
+}
+
+function closeHistoryModal() {
+    const modal = document.getElementById('history-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function renderKV(label, value) {
+    const v = (value === null || value === undefined || String(value).trim() === '') ? '—' : value;
+    return `
+        <div class="p-3 rounded-lg bg-gray-50 border">
+            <p class="text-[11px] font-semibold text-gray-600">${label}</p>
+            <p class="mt-1 text-sm text-gray-900">${v}</p>
+        </div>
+    `;
+}
+
+function renderMedicalView(mr) {
+    if (!mr) {
+        return `<p class="text-sm text-gray-500">No medical record was recorded for this appointment.</p>`;
+    }
+    return `
+        <div class="grid md:grid-cols-2 gap-3">
+            ${renderKV('Height', mr.Height ? `${mr.Height} cm` : '—')}
+            ${renderKV('Weight', mr.Weight ? `${mr.Weight} kg` : '—')}
+            ${renderKV('Blood Type', mr.BloodType)}
+            ${renderKV('Allergies', mr.Allergies)}
+            ${renderKV('Medication', mr.Medication)}
+            ${renderKV('Medical Conditions', mr.MedicalConditions)}
+            ${renderKV('Emergency Contact Name', mr.EmergencyContactName)}
+            ${renderKV('Emergency Contact Number', mr.EmergencyContactNumber)}
+        </div>
+        <div class="mt-3">
+            ${renderKV('Medical Record Notes', mr.MedicalRecordNotes)}
+        </div>
+    `;
+}
+
+function renderTreatmentView(tr) {
+    if (!tr) {
+        return `<p class="text-sm text-gray-500">No treatment record was recorded for this appointment.</p>`;
+    }
+    const notes = (tr.TreatmentNotes || '').trim() || '—';
+    const details = (tr.TreatmentDetails || '').trim() || '—';
+    return `
+        <div class="grid md:grid-cols-2 gap-3">
+            ${renderKV('Treatment Notes', notes)}
+            ${renderKV('Treatment Details', details)}
+        </div>
+    `;
+}
+
+
+function renderToothChartView(teethStatus) {
+    if (!teethStatus || Object.keys(teethStatus).length === 0) {
+        return `
+            <div class="mt-2 p-4 rounded-xl border bg-gray-50">
+                <p class="text-sm font-semibold text-gray-800">Tooth Chart</p>
+                <p class="text-sm text-gray-500 mt-1">No tooth chart selections recorded.</p>
+            </div>
+        `;
+    }
+
+    const Q1 = [8,7,6,5,4,3,2,1];
+    const Q2 = [9,10,11,12,13,14,15,16];
+    const Q4 = [32,31,30,29,28,27,26,25];
+    const Q3 = [24,23,22,21,20,19,18,17];
+
+    const toothCell = (n, status, isUpperArch) => {
+        let base = "bg-white border-gray-300 text-gray-700";
+        let num = "text-gray-700";
+        let dot = "";
+
+        if (status === "treatment") {
+            base = "bg-red-200 border-red-600 shadow-xl ring-2 ring-red-400";
+            num = "text-red-900";
+            dot = "bg-red-600";
+        } else if (status === "completed") {
+            base = "bg-blue-200 border-blue-600 shadow-xl ring-2 ring-blue-400";
+            num = "text-blue-900";
+            dot = "bg-blue-600";
+        } else {
+            base = "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 shadow-md";
+        }
+
+        return `
+            <button type="button" disabled
+                class="w-full aspect-square transition-all duration-200 flex items-center justify-center relative border-2 ${base} tooth-shape"
+                title="Tooth ${n}">
+                <div class="tooth-button-inner">
+                    <span class="text-xl font-bold ${num}">${n}</span>
+                    ${status ? `
+                        <div class="absolute w-3 h-3 rounded-full border border-white shadow-md ${dot}"
+                             style="top:${isUpperArch ? '70%' : '10%'}; right:10%;">
+                        </div>
+                    ` : ``}
+                </div>
+            </button>
+        `;
+    };
+
+    const quadrant = (numbers, isUpperArch) => `
+        <div class="quadrant-grid ${isUpperArch ? 'upper-arch' : 'lower-arch'}">
+            ${numbers.map(n => toothCell(n, teethStatus[n] || null, isUpperArch)).join('')}
+        </div>
+    `;
+
+    return `
+        <div class="mt-2 p-4 rounded-xl border bg-white">
+            <div class="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Tooth Chart</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Recorded selections (view-only)</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-gray-600">
+                    <span class="inline-flex items-center gap-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Treatment Needed
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Completed
+                    </span>
+                </div>
+            </div>
+
+            <div class="mt-4 bg-white p-4 rounded-xl border shadow-inner">
+                <h4 class="text-center text-xs font-semibold text-gray-500 mb-2 uppercase tracking-widest">
+                    Maxillary Arch (Upper)
+                </h4>
+                <div class="tooth-chart-container">
+                    ${quadrant(Q1, true)}
+                    <div class="text-sm font-light text-gray-300">|</div>
+                    ${quadrant(Q2, true)}
+                </div>
+
+                <div class="w-full h-1 bg-gray-100 my-4 rounded-full"></div>
+
+                <div class="tooth-chart-container">
+                    ${quadrant(Q4, false)}
+                    <div class="text-sm font-light text-gray-300">|</div>
+                    ${quadrant(Q3, false)}
+                </div>
+
+                <h4 class="text-center text-xs font-semibold text-gray-500 mt-2 uppercase tracking-widest">
+                    Mandibular Arch (Lower)
+                </h4>
+            </div>
+        </div>
+    `;
+}
+
+
+// --- Toast / message ---
+    function showMessage(message, type = "error") {
+        const box = document.getElementById("messageBox");
+        if (!box) return;
+
+        box.textContent = message;
+        box.classList.remove("hidden", "bg-red-500", "bg-green-500", "opacity-0");
+
+        box.classList.add(type === "success" ? "bg-green-500" : "bg-red-500", "opacity-100");
+
+        setTimeout(() => {
+            box.classList.add("opacity-0");
+            setTimeout(() => box.classList.add("hidden"), 300);
+        }, 4000);
+    }
+
+    // --- Header ---
+    function renderHeader() {
+    const patient = state.patient;
+    if (!patient) return '';
+
+    const fullName = [patient.FirstName, patient.MiddleName, patient.LastName]
+        .filter(Boolean)
+        .join(' ');
+    const initials = (patient.FirstName?.[0] || '?') + (patient.LastName?.[0] || '');
+    const age = computeAge(patient.BirthDate);
+    const gender = patient.Gender || 'N/A';
+
+    return `
+    <header class="bg-[#03555E] text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 lg:px-6 py-4 flex items-center gap-4">
+            <a href="/Dentist/Viewing_PatientRecord.html">
+                <button class="h-10 px-4 py-2 rounded-lg text-sm font-medium bg-white/5 text-white hover:bg-white/10 flex items-center gap-2">
+                    <!-- Back icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                    <span class="hidden sm:inline">Back to Patient List</span>
+                </button>
+            </a>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-lg font-semibold">
+                    ${initials.toUpperCase()}
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">${fullName || 'Patient Record'}</h1>
+</div>
+            </div>
+        </div>
+    </header>`;
+}
+
+function formatDateTimeFriendly(dateStr) {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const date = d.toLocaleDateString('en-PH', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${date} · ${time}`;
+}
+
+function getStatusPill(status) {
+    const s = (status || '').toLowerCase();
+    const base = 'pill border text-xs';
+
+    if (s === 'pending') {
+        return `<span class="${base} bg-amber-50 text-amber-700 border-amber-100">Pending</span>`;
+    }
+    if (s === 'approved') {
+        return `<span class="${base} bg-blue-50 text-blue-700 border-blue-100">Approved</span>`;
+    }
+    if (s === 'rescheduled') {
+        return `<span class="${base} bg-purple-50 text-purple-700 border-purple-100">Rescheduled</span>`;
+    }
+    if (s === 'finished') {
+        return `<span class="${base} bg-emerald-50 text-emerald-700 border-emerald-100">Finished</span>`;
+    }
+    if (s === 'cancelled') {
+        return `<span class="${base} bg-red-50 text-red-700 border-red-100">Cancelled</span>`;
+    }
+
+    return `<span class="${base} bg-gray-50 text-gray-700 border-gray-200">${status || 'Unknown'}</span>`;
+}
+
+    // --- Main content ---
+function renderMainContent() {
+    const patient = state.patient;
+    const mr = state.medicalRecord || {};
+    if (!patient) return '';
+
+    const p = patient;
+    const m = mr;
+
+    return `
+    <main class="flex-grow">
+        <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 space-y-6">
+            <!-- ✅ ONE form wrapping both personal + medical sections -->
+            <form id="patient-form" onsubmit="event.preventDefault(); handleEditToggle();">
+                <!-- Top row: summary + personal info -->
+                <div class="grid gap-6 mb-6">
+<!-- Personal info card -->
+                    <section class="card">
+                        <div class="p-6 border-b border-gray-100 flex items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-base sm:text-lg font-semibold text-gray-900">Personal Information</h2>
+                                <p class="text-xs text-gray-500 mt-1">Basic demographics and contact details</p>
+                            </div>
+                            <button
+                                type="submit"
+                                id="edit-toggle-button"
+                                class="border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 h-9 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
+                            >
+                                ${
+                                    state.isEditing
+                                    ? `
+                                    <!-- Save icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 5h14v14H5z" />
+                                        <path d="M9 5v4h6V5" />
+                                        <path d="M9 15h6" />
+                                    </svg>
+                                    Save Changes
+                                    `
+                                    : `
+                                    <!-- Edit icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L13 14l-4 1 1-4Z" />
+                                    </svg>
+                                    Edit Record
+                                    `
+                                }
+                            </button>
+                        </div>
+                        <div class="p-6 pt-4">
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${renderInputField("First Name", "firstName", p.FirstName)}
+                                ${renderInputField("Middle Name", "middleName", p.MiddleName)}
+                                ${renderInputField("Last Name", "lastName", p.LastName)}
+                                ${renderInputField("Email", "email", p.Email, 'email')}
+                                ${renderInputField("Phone", "phone", p.ContactNumber)}
+                                ${renderInputField("Date of Birth", "dateOfBirth", p.BirthDate, 'date')}
+                                ${renderInputField("Gender", "gender", p.Gender)}
+                                ${renderInputField("Address", "address", p.Address || '', 'text', 3)} 
+                            </div>
+                        </div>
+                    </section>
+                </div>
+<!-- 🔹 Appointment History section -->
+                <section class="card mt-6">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-semibold text-gray-900">Appointment History</h2>
+                            <p class="text-xs text-gray-500 mt-1">All appointments linked to this patient account</p>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-4 space-y-3">
+                        ${
+                            state.appointments.length === 0
+                                ? `<p class="text-sm text-gray-500">No appointment history found for this patient.</p>`
+                                : state.appointments
+                                    .map(a => {
+                                        const dentist = a.Dentist
+                                            ? `Dr. ${a.Dentist.FirstName || ''} ${a.Dentist.LastName || ''}`.trim()
+                                            : 'N/A';
+                                        return `
+                                            <button type="button" class="w-full text-left flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#03555E]/40" onclick="openAppointmentRecord(\'${a.AppointmentID}\')">
+                                                <div class="pr-3">
+                                                    <p class="text-sm font-semibold text-gray-800">
+                                                        ${a.Service || 'No service specified'}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        ${formatDateTimeFriendly(a.AppointmentSchedule)}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        Dentist: ${dentist}
+                                                    </p>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    ${getStatusPill(a.Status)}
+                                                </div>
+                                            </button>
+                                        `;
+                                    })
+                                    .join('')
+                        }
+                    </div>
+                </section>
+            </form>
+        </div>
+    </main>`;
+}
+
+    // --- Render app ---
+    function renderApp() {
+        const appContainer = document.getElementById('app-container');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        if (loadingSpinner && state.patient) loadingSpinner.classList.add('hidden');
+
+        if (!state.patient) return;
+
+        appContainer.innerHTML = `
+            ${renderHeader()}
+            ${renderMainContent()}
+        `;
+
+      if (window.lucide) {
+            window.lucide.createIcons();
+        } else {
+            setTimeout(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, 100);
+        }
+
+
+    }
+
+    // expose handlers for inline calls
+    window.handleEditToggle = handleEditToggle;
+    window.savePatient = savePatient;
+    window.openAppointmentRecord = openAppointmentRecord;
+    window.closeHistoryModal = closeHistoryModal;
+
+    document.addEventListener('DOMContentLoaded', fetchPatientData);
+    </script>
+
+<!-- History View Modal (View-only) -->
+<div id="history-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4">
+  <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="px-5 py-4 border-b flex items-start justify-between gap-4">
+      <div>
+        <h2 id="history-modal-title" class="text-lg font-semibold text-gray-900">Appointment Record</h2>
+        <p id="history-modal-subtitle" class="text-xs text-gray-500 mt-1"></p>
+      </div>
+      <button type="button" onclick="closeHistoryModal()"
+        class="h-9 px-3 rounded-lg border bg-white text-gray-700 hover:bg-gray-50 text-sm font-semibold">
+        Close
+      </button>
+    </div>
+    <div id="history-modal-body" class="max-h-[75vh] overflow-y-auto"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom colors from the original component */
+        .bg-\[\#03555E\] { background-color: #03555E; }
+        .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
+
+        /* Approximate shadcn/ui styles */
+        .card {
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            overflow: hidden; 
+        }
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .card-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-content {
+            padding: 1.5rem;
+        }
+        .button-style {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            line-height: 1.25;
+            font-weight: 500;
+            transition: background-color 0.15s;
+        }
+        .button-ghost {
+            background-color: transparent;
+            border: none;
+        }
+        
+        /* Filter button styles */
+        .filter-group {
+            display: flex;
+            border-radius: 0.375rem; 
+            background-color: #f3f4f6; 
+            padding: 0.25rem; 
+        }
+        .filter-button {
+            padding: 0.375rem 0.75rem; 
+            border-radius: 0.25rem; 
+            font-size: 0.75rem; 
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap; 
+        }
+        .filter-active {
+            background-color: #03555E;
+            color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .filter-inactive {
+            background-color: transparent;
+            color: #4b5563; 
+        }
+        .filter-inactive:hover {
+            background-color: #e5e7eb; 
+        }
+
+        /* 🚀 UPDATED: Notification item styling for increased visibility/font size */
+        .notification-item {
+            padding: 0.4rem 1rem; /* Reduced vertical padding further */
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; 
+        }
+        .notification-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+            transform: translateY(-1px);
+        }
+        .notification-item.unread {
+            background-color: #eff6ff; /* bg-blue-50 */
+            border-color: #bfdbfe; /* border-blue-200 */
+        }
+        
+        .notification-message {
+            font-size: 1rem; /* Increased font size (default text size) */
+            font-weight: 500;
+            color: #1f2937; 
+            line-height: 1.3; /* Tightened line height slightly */
+        }
+        .notification-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.125rem;
+        }
+        .notification-date {
+            font-size: 0.75rem; /* Increased font size for better readability */
+            color: #9ca3af; 
+        }
+        .notification-status {
+            font-size: 0.75rem; /* Increased font size for better readability */
+            font-weight: 600;
+            text-transform: capitalize;
+            padding: 0 0.3rem; 
+            border-radius: 0.25rem;
+            line-height: 1.5;
+        }
+        .notification-item.unread .notification-status {
+            color: #2563eb; 
+            background-color: #dbeafe; 
+        }
+        .notification-item.read .notification-status {
+            color: #6b7280; 
+            background-color: #f3f4f6; 
+        }
+        /* End Compact Styling */
+
+        /* No notifications message */
+        #no-notifications-message {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1rem; 
+            border: 1px dashed #e5e7eb;
+            color: #6b7280;
+        }
+        #no-notifications-message svg {
+            color: #9ca3af;
+        }
+        #no-notifications-message h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        #no-notifications-message p {
+            font-size: 0.875rem;
+        }
+
+        /* Load More button */
+        #load-more-btn {
+            width: 100%;
+            padding: 0.625rem 1rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            background-color: #03555E;
+            color: white;
+            transition: background-color 0.2s ease-in-out;
+        }
+        #load-more-btn:hover {
+            background-color: #024449;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-50">
+        <header class="bg-[#03555E] text-white">
+            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+                <a href="Dashboard.html">
+                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
+                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold">Notifications</h1>
+                    <p class="text-sm opacity-90">Stay updated with your dental care</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="max-w-2xl mx-auto grid gap-6"> 
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-700">
+                                <path d="M18.8 15.6v-5.2a6.9 6.9 0 0 0-4-6.2c-.3-.2-.7-.3-1.1-.3H11c-.4 0-.8.1-1.1.3a6.9 6.9 0 0 0-4 6.2v5.2L4 18h16l-1.2-2.4zM12 22c-1.1 0-2-.9-2-2h4c0 1.1-.9 2-2 2z"></path>
+                            </svg>
+                            Recent Notifications
+                        </h2>
+                        
+                        <div class="filter-group flex space-x-1">
+                            <button id="filter-all" class="filter-button filter-active" data-status="">All</button>
+                            <button id="filter-unread" class="filter-button filter-inactive" data-status="Unread">Unread</button>
+                            <button id="filter-read" class="filter-button filter-inactive" data-status="Read">Read</button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="text-center py-12 text-gray-500" id="no-notifications-message">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-16 h-16 mx-auto mb-4 opacity-50">
+                                <path d="M18.8 15.6v-5.2a6.9 6.9 0 0 0-4-6.2c-.3-.2-.7-.3-1.1-.3H11c-.4 0-.8.1-1.1.3a6.9 6.9 0 0 0-4 6.2v5.2L4 18h16l-1.2-2.4zM12 22c-1.1 0-2-.9-2-2h4c0 1.1-.9 2-2 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium mb-2">No notifications</h3>
+                            <p class="text-sm">You're all caught up! New notifications will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function checkAuth(redirect = true) {
+  // 1️⃣ Try localStorage first
+  const storedFirstName = localStorage.getItem('userFirstName');
+  const storedRole = localStorage.getItem('userRole');
+  const storedEmail = localStorage.getItem('userEmail');
+
+  if (storedFirstName && storedRole) {
+    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+  }
+
+  // 2️⃣ Fallback to Supabase session
+  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) console.error(sessionError);
+
+  if (!session?.user) {
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 3️⃣ Fetch user info from UserAccount table
+  const { data: userData, error } = await supabaseClient
+    .from('UserAccount')
+    .select('*')
+    .eq('Email', session.user.email)
+    .maybeSingle();
+
+  if (error || !userData) {
+    console.error(error || "No user data found");
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 4️⃣ Save to localStorage
+  localStorage.setItem('userFirstName', userData.FirstName);
+  localStorage.setItem('userRole', userData.Role);
+  localStorage.setItem('userEmail', userData.Email);
+  localStorage.setItem('userId', session.user.id);
+
+  return userData;
+}
+
+let currentPage = 1;
+const pageSize = 10;
+let currentFilter = ''; // '' for All, 'Read', or 'Unread'
+
+// Function to update the appearance of filter buttons
+function updateFilterButtons(newFilter) {
+    document.querySelectorAll('.filter-button').forEach(btn => {
+        const btnStatus = btn.getAttribute('data-status');
+        if (btnStatus === newFilter) {
+            btn.classList.add('filter-active');
+            btn.classList.remove('filter-inactive');
+        } else {
+            btn.classList.remove('filter-active');
+            btn.classList.add('filter-inactive');
+        }
+    });
+}
+
+// Function to set up filter button event listeners
+function setupFilterListeners() {
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const newFilter = e.currentTarget.getAttribute('data-status');
+            if (newFilter !== currentFilter) {
+                currentFilter = newFilter;
+                currentPage = 1; // Reset to first page
+                updateFilterButtons(currentFilter);
+                loadPatientNotificationsPage(currentPage);
+            }
+        });
+    });
+}
+
+
+async function loadPatientNotificationsPage(page = 1) {
+    const user = await checkAuth();
+    if (!user) return;
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Build the query and apply the filter if currentFilter is set
+    let query = supabaseClient
+        .from('Notifications')
+        .select('*', { count: 'exact' }) // also get total count
+        .eq('UserAccountID', userId)
+        .order('DateSent', { ascending: false });
+    
+    if (currentFilter) {
+        query = query.eq('Status', currentFilter);
+    }
+    
+    // Apply pagination
+    query = query.range((page - 1) * pageSize, page * pageSize - 1);
+
+    // Execute the query
+    const { data: notifications, error, count } = await query;
+
+    if (error) {
+        console.error('Error fetching notifications:', error);
+        return;
+    }
+
+    const cardContent = document.querySelector('.card-content');
+    const noNotifMessage = document.getElementById('no-notifications-message');
+    if (!cardContent || !noNotifMessage) return;
+
+    // Clear content if first page
+    if (page === 1) {
+        cardContent.innerHTML = ''; // Clear existing items
+        cardContent.appendChild(noNotifMessage); // Re-add the message placeholder
+    }
+
+    if (!notifications || notifications.length === 0) {
+        noNotifMessage.style.display = 'block';
+        // Remove Load More button if no notifications
+        let loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) loadMoreBtn.remove();
+        return;
+    }
+    
+    noNotifMessage.style.display = 'none'; // Hide "No notifications" message if there are notifications
+
+    // Populate notifications list
+    notifications.forEach(n => {
+        const notifItem = document.createElement('div');
+        notifItem.className = `notification-item ${n.Status === 'Unread' ? 'unread' : 'read'}`;
+        notifItem.setAttribute('data-notification-id', n.NotificationID);
+        
+        notifItem.innerHTML = `
+            <p class="notification-message">${n.Message}</p>
+            <div class="notification-meta">
+                <p class="notification-status">${n.Status}</p>
+            </div>
+        `;
+
+        notifItem.addEventListener('click', async () => {
+            if (n.Status === 'Unread') {
+                const { error: updateError } = await supabaseClient
+                    .from('Notifications')
+                    .update({ Status: 'Read' })
+                    .eq('NotificationID', n.NotificationID);
+                    
+                if (!updateError) {
+                    // Locally update item appearance
+                    n.Status = 'Read'; // Update local status for display logic
+                    
+                    const statusP = notifItem.querySelector('.notification-status');
+                    notifItem.classList.remove('unread');
+                    notifItem.classList.add('read');
+                    statusP.textContent = 'Read';
+                    statusP.style.color = '#6b7280';
+                    statusP.style.backgroundColor = '#f3f4f6';
+                    
+                    // If filter is Unread, remove the item
+                    if (currentFilter === 'unread') {
+                        notifItem.remove();
+                        // Reload if the list is now empty to display "No notifications"
+                        if (cardContent.querySelectorAll('.notification-item').length === 0) {
+                            loadPatientNotificationsPage(1); // Recalculate and display message or next page
+                        }
+                    }
+                } else {
+                    console.error('Failed to mark notification as read:', updateError);
+                }
+            }
+        });
+
+        cardContent.appendChild(notifItem);
+    });
+
+    // Load More button logic
+    const loadMoreId = 'load-more-btn';
+    let loadMoreBtn = document.getElementById(loadMoreId);
+    
+    // Check if there are more items to load (using the total count returned by the query)
+    const totalCount = count;
+    const itemsLoaded = page * pageSize;
+
+    if (totalCount && totalCount > itemsLoaded) { // Only show if totalCount is available and more items exist
+        if (!loadMoreBtn) {
+            loadMoreBtn = document.createElement('button');
+            loadMoreBtn.id = loadMoreId;
+            loadMoreBtn.className = 'w-full py-2 mt-4 text-sm text-white bg-[#03555E] rounded hover:bg-[#024449]';
+            loadMoreBtn.textContent = 'Load More';
+            loadMoreBtn.addEventListener('click', () => {
+                currentPage++;
+                loadPatientNotificationsPage(currentPage);
+            });
+            cardContent.appendChild(loadMoreBtn);
+        }
+        loadMoreBtn.style.display = 'block';
+    } else if (loadMoreBtn) {
+        loadMoreBtn.remove(); // Remove button if no more items
+    }
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    setupFilterListeners();
+    updateFilterButtons(currentFilter); // Set initial button state (All active)
+    await loadPatientNotificationsPage();
+});
+
+</script>
+</body>
+</html>

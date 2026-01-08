@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToothHub Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="dashboard-container" class="min-h-screen bg-gray-50">
+    <!-- HEADER -->
+ <header class="bg-custom-primary text-white relative">
+  <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+
+  <!-- LEFT SIDE (Icons) -->
+  <div class="flex items-center gap-4">
+
+    <!-- Burger Menu Button -->
+    <button id="mobile-menu-toggle" class="p-2 hover:bg-custom-hover rounded-lg transition-colors" aria-label="Toggle Menu">
+      <i id="menu-icon" class="fas fa-bars w-6 h-6"></i>
+      <i id="close-icon" class="fas fa-xmark w-6 h-6 hidden"></i>
+    </button>
+
+    <!-- Notifications -->
+    <a  aria-label="Notifications" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors">
+       <i class="fas fa-bell w-6 h-6" data-lucide="bell"></i>
+    </a>
+
+    <!-- Profile -->
+    <a href="Profile.html" aria-label="Profile" class="p-2 rounded-lg hover:bg-custom-hover transition-colors">
+      <i class="fas fa-user w-6 h-6"></i>
+    </a>
+  </div>
+
+  <!-- RIGHT SIDE (Logo + Text) -->
+  <a href="/" class="flex items-center gap-3">
+    <div class="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1">
+          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+    </div>
+    <div>
+      <h1 class="text-xl font-bold">ToothHub</h1>
+      <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+    </div>
+  </a>
+
+</div>
+
+</header>
+
+    <!-- MOBILE MENU OVERLAY -->
+    <div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- MOBILE MENU PANEL -->
+    <!-- MOBILE MENU PANEL (teal style like secretary/dentist) -->
+<div
+  id="mobile-menu-panel"
+  class="fixed top-0 left-0 h-full w-64 md:w-80 bg-custom-primary text-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out z-50"
+>
+  <div class="p-6 flex items-center justify-between mb-4 border-b border-custom-hover/60">
+    <h2 class="text-2xl font-bold">Menu</h2>
+    <button
+      id="mobile-menu-close"
+      class="p-2 hover:bg-custom-hover rounded-lg transition-colors"
+      aria-label="Close Menu"
+    >
+      <i class="fas fa-xmark w-6 h-6"></i>
+    </button>
+  </div>
+
+  <nav class="px-4 pb-6 space-y-2 text-lg">
+    <a href="Dashboard.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Dashboard
+    </a>
+    <a href="Booking.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Book Appointment
+    </a>
+    <a href="MyBooking.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Appointments
+    </a>
+    <a href="MedicalRecords.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Medical Records
+    </a>
+    <a href="Billing.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Billing
+    </a>
+    <a href="notifications.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Notifications
+    </a>
+    <a href="Profile.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Profile
+    </a>
+    <a href="Settings.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Settings
+    </a>
+    <a href="TreatmentRecords.html" class="block px-4 py-3 rounded-lg hover:bg-custom-hover transition-colors">
+      Treatment Records
+    </a>
+
+    <button
+      onclick="logout()"
+      class="mt-4 w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+    >
+      Logout
+    </button>
+  </nav>
+</div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container mx-auto px-4 py-8">
+      <h1 id="welcomeMessage" class="text-2xl font-bold mb-2">Welcome to ToothHub!</h1>
+      <p class="text-gray-600">Manage your appointments and dental health records</p>
+      <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                  <div class="flex gap-4">
+                        <a href="Booking.html">
+                            <button class="px-4 py-2 text-sm font-medium rounded-md text-white bg-custom-primary hover:bg-custom-hover">
+                            Book Appointment
+                            </button>
+                        </a>
+
+                        <a href="MedicalRecords.html">
+                            <button class="px-4 py-2 text-sm font-medium rounded-md border border-custom-primary text-custom-primary bg-transparent hover:bg-custom-hover hover:text-white">
+                            Medical Records
+                            </button>
+                        </a>
+
+                        <a href="Billing.html">
+                            <button class="px-4 py-2 text-sm font-medium rounded-md border border-custom-primary text-custom-primary bg-transparent hover:bg-custom-hover hover:text-white">
+                            Billing
+                            </button>
+                        </a>
+                        </div>
+                    <div class="bg-white rounded-lg shadow-md border">
+                        <div class="p-6 border-b">
+                            <h2 class="text-lg font-semibold flex items-center gap-2">
+                                <i class="fas fa-calendar-alt w-5 h-5"></i>
+                                Upcoming Appointments
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                             <div class="p-6" id="appointmentsContainer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md border">
+                        <div class="p-6 border-b">
+                            <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-clock w-5 h-5"></i>
+                            Recent Appointments
+                            </h2>
+                        </div>
+                        <div class="p-6" id="recentAppointmentsContainer"></div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md border">
+                        <div class="p-6 border-b">
+                            <h2 class="text-lg font-semibold">Our Dental Services</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Oral Prophylaxis</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Professional cleaning and maintenance of teeth and gums for optimal oral health
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱1,500 - ₱4,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Max:</span>
+                                            <span>₱4,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Min:</span>
+                                            <span>₱1,500</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Service:</span>
+                                            <span>₱2,500 - ₱3,500</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Restoration</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Tooth fillings and composite restorations to repair damaged teeth
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱1,500 - ₱3,500</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Max:</span>
+                                            <span>₱3,500</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Min:</span>
+                                            <span>₱1,500</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Service:</span>
+                                            <span>₱2,000 - ₱3,000</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Extraction</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Safe and comfortable tooth removal procedures with proper aftercare
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱1,500 - ₱6,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Max:</span>
+                                            <span>₱6,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Min:</span>
+                                            <span>₱1,500</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Anesthesia:</span>
+                                            <span>₱2,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Complex Extraction:</span>
+                                            <span>₱4,000 - ₱6,000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-3 gap-4 mt-4">
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Root Canal Treatment</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Advanced endodontic therapy to save infected or damaged teeth
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60-90 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱6,000 - ₱10,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Starting Price:</span>
+                                            <span>₱6,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Additional Care:</span>
+                                            <span>₱2,000 each</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Odontectomy</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Surgical removal of impacted or problematic teeth including wisdom teeth
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60-90 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱8,000 - ₱15,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Root:</span>
+                                            <span>₱8,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Materials:</span>
+                                            <span>₱10,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Complex:</span>
+                                            <span>₱12,000</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Whitening</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        Professional teeth whitening treatments for a brighter, more confident smile
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>Duration:</span>
+                                            <span class="font-medium">60 minutes</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Pricing:</span>
+                                            <span class="font-medium">₱8,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>In-Office Treatment:</span>
+                                            <span>₱8,000</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Take-Home Kit:</span>
+                                            <span>₱6,000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-3 gap-4 mt-4">
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-semibold mb-2 text-custom-primary">Orthodontic Treatment</h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                    Comprehensive teeth straightening and bite correction using modern orthodontic techniques
+                                    </p>
+                                    <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Duration:</span>
+                                        <span class="font-medium">12-24 months</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Pricing:</span>
+                                        <span class="font-medium">Contact for quote</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Ordinary Braces (Metal Brackets):</span>
+                                        <span>₱15,000</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Self-Ligating Braces (Clear Brackets):</span>
+                                        <span>₱20,000</span>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden lg:block space-y-6">
+                    </div>
+            </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function checkAuth(redirect = true) {
+  // 1️⃣ Try localStorage first
+  const storedFirstName = localStorage.getItem('userFirstName');
+  const storedRole = localStorage.getItem('userRole');
+  const storedEmail = localStorage.getItem('userEmail');
+
+  if (storedFirstName && storedRole) {
+    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+  }
+
+  // 2️⃣ Fallback to Supabase session
+ const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) console.error(sessionError);
+
+  if (!session?.user) {
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 3️⃣ Fetch user info from UserAccount table
+const { data: userData, error } = await supabaseClient
+  .from('UserAccount')
+  .select('*')
+  .eq('Email', session.user.email)
+  .maybeSingle();
+
+  if (error || !userData) {
+    console.error(error || "No user data found");
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 4️⃣ Save to localStorage
+  localStorage.setItem('userFirstName', userData.FirstName);
+  localStorage.setItem('userRole', userData.Role);
+  localStorage.setItem('userEmail', userData.Email);
+  localStorage.setItem('userId', session.user.id);
+
+  return userData;
+}
+
+// ✅ Logout function
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+async function loadAppointments() {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  const nowUTC = new Date().toISOString();
+  console.log('Current UTC time:', nowUTC);
+
+  // Fetch upcoming approved appointments
+  const { data: appointments, error } = await supabaseClient
+    .from('Appointment')
+    .select('*')
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Approved') // exact capitalization
+    .gte('AppointmentSchedule', nowUTC) // upcoming
+    .order('AppointmentSchedule', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching appointments:', error);
+    return;
+  }
+
+  console.log('Upcoming approved appointments:', appointments);
+  renderAppointments(appointments);
+}
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.querySelector('i[data-lucide="bell"]')?.parentElement;
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('i[data-lucide="bell"]');
+    if (!bellIcon) return console.warn("Bell icon not found");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+        .from('Notifications')
+        .select('*')
+        .eq('UserAccountID', userId)
+        .eq('Status', 'Unread')
+        .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full';
+        badge.style.transform = 'translate(50%, -50%)';
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    // Click to toggle dropdown
+    bellIcon.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className ='absolute left-full ml-2 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '300px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-3 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'p-3 border-b last:border-b-0 hover:bg-gray-100 cursor-pointer text-gray-900';
+                item.textContent = n.Message;
+                item.addEventListener('click', async () => {
+                    await supabaseClient.from('Notifications').update({ Status: 'Read' }).eq('NotificationID', n.NotificationID);
+                    loadNotifications(); // refresh badge and dropdown
+                });
+
+                dropdown.appendChild(item);
+            });
+        }
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+function renderAppointments(appointments) {
+  const container = document.getElementById('appointmentsContainer');
+  if (!container) return;
+
+  if (!appointments || appointments.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-gray-500">
+        <i class="fas fa-calendar-alt w-12 h-12 mx-auto mb-4 opacity-50"></i>
+        <p>No upcoming approved appointments</p>
+        <p class="text-sm">Book your next appointment to get started</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="space-y-4">
+      ${appointments.map(a => `
+        <div class="p-4 border rounded-lg flex justify-between items-center hover:shadow-md transition">
+          <div>
+            <p class="font-semibold">${a.Service}</p>
+            <p class="text-sm text-gray-500">${new Date(a.AppointmentSchedule).toLocaleString()}</p>
+            <p class="text-sm text-gray-400">Status: ${a.Status}</p>
+          </div>
+          ${
+            a.ReceiptImage
+              ? `<img src="${supabaseClient.storage.from('receipts').getPublicUrl(a.ReceiptImage).data.publicUrl}" class="w-16 h-16 object-cover rounded" />`
+              : ''
+          }
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderPastAppointments(appointments) {
+  const container = document.getElementById('recentAppointmentsContainer');
+  if (!container) return;
+
+  if (!appointments || appointments.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-gray-500">
+        <i class="fas fa-clock w-12 h-12 mx-auto mb-4 opacity-50"></i>
+        <p>No past appointments yet</p>
+        <p class="text-sm">Your finished appointments will appear here</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Optionally only show the 3 most recent ones
+  const recent = appointments.slice(0, 3);
+
+  container.innerHTML = `
+    <div class="space-y-4">
+      ${recent.map(a => `
+        <div class="p-4 border rounded-lg flex justify-between items-center hover:shadow-md transition">
+          <div>
+            <p class="font-semibold">${a.Service}</p>
+            <p class="text-sm text-gray-500">
+              ${new Date(a.AppointmentSchedule).toLocaleString()}
+            </p>
+            <p class="text-sm text-gray-400">Status: Finished</p>
+          </div>
+          ${
+            a.ReceiptImage
+              ? `<img src="${supabaseClient.storage.from('receipts').getPublicUrl(a.ReceiptImage).data.publicUrl}" class="w-16 h-16 object-cover rounded" />`
+              : ''
+          }
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function loadPastAppointments() {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  const nowUTC = new Date().toISOString();
+
+  // Fetch past completed appointments (consultations already done)
+  const { data: appointments, error } = await supabaseClient
+    .from('Appointment')
+    .select('*')
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Finished')      // only completed ones
+    .lt('AppointmentSchedule', nowUTC)  // strictly in the past
+    .order('AppointmentSchedule', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching past appointments:', error);
+    return;
+  }
+
+  renderPastAppointments(appointments);
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', async () => {
+  const user = await checkAuth(); // redirects if not logged in
+  if (!user) return;
+
+  // Update welcome message
+  const welcomeEl = document.getElementById('welcomeMessage');
+  if (welcomeEl) welcomeEl.textContent = `Welcome to ToothHub, ${user.FirstName}!`;
+
+  // Load data
+ loadAppointments();
+  loadPastAppointments();
+  loadNotifications();
+  // Mobile menu logic
+  const menuToggle = document.getElementById('mobile-menu-toggle');
+  const menuPanel = document.getElementById('mobile-menu-panel');
+  const menuOverlay = document.getElementById('mobile-menu-overlay');
+  const menuCloseButton = document.getElementById('mobile-menu-close');
+  const menuIcon = document.getElementById('menu-icon');
+  const closeIcon = document.getElementById('close-icon');
+
+  function openMobileMenu() {
+    menuPanel.classList.remove('-translate-x-full');
+    menuPanel.classList.add('translate-x-0');
+    menuOverlay.classList.remove('hidden');
+    menuIcon.classList.add('hidden');
+    closeIcon.classList.remove('hidden');
+  }
+
+  function closeMobileMenu() {
+    menuPanel.classList.remove('translate-x-0');
+    menuPanel.classList.add('-translate-x-full');
+    menuOverlay.classList.add('hidden');
+    menuIcon.classList.remove('hidden');
+    closeIcon.classList.add('hidden');
+  }
+
+  menuToggle.addEventListener('click', () => {
+    if (menuPanel.classList.contains('translate-x-0')) closeMobileMenu();
+    else openMobileMenu();
+  });
+
+  menuOverlay.addEventListener('click', closeMobileMenu);
+  menuCloseButton.addEventListener('click', closeMobileMenu);
+
+  document.querySelector('#mobile-menu-panel nav').addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') setTimeout(closeMobileMenu, 100);
+  });
+
+  const logoutBtn = document.getElementById('logoutButton');
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
+});
+
+</script>
+</body>
+</html>

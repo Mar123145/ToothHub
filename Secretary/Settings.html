@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Theme Colors */
+        .bg-primary { background-color: #03555E; }
+        .text-primary { color: #03555E; }
+        .hover\:bg-primary-dark:hover { background-color: #024449; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        /* Custom Switch Styling (Mimics Shadcn/ui) */
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px; /* Standard switch width */
+            height: 24px; /* Standard switch height */
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc; /* bg-gray-300 */
+            transition: .4s;
+            border-radius: 9999px; /* rounded-full */
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; /* Switch circle height */
+            width: 20px; /* Switch circle width */
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Shadow */
+        }
+
+        input:checked + .slider {
+            background-color: #03555E; /* bg-primary */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+            <!-- Link replacement -->
+            <a href="Dashboard.html">
+                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                    Back
+                </button>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold">Settings</h1>
+                <p class="text-sm opacity-90">Manage your preferences</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto space-y-6">
+
+            <!-- Notification Settings Card -->
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
+                        Notifications
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        
+                        <!-- Email Notifications -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">Email Notifications</h3>
+                                <p class="text-sm text-gray-600">Receive appointment confirmations via email</p>
+                            </div>
+                            <label class="custom-switch">
+                                <input type="checkbox" id="email-switch" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Payment Alerts -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">Payment Alerts</h3>
+                                <p class="text-sm text-gray-600">Get notified of new payments</p>
+                            </div>
+                            <label class="custom-switch">
+                                <input type="checkbox" id="payment-switch">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Appointment Reminders -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">Appointment Reminders</h3>
+                                <p class="text-sm text-gray-600">Daily appointment schedule reminders</p>
+                            </div>
+                            <label class="custom-switch">
+                                <input type="checkbox" id="reminder-switch" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings Card -->
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                        <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
+                        Security
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">Two-Factor Authentication</h3>
+                                <p class="text-sm text-gray-600">Add extra security to your account</p>
+                            </div>
+                            <button onclick="handleSecurityAction('2fa')" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">
+                                Enable
+                            </button>
+                        </div>
+                        <div>
+                            <button onclick="handleSecurityAction('password')" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 bg-white">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Card -->
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                        <i data-lucide="moon" class="w-5 h-5 text-primary"></i>
+                        Appearance
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">Dark Mode</h3>
+                                <p class="text-sm text-gray-600">Switch to dark theme</p>
+                            </div>
+                            <label class="custom-switch">
+                                <input type="checkbox" id="dark-mode-switch" onclick="toggleDarkMode(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Message Box (for feedback) -->
+            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
+                <!-- Message content injected here -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA STATE (for persistence simulation) ---
+        const settings = {
+            emailNotifications: true,
+            paymentAlerts: false,
+            appointmentReminders: true,
+            darkMode: false
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        function showFeedback(message, isError = false) {
+            const feedbackBox = document.getElementById('feedback-message');
+            feedbackBox.textContent = message;
+            
+            feedbackBox.classList.remove('hidden', 'bg-green-600', 'bg-red-600');
+            feedbackBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+            
+            // Show message
+            feedbackBox.classList.add('opacity-100');
+            
+            // Hide message after 2 seconds
+            setTimeout(() => {
+                feedbackBox.classList.remove('opacity-100');
+                setTimeout(() => {
+                    feedbackBox.classList.add('hidden');
+                }, 300); // Wait for transition
+            }, 2000);
+        }
+
+        function updateSetting(settingName, value) {
+            settings[settingName] = value;
+            showFeedback(`${settingName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} ${value ? 'enabled' : 'disabled'}.`);
+            console.log(`Setting updated: ${settingName} = ${value}`);
+        }
+        
+        function handleSecurityAction(action) {
+            if (action === '2fa') {
+                showFeedback("Two-Factor Authentication setup process started (simulated).", false);
+            } else if (action === 'password') {
+                showFeedback("Redirecting to Change Password form (simulated).", false);
+            }
+        }
+        
+        function toggleDarkMode(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark');
+                document.body.classList.remove('bg-gray-50');
+                document.body.classList.add('bg-gray-900');
+                showFeedback("Dark Mode activated.");
+            } else {
+                document.body.classList.remove('dark');
+                document.body.classList.remove('bg-gray-900');
+                document.body.classList.add('bg-gray-50');
+                showFeedback("Light Mode activated.");
+            }
+            settings.darkMode = isDark;
+        }
+
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            // Set initial switch states and attach listeners
+            
+            const emailSwitch = document.getElementById('email-switch');
+            emailSwitch.checked = settings.emailNotifications;
+            emailSwitch.addEventListener('change', (e) => updateSetting('emailNotifications', e.target.checked));
+
+            const paymentSwitch = document.getElementById('payment-switch');
+            paymentSwitch.checked = settings.paymentAlerts;
+            paymentSwitch.addEventListener('change', (e) => updateSetting('paymentAlerts', e.target.checked));
+
+            const reminderSwitch = document.getElementById('reminder-switch');
+            reminderSwitch.checked = settings.appointmentReminders;
+            reminderSwitch.addEventListener('change', (e) => updateSetting('appointmentReminders', e.target.checked));
+            
+            const darkModeSwitch = document.getElementById('dark-mode-switch');
+            darkModeSwitch.checked = settings.darkMode;
+            
+            // Initial dark mode check (for persistence)
+            if (settings.darkMode) {
+                 toggleDarkMode(true);
+            }
+
+            // Render Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+    </script>
+</body>
+</html>

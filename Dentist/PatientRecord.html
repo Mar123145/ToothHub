@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Records</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom colors from the original component */
+        .bg-\[\#03555E\] { background-color: #03555E; }
+        .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
+
+        /* Approximate shadcn/ui styles */
+        .card {
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .card-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+        }
+        .card-content {
+            padding: 1.5rem;
+        }
+        .button-style {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            line-height: 1.25;
+            font-weight: 500;
+            transition: background-color 0.15s;
+        }
+        .button-ghost {
+            background-color: transparent;
+            border: none;
+        }
+        .button-outline {
+             border: 1px solid #e5e7eb;
+             background-color: white;
+             color: #374151; /* gray-700 */
+        }
+        .button-outline:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .input-style {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-top: 0.25rem;
+            height: 2.5rem; /* h-10 */
+        }
+        .label-style {
+            display: block;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-50">
+        <header class="bg-[#03555E] text-white">
+            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+                <a href="Dashboard.html">
+                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
+                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold">Patient Records</h1>
+                    <p class="text-sm opacity-90">Manage your patients</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-8">
+            
+            <div class="card mb-6">
+                <div class="card-header border-b border-gray-100">
+                    <h2 class="card-title flex items-center justify-between">
+                        <span>Manage Patients</span>
+                        <button
+                            id="addPatientToggleBtn"
+                            class="button-style bg-[#03555E] text-white hover:bg-[#024449] flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                <path d="M12 5v14"></path><path d="M5 12h14"></path>
+                            </svg>
+                            Add Patient
+                        </button>
+                    </h2>
+                </div>
+                <div class="card-content">
+                    <div class="flex gap-2">
+                        <div class="flex-1 relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-3 w-4 h-4 text-gray-400">
+                                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                placeholder="Search by name, email, or patient ID..."
+                                class="input-style pl-10"
+                                type="text"
+                            />
+                        </div>
+                        <button class="button-style button-outline">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="addPatientFormCard" class="card mb-6 hidden">
+                <div class="card-header border-b border-gray-100">
+                    <h2 class="card-title">Add New Patient</h2>
+                </div>
+                <div class="card-content">
+                    <form>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="label-style">First Name</label>
+                                <input class="input-style" placeholder="First name" required />
+                            </div>
+                            <div>
+                                <label class="label-style">Last Name</label>
+                                <input class="input-style" placeholder="Last name" required />
+                            </div>
+                            <div>
+                                <label class="label-style">Email</label>
+                                <input class="input-style" type="email" placeholder="Email address" />
+                            </div>
+                            <div>
+                                <label class="label-style">Phone</label>
+                                <input class="input-style" placeholder="Phone number" />
+                            </div>
+                            <div>
+                                <label class="label-style">Date of Birth</label>
+                                <input class="input-style" type="date" />
+                            </div>
+                            <div>
+                                <label class="label-style">Gender</label>
+                                <input class="input-style" placeholder="Gender" />
+                            </div>
+                        </div>
+                        <div class="mt-4 flex gap-2">
+                            <button type="submit" class="button-style bg-[#03555E] text-white hover:bg-[#024449]">Save Patient</button>
+                            <button type="button" id="cancelAddPatientBtn" class="button-style button-outline">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header border-b border-gray-100">
+                    <h2 class="card-title">All Patients</h2>
+                </div>
+                <div class="card-content">
+                    <div class="text-center py-12 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-16 h-16 mx-auto mb-4 opacity-50">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <h3 class="text-lg font-medium mb-2">No patients found</h3>
+                        <p class="text-sm mb-4">Add your first patient to get started</p>
+                        <button 
+                            id="addPatientEmptyBtn"
+                            class="button-style bg-[#03555E] text-white hover:bg-[#024449]"
+                        >
+                            Add Patient
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const addFormCard = document.getElementById('addPatientFormCard');
+        const toggleButtons = [
+            document.getElementById('addPatientToggleBtn'), 
+            document.getElementById('addPatientEmptyBtn'),
+            document.getElementById('cancelAddPatientBtn')
+        ];
+
+        function toggleAddForm(e) {
+            // Prevent default form submission if applicable
+            if (e && e.target.type === 'submit') return; 
+            
+            if (addFormCard.classList.contains('hidden')) {
+                // Show form
+                addFormCard.classList.remove('hidden');
+            } else {
+                // Hide form
+                addFormCard.classList.add('hidden');
+            }
+        }
+
+        // Attach toggle function to all relevant buttons
+        toggleButtons.forEach(button => {
+            if (button) {
+                button.addEventListener('click', toggleAddForm);
+            }
+        });
+
+    </script>
+</body>
+</html>

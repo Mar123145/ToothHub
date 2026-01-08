@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom colors and styles */
+        .bg-\[\#03555E\] { background-color: #03555E; }
+        .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
+
+        /* Approximate shadcn/ui styles */
+        .card {
+            border-radius: 0.75rem; /* Increased rounding */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .card-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+        }
+        .card-content {
+            padding: 1.5rem;
+            min-height: 200px;
+        }
+        .button-style {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem; /* Increased rounding */
+            line-height: 1.25;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .button-ghost {
+            background-color: transparent;
+            border: none;
+        }
+        .skeleton {
+            animation: pulse 1.5s infinite;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* New active button style */
+        .filter-button.active {
+            background-color: #03555E !important; /* Your primary color */
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 640px) {
+            .card-content {
+                padding: 1rem;
+            }
+        }
+    
+/* ToothChart styles (from TreatmentRecords) */
+body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom style for the chart container to ensure responsiveness while maintaining aspect ratio */
+        .tooth-chart-container {
+            display: grid;
+            grid-template-columns: repeat(17, minmax(0, 1fr)); /* 8 + 1 (gap) + 8 */
+            gap: 0.35rem;
+        }
+            .tooth-chart-container > div:nth-child(9) {
+            grid-column: 9 / span 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #d1d5db;
+            }
+        /* Grid for 8 teeth in a quadrant */
+        .quadrant-grid {
+            display: contents;
+        }
+        
+        /* --- STYLIZED TOOTH SHAPE --- */
+        .tooth-shape {
+        position: relative;
+        border-radius: 60% 60% 38% 38% / 70% 70% 30% 30%;
+        background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+        }
+        .tooth-shape::before {
+        content: "";
+        position: absolute;
+        top: 10%;
+        left: 16%;
+        right: 16%;
+        height: 22%;
+        border-radius: 999px;
+        background: rgba(255,255,255,.7);
+        filter: blur(0.3px);
+        }
+
+        /* tiny roots / neck detail (very subtle) */
+        .tooth-shape::after {
+        content: "";
+        position: absolute;
+        bottom: 8%;
+        left: 26%;
+        right: 26%;
+        height: 18%;
+        border-radius: 0 0 14px 14px;
+        background: rgba(17,24,39,.06);
+        }
+        .upper-arch .tooth-shape {
+             /* Flip upper arch buttons for anatomical correctness */
+             transform: scaleY(-1);
+             transform-origin: center center;
+        }
+        
+        .tooth-button-inner {
+            /* This div reverses the transformation so the content is upright */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        .upper-arch .tooth-button-inner {
+            transform: scaleY(-1); /* Reverse transform for content */
+        }
+        /* Curve effect: move teeth up/down to simulate arch */
+.upper-arch .tooth-shape { transform: translateY(var(--arch-offset)) scaleY(-1); }
+.upper-arch .tooth-button-inner { transform: scaleY(-1); } /* keep numbers upright */
+
+.lower-arch .tooth-shape { transform: translateY(var(--arch-offset)); }
+
+/* Offsets for 8 teeth (left side). Right side mirrors using same pattern. */
+.tooth-chart-container button:nth-child(1)  { --arch-offset: 8px; }
+.tooth-chart-container button:nth-child(2)  { --arch-offset: 5px; }
+.tooth-chart-container button:nth-child(3)  { --arch-offset: 2px; }
+.tooth-chart-container button:nth-child(4)  { --arch-offset: 0px; }
+.tooth-chart-container button:nth-child(5)  { --arch-offset: 0px; }
+.tooth-chart-container button:nth-child(6)  { --arch-offset: 2px; }
+.tooth-chart-container button:nth-child(7)  { --arch-offset: 5px; }
+.tooth-chart-container button:nth-child(8)  { --arch-offset: 8px; }
+
+/* After the midline (child 9), the next 8 buttons are 10..17 */
+.tooth-chart-container button:nth-child(10) { --arch-offset: 8px; }
+.tooth-chart-container button:nth-child(11) { --arch-offset: 5px; }
+.tooth-chart-container button:nth-child(12) { --arch-offset: 2px; }
+.tooth-chart-container button:nth-child(13) { --arch-offset: 0px; }
+.tooth-chart-container button:nth-child(14) { --arch-offset: 0px; }
+.tooth-chart-container button:nth-child(15) { --arch-offset: 2px; }
+.tooth-chart-container button:nth-child(16) { --arch-offset: 5px; }
+.tooth-chart-container button:nth-child(17) { --arch-offset: 8px; }
+
+
+</style>
+</head>
+<body class="font-sans antialiased">
+    <div class="min-h-screen bg-gray-50">
+        <header class="bg-[#03555E] text-white shadow-lg">
+            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+                <a href="Dashboard.html">
+                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
+                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold">Appointments</h1>
+                    <p class="text-sm opacity-90">Manage all patient appointments</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6 p-4 bg-white rounded-xl shadow-md border border-gray-100">
+                <input type="text" id="searchAppointments" placeholder="Search by patient or service..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#03555E] focus:border-[#03555E] transition focus:outline-none">
+                
+                </div>
+            
+            <div class="flex gap-2 mb-4 flex-wrap">
+                <button 
+                    id="btn-today" 
+                    data-filter="today" 
+                    class="filter-button px-4 py-2 text-sm font-medium bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                >
+                    Today's Appointments
+                </button>
+                <button 
+                    id="btn-upcoming" 
+                    data-filter="upcoming" 
+                    class="filter-button px-4 py-2 text-sm font-medium bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                >
+                    Upcoming Appointments
+                </button>
+                <button 
+                    id="btn-finished" 
+                    data-filter="finished" 
+                    class="filter-button px-4 py-2 text-sm font-medium bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                >
+                    Finished Appointments
+                </button>
+            </div>
+            
+            <div class="card" id="appointmentsCard">
+                <div class="card-header border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="card-title">
+                        Appointments: <span id="filterTitle">Today's Appointments</span>
+                    </h2>
+                    <span id="appointmentCount" class="text-2xl font-bold text-[#03555E]">0</span>
+                </div>
+                <div class="card-content" id="appointmentsList">
+                    <div id="loading" class="space-y-4">
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="skeleton h-16 w-3/4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finish Appointment: Set Price Modal -->
+<div id="finish-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-y-auto p-6 relative">
+    <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeFinishModal()">✕</button>
+
+    <h2 class="text-lg font-semibold mb-2">Complete Appointment</h2>
+    <p class="text-xs text-gray-600 mb-4">Follow the steps in order. You can’t proceed until the previous step is saved.</p>
+
+    <!-- Patient + Service -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm">
+      <div class="border rounded-lg p-3 bg-gray-50">
+        <p class="text-gray-600 text-xs font-semibold">Patient</p>
+        <p id="finish-patient" class="font-semibold text-gray-900">—</p>
+      </div>
+      <div class="border rounded-lg p-3 bg-gray-50">
+        <p class="text-gray-600 text-xs font-semibold">Service</p>
+        <p id="finish-service" class="font-semibold text-gray-900">—</p>
+      </div>
+    </div>
+
+    <!-- Stepper tabs -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button id="tab-step-1" type="button" class="step-tab px-4 py-2 rounded-lg border text-sm font-semibold" onclick="goToFinishStep(1)">
+        <span class="mr-2">1</span> Medical <span id="mr-status" class="ml-2 text-xs font-semibold text-red-600">Required</span>
+      </button>
+      <button id="tab-step-2" type="button" class="step-tab px-4 py-2 rounded-lg border text-sm font-semibold" onclick="goToFinishStep(2)" disabled style="opacity:.5">
+        <span class="mr-2">2</span> Treatment <span id="tr-status" class="ml-2 text-xs font-semibold text-red-600">Required</span>
+      </button>
+      <button id="tab-step-3" type="button" class="step-tab px-4 py-2 rounded-lg border text-sm font-semibold" onclick="goToFinishStep(3)" disabled style="opacity:.5">
+        <span class="mr-2">3</span> Pricing
+      </button>
+    </div>
+
+    <!-- Step contents -->
+    <div id="finish-step-1" class="finish-step space-y-3">
+      <div class="border rounded-lg p-4">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <p class="font-semibold">Medical Record</p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Enter measurements in <span class="font-semibold">cm</span> and <span class="font-semibold">kg</span>. Leave blank if unknown.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Height -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Height</label>
+            <div class="mt-1 flex rounded-lg border bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#03555E]">
+              <input id="mr-height" type="number" step="0.01"
+                class="w-full px-3 py-2 text-sm outline-none"
+                placeholder="e.g. 165" />
+              <span class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-l">cm</span>
+            </div>
+          </div>
+
+          <!-- Weight -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Weight</label>
+            <div class="mt-1 flex rounded-lg border bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#03555E]">
+              <input id="mr-weight" type="number" step="0.01"
+                class="w-full px-3 py-2 text-sm outline-none"
+                placeholder="e.g. 62" />
+              <span class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-l">kg</span>
+            </div>
+          </div>
+
+          <!-- Blood Type -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Blood Type</label>
+            <input id="mr-bloodtype" type="text"
+              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
+              placeholder="e.g. O+, A-" />
+            <p class="text-[11px] text-gray-500 mt-1">Optional</p>
+          </div>
+
+          <!-- Allergies -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Allergies</label>
+            <input id="mr-allergies" type="text"
+              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
+              placeholder="e.g. Penicillin, Latex" />
+            <p class="text-[11px] text-gray-500 mt-1">Separate with commas</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Emergency Contact Name</label>
+            <input id="mr-emergency-name" type="text"
+              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
+              placeholder="Full name" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Emergency Contact Number</label>
+            <input id="mr-emergency-number" type="text" inputmode="numeric"
+              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
+              placeholder="09xxxxxxxxx" />
+            <p class="text-[11px] text-gray-500 mt-1">Digits only if possible</p>
+          </div>
+        </div>
+
+        <div class="mt-3 space-y-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Medication</label>
+            <textarea id="mr-medication" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="2" placeholder="Optional"></textarea>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Medical Conditions</label>
+            <textarea id="mr-conditions" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="2" placeholder="Optional"></textarea>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Notes</label>
+            <textarea id="mr-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="3" placeholder="Any additional notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeFinishModal()">Cancel</button>
+          <button type="button" id="mr-save-btn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]" onclick="saveMedicalRecordStep()">Save Medical</button>
+        </div>
+      </div>
+    </div>
+<div id="finish-step-2" class="finish-step hidden space-y-3">
+      <div class="border rounded-lg p-4">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <p class="font-semibold">Treatment Record</p>
+            <p class="text-xs text-gray-500 mt-0.5">Add notes/details and update the tooth chart for this appointment.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Treatment Notes</label>
+            <textarea id="tr-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="5" placeholder="Write what was done / findings..."></textarea>
+
+            <label class="text-xs font-semibold text-gray-600 mt-3 block">Treatment Details</label>
+            <textarea id="tr-details" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="5" placeholder="Detailed procedure, materials used, etc..."></textarea>
+
+            <div class="mt-3 flex justify-end gap-2">
+              <button type="button" class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="goToFinishStep(1)">Back</button>
+              <button type="button" id="tr-save-btn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]" onclick="saveTreatmentRecordStep()" disabled style="opacity:.5">Save Treatment</button>
+            </div>
+          </div>
+
+          <div class="border p-4 rounded-xl bg-gray-50">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <div>
+                <p class="font-bold text-gray-700">Tooth Chart</p>
+                <p class="text-xs text-gray-500">Select a tool, then tap teeth.</p>
+              </div>
+
+              <div class="flex items-center gap-3 text-xs text-gray-600">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Treatment Needed
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Completed
+                </span>
+              </div>
+
+              <div class="flex bg-white p-1 rounded-lg shadow-sm border">
+                <button type="button" id="tool-treatment" class="px-3 py-1.5 rounded-md text-sm font-medium" onclick="setActiveToothTool('treatment')">
+                  Treatment Needed
+                </button>
+                <button type="button" id="tool-completed" class="px-3 py-1.5 rounded-md text-sm font-medium" onclick="setActiveToothTool('completed')">
+                  Completed
+                </button>
+              </div>
+            </div>
+
+            <div id="toothchart-grid" class="bg-white p-4 rounded-xl border shadow-inner"></div>
+
+            <div class="mt-4 p-3 bg-white rounded-lg border text-sm">
+              <p><span class="font-semibold text-red-600">Treatment:</span> <span id="summary-treatment">None</span></p>
+              <p><span class="font-semibold text-blue-600">Completed:</span> <span id="summary-completed">None</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<div id="finish-step-3" class="finish-step hidden space-y-3">
+      <div class="border rounded-lg p-4">
+        <p class="font-semibold mb-3">Pricing</p>
+
+        <div class="border rounded-lg p-3 bg-gray-50">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Base service price (₱)</label>
+          <input id="finish-base-price" type="number" min="0" step="0.01"
+            class="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+            placeholder="e.g. 1500" disabled />
+        </div>
+
+        <div class="border rounded-lg p-3 mt-3">
+          <div class="flex items-center justify-between mb-2">
+            <p class="font-semibold">Add-ons</p>
+            <button type="button"
+              class="text-xs px-3 py-1 rounded-lg bg-[#03555E] text-white hover:bg-[#024449]"
+              onclick="addAddonRow()" disabled id="addons-add-btn"
+            >+ Add add-on</button>
+          </div>
+
+          <div id="finish-addons" class="space-y-2" style="opacity:.5"></div>
+        </div>
+
+        <div class="flex items-center justify-between border-t pt-3 mt-3">
+          <span class="font-semibold">Total</span>
+          <span id="finish-total" class="text-lg font-bold text-[#03555E]">₱0</span>
+        </div>
+
+        <div id="finish-error" class="hidden text-red-600 text-xs font-semibold mt-2"></div>
+
+        <div class="mt-4 flex justify-between gap-3 flex-wrap">
+          <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="goToFinishStep(2)">
+            Back
+          </button>
+          <div class="flex gap-3">
+            <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeFinishModal()">
+              Cancel
+            </button>
+            <button id="finish-confirm-btn"
+              class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
+              onclick="confirmFinishAppointment()" disabled style="opacity:.5"
+            >
+              Save Price & Finish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- Supabase client (replace with your values) ---
+        const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co"; // <- replace
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; // <- replace
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentFilter = 'upcoming'; // Default to upcoming or today for initial load
+
+        // =================================================================================
+        // *** START OF USER-PROTECTED BLOCK (checkAuth) ***
+        // =================================================================================
+
+        async function checkAuth(redirect = true) {
+            const storedFirstName = localStorage.getItem('userFirstName');
+            const storedRole = localStorage.getItem('userRole');
+            const storedEmail = localStorage.getItem('userEmail');
+            const storedUserId = localStorage.getItem('userId'); 
+
+            if (storedFirstName && storedRole && storedUserId) return { UserAccountID: storedUserId, FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+            const { data: userData } = await supabaseClient
+                .from('UserAccount')
+                .select('*')
+                .eq('Email', session.user.email)
+                .maybeSingle();
+
+            if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+            localStorage.setItem('userFirstName', userData.FirstName);
+            localStorage.setItem('userRole', userData.Role);
+            localStorage.setItem('userEmail', userData.Email);
+            localStorage.setItem('userId', userData.UserAccountID); 
+            
+            return userData;
+        }
+
+        // =================================================================================
+        // *** END OF USER-PROTECTED BLOCK (checkAuth) ***
+        // =================================================================================
+
+
+        // --- NEW FUNCTION: Mark Appointment as Finished ---
+        async function updateAppointmentStatus(appointmentId, filter, searchQuery) {
+            if (!appointmentId) return;
+
+            const dentistId = localStorage.getItem('userId');
+            if (!dentistId) {
+                console.error("No dentist ID found in localStorage.");
+                return;
+            }
+
+            // Get the appointment row in the UI (for quick visual feedback)
+            const rowEl = document.querySelector(`button[data-id="${appointmentId}"]`)?.closest('.border');
+            if (rowEl) {
+                rowEl.style.opacity = "0.5";
+                rowEl.style.pointerEvents = "none";
+            }
+
+            // --- Show local loading state ---
+            const loadingHTML = `
+                <div class="text-center py-6 text-gray-500">
+                    <div class="skeleton h-5 w-1/2 mx-auto mb-3"></div>
+                    <div class="skeleton h-5 w-1/3 mx-auto"></div>
+                </div>
+            `;
+            if (rowEl) rowEl.innerHTML = loadingHTML;
+
+            // --- Update appointment in Supabase ---
+            const { error } = await supabaseClient
+                .from('Appointment')
+                .update({ Status: 'Finished' })
+                .eq('AppointmentID', appointmentId)
+                .eq('DentistID', dentistId);
+
+            if (error) {
+                console.error("Error updating appointment status:", error);
+                if (rowEl) {
+                    rowEl.innerHTML = `<div class="text-center py-6 text-red-500">
+                        Failed to mark as finished. Try again later.
+                    </div>`;
+                }
+                return;
+            }
+
+            // --- Remove the appointment from the current list if it's not in "Finished" filter ---
+            // If the current filter is 'today' (where the button is visible), remove it.
+            if (filter !== 'finished') { 
+                if (rowEl) {
+                    rowEl.style.transition = "all 0.3s ease";
+                    rowEl.style.opacity = "0";
+                    setTimeout(() => rowEl.remove(), 300);
+                }
+            }
+
+            // --- Refresh the list after update ---
+            await loadDentistAppointments(filter, searchQuery);
+        }
+
+        // --- NEW HELPER FUNCTION: Render Appointments (used for search and button handling) ---
+        function renderAppointments(appointments, filter, listEl, countEl) {
+            const searchQuery = document.getElementById('searchAppointments').value.toLowerCase();
+            
+            // Map filter value to display name
+            let filterDisplayName;
+            switch (filter) {
+                case 'today':
+                    filterDisplayName = "Today's Appointments";
+                    break;
+                case 'upcoming':
+                    filterDisplayName = "Upcoming Appointments";
+                    break;
+                case 'finished':
+                    filterDisplayName = "Finished Appointments";
+                    break;
+                default:
+                    filterDisplayName = "Appointments";
+            }
+
+            // Filter appointments based on current search query
+            const filteredAppointments = appointments.filter(a => 
+                a.PatientName.toLowerCase().includes(searchQuery) || 
+                a.Service?.toLowerCase().includes(searchQuery) || 
+                (a.ServiceType && a.ServiceType.toLowerCase().includes(searchQuery))
+            );
+
+            countEl.textContent = filteredAppointments.length;
+            document.getElementById('filterTitle').textContent = filterDisplayName;
+
+
+            if (filteredAppointments.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-500">No ${filterDisplayName.toLowerCase()} match your criteria.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filteredAppointments.map(a => {
+                const scheduleDate = new Date(a.AppointmentSchedule);
+                const dateStr = scheduleDate.toLocaleDateString();
+                const timeStr = scheduleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                // Logic for status color: Green for Approved or Finished, Yellow for others
+                const statusColor = a.Status === 'Finished' || a.Status === 'Approved' ? 'text-green-600' : 'text-yellow-600';
+                
+                // Logic for action button: Button only appears if filter is 'today' AND status is active.
+                const showMarkFinishedButton = filter === 'today' && 
+                    (a.Status === 'Approved' ||
+                    a.Status === 'Pending' ||
+                    a.Status === 'Requested' ||
+                    a.Status === 'Rescheduled');
+
+                const actionButton = showMarkFinishedButton ? `
+                    <button 
+                        data-id="${a.AppointmentID}"
+                        class="mark-finished-btn text-xs font-semibold px-3 py-1 bg-[#03555E] text-white rounded-md hover:bg-[#024449] transition duration-150 shadow-md ml-4 mt-2"
+                    >
+                        Mark Finished
+                    </button>
+                ` : (a.Status === 'Finished' ? `<span class="text-xs text-gray-500">Completed</span>` : '');
+
+                return `
+                    <div class="border rounded-lg p-4 flex justify-between items-center mb-2 bg-white shadow-sm">
+                        <div>
+                            <p class="font-medium text-gray-800">${a.PatientName}</p>
+                            <p class="text-sm text-gray-600">${a.Service || a.ServiceType || "No service specified"}</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <p class="text-sm">${dateStr} ${timeStr}</p>
+                            <p class="text-sm font-semibold ${statusColor}">${a.Status}</p>
+                            ${actionButton}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Attach listener to new buttons
+            document.querySelectorAll('.mark-finished-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const appointmentId = e.target.getAttribute('data-id');
+                    const currentSearchQuery = document.getElementById('searchAppointments').value;
+                    openFinishModal(appointmentId, filter);
+                });
+            });
+        }
+
+        let finishContext = {
+  appointmentId: null,
+  filter: null,
+  appointment: null,
+  patientName: null,
+};
+
+let finishSteps = {
+  medicalSaved: false,
+  treatmentSaved: false,
+  priceSaved: false,
+};
+
+let currentFinishStep = 1;
+
+function goToFinishStep(step) {
+  // Guard: step 2 requires medical saved; step 3 requires treatment saved
+  if (step === 2 && !finishSteps.medicalSaved) return;
+  if (step === 3 && !(finishSteps.medicalSaved && finishSteps.treatmentSaved)) return;
+
+  currentFinishStep = step;
+
+  document.querySelectorAll('.finish-step').forEach((el) => el.classList.add('hidden'));
+  const active = document.getElementById(`finish-step-${step}`);
+  if (active) active.classList.remove('hidden');
+
+  document.querySelectorAll('.step-tab').forEach((btn) => {
+    btn.classList.remove('bg-[#03555E]', 'text-white', 'border-[#03555E]');
+  });
+  const tab = document.getElementById(`tab-step-${step}`);
+  if (tab) tab.classList.add('bg-[#03555E]', 'text-white', 'border-[#03555E]');
+
+  // ensure tooth chart is visible & rendered when entering step 2
+  if (step === 2) {
+    renderToothChart();
+  }
+}
+
+function unlockTab(id, can) {
+  const tab = document.getElementById(id);
+  if (!tab) return;
+  tab.disabled = !can;
+  tab.style.opacity = can ? '1' : '.5';
+}
+
+function lockPricingUI(lock) {
+  const base = document.getElementById('finish-base-price');
+  const addBtn = document.getElementById('addons-add-btn');
+  const addonsWrap = document.getElementById('finish-addons');
+  const finishBtn = document.getElementById('finish-confirm-btn');
+
+  if (base) base.disabled = lock;
+  if (addBtn) addBtn.disabled = lock;
+  if (addonsWrap) addonsWrap.style.opacity = lock ? '.5' : '1';
+  if (finishBtn) {
+    finishBtn.disabled = lock;
+    finishBtn.style.opacity = lock ? '.5' : '1';
+  }
+}
+
+
+// ---------------- ToothChart (vanilla JS, same numbering + styling as TreatmentRecords) ----------------
+let activeToothTool = 'treatment'; // 'treatment' | 'completed'
+let teethStatus = {}; // { "1": "treatment" | "completed", ... }
+
+function setActiveToothTool(tool) {
+  activeToothTool = tool;
+  // Toggle button styles
+  const btnTreatment = document.getElementById('tool-treatment');
+  const btnCompleted = document.getElementById('tool-completed');
+  if (!btnTreatment || !btnCompleted) return;
+
+  if (tool === 'treatment') {
+    btnTreatment.className = "px-3 py-1.5 rounded-md text-sm font-medium bg-red-100 text-red-800";
+    btnCompleted.className = "px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50";
+  } else {
+    btnCompleted.className = "px-3 py-1.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800";
+    btnTreatment.className = "px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50";
+  }
+}
+
+function updateToothSummary() {
+  const treatment = [];
+  const completed = [];
+  Object.entries(teethStatus || {}).forEach(([k, v]) => {
+    const n = Number(k);
+    if (v === 'treatment') treatment.push(n);
+    if (v === 'completed') completed.push(n);
+  });
+  treatment.sort((a,b)=>a-b);
+  completed.sort((a,b)=>a-b);
+
+  const tEl = document.getElementById('summary-treatment');
+  const cEl = document.getElementById('summary-completed');
+  if (tEl) tEl.textContent = treatment.length ? treatment.join(', ') : 'None';
+  if (cEl) cEl.textContent = completed.length ? completed.join(', ') : 'None';
+}
+
+function toothButtonClasses(status) {
+  let baseStyles = "bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 shadow-sm";
+  let numberColor = "text-gray-700";
+  let indicator = "";
+
+  if (status === 'treatment') {
+    baseStyles = "bg-red-100 border-red-500 ring-2 ring-red-300 shadow-sm";
+    numberColor = "text-red-900";
+    indicator = "bg-red-600";
+  }
+  if (status === 'completed') {
+    baseStyles = "bg-blue-100 border-blue-500 ring-2 ring-blue-300 shadow-sm";
+    numberColor = "text-blue-900";
+    indicator = "bg-blue-600";
+  }
+  return { baseStyles, numberColor, indicator };
+
+  if (status === 'completed') {
+    baseStyles = "bg-blue-200 border-blue-600 shadow-xl ring-2 ring-blue-400";
+    numberColor = "text-blue-900";
+    indicator = "bg-blue-600";
+  }
+  return { baseStyles, numberColor, indicator };
+}
+
+
+function handleToothClick(number) {
+  const key = String(number);
+  const current = teethStatus[key] || null;
+
+  if (current === activeToothTool) {
+    delete teethStatus[key];
+  } else {
+    teethStatus[key] = activeToothTool;
+  }
+  renderToothChart();
+  updateToothSummary();
+}
+
+function renderQuadrant(numbers, isUpperArch) {
+  const wrap = document.createElement('div');
+  wrap.className = `quadrant-grid ${isUpperArch ? 'upper-arch' : 'lower-arch'}`;
+
+  numbers.forEach(n => {
+    const status = teethStatus[String(n)] || null;
+    const { baseStyles, numberColor, indicator } = toothButtonClasses(status);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className =
+  `relative w-full min-h-[52px] aspect-[4/5]
+   flex items-center justify-center
+   rounded-lg border-2 transition-all duration-200
+   ${baseStyles} tooth-shape`;
+    btn.onclick = () => handleToothClick(n);
+
+    const inner = document.createElement('div');
+    inner.className = "tooth-button-inner";
+    const num = document.createElement('span');
+    num.className = `text-sm font-semibold ${numberColor}`;
+    num.textContent = String(n);
+
+    inner.appendChild(num);
+    btn.appendChild(inner);
+
+    if (indicator) {
+      const dot = document.createElement('div');
+      dot.className = `absolute w-2 h-2 rounded-full ${indicator}`;
+      dot.style.top = isUpperArch ? '70%' : '10%';
+      dot.style.right = '10%';
+      btn.appendChild(dot);
+    }
+
+    wrap.appendChild(btn);
+  });
+
+  return wrap;
+}
+
+function createToothBtn(n, isUpper) {
+  const status = teethStatus[String(n)] || null;
+  const { baseStyles, numberColor, indicator } = toothButtonClasses(status);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.title = `Tooth ${n}`;
+  btn.className = `relative w-full min-h-[44px] aspect-square flex items-center justify-center rounded-lg border-2 transition-all duration-200 ${baseStyles} tooth-shape`;
+  btn.onclick = () => handleToothClick(n);
+
+  const inner = document.createElement('div');
+  inner.className = "tooth-button-inner";
+
+  const num = document.createElement('span');
+  num.className = `text-sm font-semibold ${numberColor}`;
+  num.textContent = String(n);
+
+  inner.appendChild(num);
+  btn.appendChild(inner);
+
+  if (indicator) {
+    const dot = document.createElement('div');
+    dot.className = `absolute w-2.5 h-2.5 rounded-full ${indicator}`;
+    dot.style.top = isUpper ? '70%' : '10%';
+    dot.style.right = '10%';
+    btn.appendChild(dot);
+  }
+
+  return btn;
+
+
+  return btn;
+
+}
+function createMidline() {
+  const mid = document.createElement('div');
+  mid.className = "flex items-center justify-center";
+  mid.innerHTML = `<div class="w-px h-10 bg-gray-300 rounded-full"></div>`;
+  return mid; // styled/positioned via .tooth-chart-container > div:nth-child(9)
+}
+
+function renderRow(container, leftNums, rightNums, isUpper) {
+  container.innerHTML = "";
+  leftNums.forEach(n => container.appendChild(createToothBtn(n, isUpper)));
+  container.appendChild(createMidline());
+  rightNums.forEach(n => container.appendChild(createToothBtn(n, isUpper)));
+}
+
+function renderToothChart() {
+  const host = document.getElementById('toothchart-grid');
+  if (!host) return;
+
+  host.innerHTML = "";
+
+  const Q1 = [8,7,6,5,4,3,2,1];
+  const Q2 = [9,10,11,12,13,14,15,16];
+  const Q4 = [32,31,30,29,28,27,26,25];
+  const Q3 = [24,23,22,21,20,19,18,17];
+
+    const topLabel = document.createElement('div');
+    topLabel.className = "text-xs font-semibold text-gray-500 mb-1";
+    topLabel.textContent = "Maxillary (Upper)";
+
+    const top = document.createElement('div');
+    top.className = "tooth-chart-container upper-arch";
+    renderRow(top, Q1, Q2, true);
+
+  const hr = document.createElement('div');
+  hr.className = "w-full h-1 bg-gray-100 my-4 rounded-full";
+
+const bottomLabel = document.createElement('div');
+bottomLabel.className = "text-xs font-semibold text-gray-500 mt-3 mb-1";
+bottomLabel.textContent = "Mandibular (Lower)";
+
+const bottom = document.createElement('div');
+bottom.className = "tooth-chart-container lower-arch";
+renderRow(bottom, Q4, Q3, false);
+
+    host.appendChild(topLabel);
+  host.appendChild(top);
+  host.appendChild(hr);
+  host.appendChild(bottomLabel);
+  host.appendChild(bottom);
+
+  setActiveToothTool(activeToothTool);
+  updateToothSummary();
+}
+// -------------------------------------------------------------------------------------------
+
+function peso(amount) {
+  const n = Number(amount || 0);
+  return `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+
+function computeFinishTotal() {
+  const base = Number(document.getElementById('finish-base-price')?.value || 0);
+
+  const addonRows = Array.from(document.querySelectorAll('.addon-row'));
+  const addons = addonRows.map(row => {
+    const name = row.querySelector('.addon-name')?.value?.trim() || '';
+    const price = Number(row.querySelector('.addon-price')?.value || 0);
+    return { name, price };
+  }).filter(a => a.name || a.price > 0);
+
+  const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+  const total = base + addonsTotal;
+
+  document.getElementById('finish-total').textContent = peso(total);
+  return { base, addons, total };
+}
+
+function addAddonRow(prefill = { name: '', price: '' }) {
+  const wrap = document.getElementById('finish-addons');
+  const row = document.createElement('div');
+  row.className = 'addon-row grid grid-cols-12 gap-2 items-center';
+
+  row.innerHTML = `
+    <input type="text"
+      class="addon-name col-span-7 border rounded-lg px-3 py-2 text-sm"
+      placeholder="Add-on name"
+      value="${prefill.name || ''}"
+    />
+    <input type="number" min="0" step="0.01"
+      class="addon-price col-span-4 border rounded-lg px-3 py-2 text-sm"
+      placeholder="₱"
+      value="${prefill.price || ''}"
+    />
+    <button type="button"
+      class="col-span-1 text-gray-400 hover:text-red-600"
+      title="Remove"
+    >✕</button>
+  `;
+
+  row.querySelector('button').addEventListener('click', () => {
+    row.remove();
+    computeFinishTotal();
+  });
+
+  row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', computeFinishTotal));
+
+  wrap.appendChild(row);
+  computeFinishTotal();
+}
+
+async function openFinishModal(appointmentId, filter) {
+  finishContext.appointmentId = appointmentId;
+  finishContext.filter = filter;
+
+  const dentistId = localStorage.getItem('userId');
+  if (!dentistId) return;
+
+  // Load appointment
+  const { data: appt, error: apptErr } = await supabaseClient
+    .from('Appointment')
+    .select('AppointmentID, Service, ServiceType, UserAccountID, DentistID')
+    .eq('AppointmentID', appointmentId)
+    .eq('DentistID', dentistId)
+    .maybeSingle();
+
+  if (apptErr || !appt) {
+    console.error(apptErr);
+    showToast('Failed to load appointment.');
+    return;
+  }
+
+  // Load patient name
+  let patientName = 'Unknown';
+  if (appt.UserAccountID) {
+    const { data: patient } = await supabaseClient
+      .from('UserAccount')
+      .select('FirstName, LastName')
+      .eq('UserAccountID', appt.UserAccountID)
+      .maybeSingle();
+    if (patient) patientName = `${patient.FirstName || ''} ${patient.LastName || ''}`.trim() || 'Unknown';
+  }
+
+  finishContext.appointment = appt;
+  finishContext.patientName = patientName;
+
+  document.getElementById('finish-patient').textContent = patientName;
+  document.getElementById('finish-service').textContent = appt.Service || appt.ServiceType || '—';
+
+  // reset fields
+  document.getElementById('finish-base-price').value = '';
+  document.getElementById('finish-addons').innerHTML = '';
+  document.getElementById('finish-error').classList.add('hidden');
+  document.getElementById('finish-error').textContent = '';
+  document.getElementById('finish-total').textContent = peso(0);
+
+  // Optional: start with one row
+  // addAddonRow();
+
+  document.getElementById('finish-base-price').oninput = computeFinishTotal;
+
+  const modal = document.getElementById('finish-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  // reset to step 1 view
+  goToFinishStep(1);
+  // Load existing records (if any) then lock/unlock steps accordingly
+  await loadExistingStepsForAppointment();
+
+  computeFinishTotal();
+}
+
+function closeFinishModal() {
+  const modal = document.getElementById('finish-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  finishContext = { appointmentId: null, filter: null, appointment: null, patientName: null };
+}
+
+async function confirmFinishAppointment() {
+  const errBox = document.getElementById('finish-error');
+  const btn = document.getElementById('finish-confirm-btn');
+
+  const dentistId = localStorage.getItem('userId');
+  if (!dentistId || !finishContext.appointmentId) return;
+
+  const { base, addons, total } = computeFinishTotal();
+
+  if (total <= 0) {
+    errBox.textContent = 'Please set a valid price before finishing.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const breakdown = {
+    baseServicePrice: base,
+    addons,
+    computedTotal: total,
+    setByDentistId: dentistId,
+    setAt: new Date().toISOString(),
+  };
+
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = 'Saving...';
+
+  // IMPORTANT:
+  // Requires Appointment.TotalAmount column.
+  // PriceBreakdown is optional (remove if you don't have it).
+  const { data: updatedRows, error } = await supabaseClient
+    .from('Appointment')
+    .update({
+      TotalAmount: total,
+      Status: 'Finished',
+    })
+    .eq('AppointmentID', finishContext.appointmentId)
+    .eq('DentistID', dentistId)
+    .select('AppointmentID, TotalAmount, Status');
+
+  // IMPORTANT: PostgREST can return no error even if 0 rows matched (e.g. DentistID mismatch or RLS).
+  if (!error && (!updatedRows || updatedRows.length === 0)) {
+    const msg = "No rows were updated. Check DentistID/userId mismatch or RLS policy.";
+    console.warn(msg);
+    errBox.textContent = msg;
+    errBox.classList.remove('hidden');
+    showToast(msg, 'error');
+    btn.disabled = false;
+    btn.textContent = old;
+    return;
+  }
+
+  btn.disabled = false;
+  btn.textContent = old;
+
+  if (error) {
+    console.error(error);
+    errBox.textContent = 'Failed to save price / finish. Please try again.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  showToast('Appointment finished and price saved.', 'success');
+  closeFinishModal();
+
+  // Refresh list
+  const searchQuery = document.getElementById('searchAppointments').value;
+  await loadDentistAppointments(finishContext.filter || 'today', searchQuery);
+}
+
+function setStepStatus(id, ok, textOk = 'Done') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = ok ? `✅ ${textOk}` : 'Required';
+  el.className = ok
+    ? 'text-xs font-semibold text-green-700'
+    : 'text-xs font-semibold text-red-600';
+}
+
+function lockTreatment(lock) {
+  const btn = document.getElementById('tr-save-btn');
+  btn.disabled = lock;
+  btn.style.opacity = lock ? '.5' : '1';
+}
+
+function lockPrice(lock) {
+  document.getElementById('finish-base-price').disabled = lock;
+  document.getElementById('finish-confirm-btn').disabled = lock;
+  document.getElementById('finish-confirm-btn').style.opacity = lock ? '.5' : '1';
+}
+
+function refreshFinishLocks() {
+  setStepStatus('mr-status', finishSteps.medicalSaved);
+  setStepStatus('tr-status', finishSteps.treatmentSaved);
+
+  // Step 2 can only be used after medical is saved
+  unlockTab('tab-step-2', finishSteps.medicalSaved);
+  lockTreatment(!finishSteps.medicalSaved);
+
+  // Step 3 (pricing) only after medical + treatment saved
+  const canPrice = finishSteps.medicalSaved && finishSteps.treatmentSaved;
+  unlockTab('tab-step-3', canPrice);
+  lockPricingUI(!canPrice);
+
+  // If user is currently on a step that is no longer allowed, bounce back.
+  if (currentFinishStep === 3 && !canPrice) goToFinishStep(2);
+  if (currentFinishStep === 2 && !finishSteps.medicalSaved) goToFinishStep(1);
+}
+
+async function loadExistingStepsForAppointment() {
+  const appointmentId = finishContext.appointmentId;
+  const appt = finishContext.appointment;
+
+  finishSteps = { medicalSaved: false, treatmentSaved: false, priceSaved: false };
+
+  // MedicalRecord exists?
+  const { data: mr } = await supabaseClient
+    .from('MedicalRecord')
+    .select('*')
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
+
+  if (mr) {
+    finishSteps.medicalSaved = true;
+    // prefill fields
+    document.getElementById('mr-height').value = mr.Height ?? '';
+    document.getElementById('mr-weight').value = mr.Weight ?? '';
+    document.getElementById('mr-bloodtype').value = mr.BloodType ?? '';
+    document.getElementById('mr-allergies').value = mr.Allergies ?? '';
+    document.getElementById('mr-medication').value = mr.Medication ?? '';
+    document.getElementById('mr-conditions').value = mr.MedicalConditions ?? '';
+    document.getElementById('mr-notes').value = mr.MedicalRecordNotes ?? '';
+    document.getElementById('mr-emergency-name').value = mr.EmergencyContactName ?? '';
+    document.getElementById('mr-emergency-number').value = mr.EmergencyContactNumber ?? '';
+  }
+
+  // TreatmentRecord exists?
+  const { data: tr } = await supabaseClient
+    .from('TreatmentRecord')
+    .select('*')
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
+
+  if (tr) {
+    const hasContent = (tr.TreatmentNotes || '').trim() || (tr.TreatmentDetails || '').trim();
+    if (hasContent) finishSteps.treatmentSaved = true;
+
+    document.getElementById('tr-notes').value = tr.TreatmentNotes ?? '';
+    document.getElementById('tr-details').value = tr.TreatmentDetails ?? '';
+
+    // Load ToothChart for this TreatmentRecord (if exists)
+    if (tr.TreatmentRecordID) {
+      const { data: tc } = await supabaseClient
+        .from('ToothChart')
+        .select('TeethStatus')
+        .eq('TreatmentRecordID', tr.TreatmentRecordID)
+        .maybeSingle();
+      teethStatus = (tc && tc.TeethStatus) ? tc.TeethStatus : {};
+    } else {
+      teethStatus = {};
+    }
+    renderToothChart();
+    updateToothSummary();
+
+  }
+
+  // Price exists?
+  if (appt?.TotalAmount && Number(appt.TotalAmount) > 0) {
+    finishSteps.priceSaved = true;
+  }
+
+  refreshFinishLocks();
+}
+
+async function saveMedicalRecordStep() {
+  const appointmentId = finishContext.appointmentId;
+  const appt = finishContext.appointment;
+  if (!appointmentId || !appt?.UserAccountID) return;
+
+  const payload = {
+    MedicalRecordID: crypto.randomUUID(), // will overwrite if updating; we'll fix below
+    AppointmentID: appointmentId,
+    UserAccountID: appt.UserAccountID,
+
+    Height: Number(document.getElementById('mr-height').value || 0) || null,
+    Weight: Number(document.getElementById('mr-weight').value || 0) || null,
+    BloodType: document.getElementById('mr-bloodtype').value || null,
+    Allergies: document.getElementById('mr-allergies').value || null,
+    Medication: document.getElementById('mr-medication').value || null,
+    MedicalConditions: document.getElementById('mr-conditions').value || null,
+    MedicalRecordNotes: document.getElementById('mr-notes').value || null,
+    EmergencyContactName: document.getElementById('mr-emergency-name').value || null,
+    EmergencyContactNumber: document.getElementById('mr-emergency-number').value || null,
+
+    UpdatedAt: new Date().toISOString(),
+  };
+
+  // check existing by AppointmentID
+  const { data: existing } = await supabaseClient
+    .from('MedicalRecord')
+    .select('MedicalRecordID')
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
+
+  let res;
+  if (existing?.MedicalRecordID) {
+    delete payload.MedicalRecordID;
+    res = await supabaseClient
+      .from('MedicalRecord')
+      .update(payload)
+      .eq('AppointmentID', appointmentId);
+  } else {
+    payload.CreatedAt = new Date().toISOString();
+    res = await supabaseClient
+      .from('MedicalRecord')
+      .insert(payload);
+  }
+
+  if (res.error) {
+    console.error(res.error);
+    showToast('Failed to save Medical Record.');
+    return;
+  }
+
+  finishSteps.medicalSaved = true;
+  refreshFinishLocks();
+}
+
+
+async function saveTreatmentRecordStep() {
+  if (!finishSteps.medicalSaved) {
+    showToast('Please save Medical Record first.');
+    return;
+  }
+
+  const appointmentId = finishContext.appointmentId;
+  if (!appointmentId) return;
+
+  const notes = document.getElementById('tr-notes').value || '';
+  const details = document.getElementById('tr-details').value || '';
+  const hasContent = notes.trim() || details.trim();
+
+  if (!hasContent) {
+    showToast('Please enter Treatment Notes or Treatment Details.');
+    return;
+  }
+
+  // check existing
+  const { data: existing, error: exErr } = await supabaseClient
+    .from('TreatmentRecord')
+    .select('TreatmentRecordID')
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
+
+  if (exErr) console.error(exErr);
+
+  let res;
+  if (existing?.TreatmentRecordID) {
+    res = await supabaseClient
+      .from('TreatmentRecord')
+      .update({ TreatmentNotes: notes, TreatmentDetails: details })
+      .eq('AppointmentID', appointmentId);
+  } else {
+    res = await supabaseClient
+      .from('TreatmentRecord')
+      .insert({
+        TreatmentRecordID: crypto.randomUUID(),
+        AppointmentID: appointmentId,
+        TreatmentNotes: notes,
+        TreatmentDetails: details,
+      });
+  }
+
+  if (res.error) {
+    console.error(res.error);
+    showToast('Failed to save Treatment Record.');
+    return;
+  }
+
+  // fetch TreatmentRecordID (needed for ToothChart)
+  const { data: trRow, error: trErr } = await supabaseClient
+    .from('TreatmentRecord')
+    .select('TreatmentRecordID')
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
+
+  if (trErr || !trRow?.TreatmentRecordID) {
+    console.error(trErr);
+    showToast('Saved treatment, but failed to resolve TreatmentRecordID for ToothChart.');
+    return;
+  }
+
+  // upsert ToothChart (one per TreatmentRecord)
+  const { error: tcErr } = await supabaseClient
+    .from('ToothChart')
+    .upsert(
+      {
+        TreatmentRecordID: trRow.TreatmentRecordID,
+        TeethStatus: teethStatus || {}
+      },
+      { onConflict: ['TreatmentRecordID'] }
+    );
+
+  if (tcErr) {
+    console.error(tcErr);
+    showToast('Failed to save ToothChart.');
+    return;
+  }
+
+  finishSteps.treatmentSaved = true;
+  refreshFinishLocks();
+}
+
+let toastTimer = null;
+
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toast');
+  const title = document.getElementById('toast-title');
+  const msg = document.getElementById('toast-message');
+  const icon = document.getElementById('toast-icon');
+
+  const styles = {
+    success: { icon: '✅', border: 'border-green-200', bg: 'bg-green-50' },
+    error:   { icon: '❌', border: 'border-red-200', bg: 'bg-red-50' },
+    info:    { icon: 'ℹ️', border: 'border-gray-200', bg: 'bg-white' }
+  };
+
+  const s = styles[type] || styles.info;
+
+  toast.className = `fixed bottom-6 right-6 z-50 max-w-sm rounded-xl border shadow-lg ${s.border} ${s.bg}`;
+  icon.textContent = s.icon;
+  title.textContent =
+    type === 'success' ? 'Success' :
+    type === 'error' ? 'Error' : 'Info';
+  msg.textContent = message;
+
+  toast.classList.remove('hidden');
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 3000);
+}
+
+        // =================================================================================
+        // *** START OF USER-PROTECTED BLOCK (loadDentistAppointments) - MODIFIED FOR RENDER/SEARCH ***
+        // =================================================================================
+
+        // Filter is the new parameter from the button
+        async function loadDentistAppointments(filter = 'upcoming', searchQuery = '') { 
+            const dentistId = localStorage.getItem('userId');
+            if (!dentistId) return;
+
+            // Highlight the active button
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            const now = new Date();
+            let query;
+
+            if (filter === 'finished') {
+                query = supabaseClient
+                    .from('Appointment')
+                    .select('*')
+                    .eq('Status', 'Finished')
+                    .eq('DentistID', dentistId)
+                    .order('AppointmentSchedule', { ascending: false });
+            } else {
+                // Fetching all relevant active appointments for 'today' and 'upcoming'
+                // This will include Approved, Pending, Requested to allow 'Mark Finished' on today's list
+                query = supabaseClient
+                    .from('Appointment')
+                    .select('*')
+                    .not('Status', 'eq', 'Finished') // Exclude Finished appointments
+                    .eq('DentistID', dentistId)
+                    .order('AppointmentSchedule', { ascending: true });
+
+                if (filter === 'today') {
+                    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+                    const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
+                    query = query.gte('AppointmentSchedule', startOfDay.toISOString())
+                                 .lte('AppointmentSchedule', endOfDay.toISOString());
+                } else if (filter === 'upcoming') {
+                    // Start from the next day's beginning for 'Upcoming' to avoid overlap with 'Today'
+                    const startOfTomorrow = new Date(now); 
+                    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+                    startOfTomorrow.setHours(0,0,0,0);
+                    query = query.gte('AppointmentSchedule', startOfTomorrow.toISOString());
+                }
+            }
+
+            // Show loading state
+            const appointmentsList = document.getElementById("appointmentsList");
+            const appointmentCount = document.getElementById("appointmentCount");
+            appointmentsList.innerHTML = `<div id="loading" class="space-y-4">
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="skeleton h-16 w-3/4"></div>
+                    </div>`;
+
+            const { data: appointments, error } = await query;
+            
+            if (error) {
+                console.error("Error fetching appointments:", error);
+                appointmentsList.innerHTML = `<div class="text-center py-8 text-red-500">Error loading appointments</div>`;
+                appointmentCount.textContent = 0;
+                return;
+            }
+
+            if (!appointments || appointments.length === 0) {
+                appointmentsList.innerHTML = `<div class="text-center py-8 text-gray-500">No appointments found</div>`;
+                appointmentCount.textContent = 0;
+                return;
+            }
+
+            // Fetch patient names (as per your original snippet)
+            for (let appt of appointments) {
+                if (appt.UserAccountID) {
+                    const { data: patient } = await supabaseClient
+                        .from('UserAccount')
+                        .select('FirstName, LastName')
+                        .eq('UserAccountID', appt.UserAccountID)
+                        .maybeSingle();
+                    appt.PatientName = patient ? `${patient.FirstName} ${patient.LastName}` : 'Unknown';
+                } else {
+                    appt.PatientName = 'Unknown';
+                }
+            }
+            
+            renderAppointments(appointments, filter, appointmentsList, appointmentCount);
+        }
+
+        // =================================================================================
+        // *** END OF USER-PROTECTED BLOCK (loadDentistAppointments) - MODIFIED FOR RENDER/SEARCH ***
+        // =================================================================================
+
+
+        // --- Initialization and Event Handling ---
+        async function initializeAppointments() {
+            const userData = await checkAuth(false);
+            const dentistId = userData ? userData.UserAccountID : null;
+            const searchInput = document.getElementById('searchAppointments');
+            
+            // Set initial filter to 'upcoming' (a safe default)
+            const initialFilter = 'upcoming'; 
+
+            if (!dentistId) {
+                document.getElementById('appointmentsList').innerHTML = `<div class="text-center py-8 text-red-500"><p class="text-sm">Authentication failed. Please log in.</p></div>`;
+                return;
+            }
+            
+            currentFilter = initialFilter;
+            
+            // 1. Load initial data
+            loadDentistAppointments(currentFilter);
+
+            // 2. Set up filter button listeners
+            document.querySelectorAll('.filter-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const filter = e.target.getAttribute('data-filter');
+                    currentFilter = filter;
+                    loadDentistAppointments(currentFilter, searchInput.value);
+                });
+            });
+            
+            // 3. Search Input Listener with Debounce
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchInput.debounceTimer);
+                searchInput.debounceTimer = setTimeout(() => {
+                    // Call loadDentistAppointments to re-fetch the data set based on the current filter, 
+                    // and then the render function inside handles the client-side search filtering.
+                    loadDentistAppointments(currentFilter, searchInput.value);
+                }, 300); 
+            });
+        }
+
+        window.addEventListener('load', initializeAppointments);
+    </script>
+
+<!-- Toast Message -->
+<div id="toast"
+  class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-xl border bg-white shadow-lg">
+  <div id="toast-inner" class="flex items-start gap-3 p-4">
+    <div id="toast-icon" class="mt-0.5">ℹ️</div>
+    <div>
+      <p id="toast-title" class="text-sm font-semibold text-gray-900">Message</p>
+      <p id="toast-message" class="text-sm text-gray-600"></p>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

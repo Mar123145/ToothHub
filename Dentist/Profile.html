@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dentist Profile</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    .bg-\[\#03555E\] { background-color: #03555E; }
+    .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
+    .text-\[\#03555E\] { color: #03555E; }
+
+    .card { border-radius: 0.5rem; border: 1px solid #e5e7eb; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
+    .card-title { font-size: 1.25rem; font-weight: 600; }
+    .card-content { padding: 1.5rem; }
+    .button-style { padding: 0.5rem 1rem; border-radius: 0.375rem; line-height: 1.25; font-weight:500; transition: background-color 0.15s; display:flex; align-items:center; justify-content:center; }
+    .button-ghost { background:transparent; border:none; }
+    .button-outline { border:1px solid #e5e7eb; background:white; color:#374151; }
+    .button-outline:hover { background:#f3f4f6; }
+    .input-style, .textarea-style { display:block; width:100%; padding:0.5rem 0.75rem; border:1px solid #e5e7eb; border-radius:0.375rem; margin-top:0.25rem; height:2.5rem; transition: all 0.2s; }
+    .textarea-style { height:auto; min-height:5rem; }
+    .input-disabled { background:#f9fafb !important; cursor:default; color:#4b5563; }
+    .label-style { display:block; font-size:0.875rem; font-weight:500; color:#4b5563; margin-bottom:0.25rem; }
+</style>
+</head>
+<body>
+<div class="min-h-screen bg-gray-50">
+<header class="bg-[#03555E] text-white">
+    <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+        <a href="Dashboard.html">
+            <button class="button-style button-ghost text-white hover:bg-[#024449] text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                Back
+            </button>
+        </a>
+        <div>
+            <h1 class="text-xl font-bold">Profile</h1>
+            <p class="text-sm opacity-90">Manage your professional profile</p>
+        </div>
+    </div>
+</header>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto space-y-6">
+        <!-- Profile Picture Card -->
+        <div class="card">
+            <div class="card-header card-title flex items-center gap-2">Profile Picture</div>
+            <div class="card-content flex items-center gap-4">
+                <div class="w-20 h-20 bg-[#03555E] rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                    <button type="button" class="button-style button-outline text-sm">Change Photo</button>
+                    <p class="text-sm text-gray-600 mt-1">JPG, PNG or GIF. Max size 2MB</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dentist Profile Info -->
+        <div class="card">
+                    <div class="card-header flex justify-between items-center">
+                <h2 class="card-title">Professional & Personal Info</h2>
+                <button id="editToggleBtn" class="button-style button-outline text-sm px-3 py-1.5 gap-1.5">
+                    <svg id="editIcon" class="inline-block" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    <svg id="saveIcon" class="hidden inline-block" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    <span id="editButtonText">Edit</span>
+                </button>
+            </div>
+            <div class="card-content">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Personal Fields -->
+                    <div><label class="label-style">First Name</label><input id="firstName" class="input-style input-disabled" disabled /></div>
+                    <div><label class="label-style">Middle Name</label><input id="middleName" class="input-style input-disabled" disabled /></div>
+                    <div><label class="label-style">Last Name</label><input id="lastName" class="input-style input-disabled" disabled /></div>
+                    <div><label class="label-style">Date of Birth</label><input id="birthDate" type="date" class="input-style input-disabled" disabled /></div>
+                    <div><label class="label-style">Gender</label>
+                        <select id="gender" class="input-style input-disabled" disabled>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div><label class="label-style">Email</label><input id="email" type="email" class="input-style input-disabled" disabled /></div>
+                    <div><label class="label-style">Phone Number</label><input id="phone" class="input-style input-disabled" disabled /></div>
+
+                    <!-- Professional Fields -->
+                    <div><label class="label-style">License Number</label><input id="licenseNumber" class="input-style input-disabled" disabled /></div>
+                    <div>
+                        <label class="label-style">Work Days</label>
+                        <select id="workDays" multiple class="input-style input-disabled" disabled>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</p>
+                        </div>
+                    <div>
+                    <label class="label-style">Office Hours</label>
+                    <div class="flex gap-2">
+                        <input id="officeStart" type="time" class="input-style input-disabled" disabled />
+                        <span class="self-center">to</span>
+                        <input id="officeEnd" type="time" class="input-style input-disabled" disabled />
+                    </div>
+                    </div>
+                </div>
+                <div id="messageBox"
+                    class="hidden fixed bottom-6 right-6 p-4 rounded text-white font-medium shadow-lg z-50 transition-all duration-300">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let isEditing = false;
+const editToggleBtn = document.getElementById('editToggleBtn');
+const editIcon = document.getElementById('editIcon');
+const saveIcon = document.getElementById('saveIcon');
+const editButtonText = document.getElementById('editButtonText');
+const inputs = document.querySelectorAll('.input-style, .textarea-style, select');
+
+
+
+function setInputsDisabled(disabled) {
+    console.log(`🔒 Setting inputs disabled=${disabled}`);
+    inputs.forEach(i => {
+        i.disabled = disabled;
+        if(disabled) i.classList.add('input-disabled');
+        else i.classList.remove('input-disabled');
+    });
+}
+
+let currentUser = null;
+
+async function checkAuth(redirect = true) {
+    console.log("🔍 Running checkAuth...");
+
+    const storedFirstName = localStorage.getItem('userFirstName');
+    const storedRole = localStorage.getItem('userRole');
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedId = localStorage.getItem('userId');
+
+    console.log("📦 LocalStorage check:", { storedFirstName, storedRole, storedEmail, storedId });
+
+    if (storedFirstName && storedRole && storedId) {
+        console.log("✅ Using cached user info from localStorage");
+        return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail, UserAccountID: storedId };
+    }
+
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    console.log("🔑 Supabase session:", session);
+    if (sessionError) console.error("❌ Session error:", sessionError);
+
+    if (!session?.user) {
+        console.warn("⚠️ No authenticated user found.");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+    }
+
+    const userId = session.user.id;
+    console.log("🆔 Fetching user from Supabase using UserAccountID:", userId);
+
+    // Fetch user by ID instead of Email
+    const { data: userData, error } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('UserAccountID', userId)
+        .maybeSingle();
+
+    if (error || !userData) {
+        console.error("❌ Failed to fetch user data:", error || "No user data found");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+    }
+
+    // Save to localStorage for future use
+    localStorage.setItem('userFirstName', userData.FirstName);
+    localStorage.setItem('userRole', userData.Role);
+    localStorage.setItem('userEmail', userData.Email || '');
+    localStorage.setItem('userId', userData.UserAccountID);
+
+    console.log("✅ Fetched user info from Supabase:", userData);
+    return userData;
+}
+async function loadProfile() {
+    console.log("📥 Loading profile...");
+
+    const storedId = localStorage.getItem('storedId') || localStorage.getItem('userId');
+    if (!storedId) {
+        console.warn("⚠️ No stored user ID, cannot load profile.");
+        return;
+    }
+    console.log("🆔 Stored UserAccountID:", storedId);
+
+    const { data: userData, error: userError } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('UserAccountID', storedId)
+        .maybeSingle();
+
+    if (userError || !userData) {
+        console.error("❌ Failed to fetch user data:", userError);
+        return;
+    }
+
+    currentUser = userData;
+
+    // Fill personal fields
+    document.getElementById('firstName').value = userData.FirstName || '';
+    document.getElementById('middleName').value = userData.MiddleName || '';
+    document.getElementById('lastName').value = userData.LastName || '';
+    document.getElementById('email').value = userData.Email || '';
+    document.getElementById('phone').value = userData.ContactNumber || '';
+    document.getElementById('birthDate').value = userData.BirthDate || '';
+    document.getElementById('gender').value = userData.Gender || '';
+
+    // Fetch dentist info using UserAccountID
+    const { data: dentist, error: dentistError } = await supabaseClient
+        .from('Dentist')
+        .select('*')
+        .eq('UserAccountID', currentUser.UserAccountID)
+        .maybeSingle();
+
+    if (dentistError) {
+        console.error("❌ Failed to fetch dentist data:", dentistError);
+        return;
+    }
+
+    if (dentist) {
+        console.log("✅ Dentist data loaded:", dentist);
+
+        document.getElementById('licenseNumber').value = dentist.LicenseNumber || '';
+
+        // Load WorkDays (multi-select)
+        if (dentist.WorkDays) {
+            const days = dentist.WorkDays.split(',');
+            const select = document.getElementById('workDays');
+            Array.from(select.options).forEach(option => {
+                option.selected = days.includes(option.value);
+            });
+        }
+
+        // Load OfficeHours (split start/end)
+        if (dentist.OfficeHours) {
+            const [start, end] = dentist.OfficeHours.split('-');
+            document.getElementById('officeStart').value = start || '';
+            document.getElementById('officeEnd').value = end || '';
+        }
+
+    } else {
+        console.log("ℹ️ No dentist profile found yet for this user.");
+    }
+}
+
+function showMessage(message, type = "error") {
+  const box = document.getElementById("messageBox");
+  if (!box) return;
+
+  // Set message text
+  box.textContent = message;
+  box.classList.remove("hidden");
+
+  // Reset color classes first
+  box.classList.remove("bg-red-500", "bg-green-500");
+
+  // Apply background color based on message type
+  if (type === "success") {
+    box.classList.add("bg-green-500");
+  } else {
+    box.classList.add("bg-red-500");
+  }
+
+  // Automatically hide the message after 4 seconds
+  setTimeout(() => {
+    box.classList.add("hidden");
+  }, 4000);
+}
+
+async function saveProfile() {
+    if (!currentUser) {
+        console.warn("⚠️ Cannot save, no current user loaded.");
+        return;
+    }
+
+    console.log("💾 Saving profile...");
+
+    // 1️⃣ Update UserAccount fields
+    const { error: userUpdateError } = await supabaseClient.from('UserAccount').update({
+        FirstName: document.getElementById('firstName').value,
+        MiddleName: document.getElementById('middleName').value,
+        LastName: document.getElementById('lastName').value,
+        Email: document.getElementById('email').value,
+        ContactNumber: document.getElementById('phone').value,
+        BirthDate: document.getElementById('birthDate').value,
+        Gender: document.getElementById('gender').value
+    }).eq('UserAccountID', currentUser.UserAccountID);
+
+    if (userUpdateError) {
+        console.error("❌ Failed to update UserAccount:", userUpdateError);
+        return;
+    }
+
+    // 2️⃣ Prepare dentist data (WorkDays as CSV, OfficeHours as start-end)
+    const dentistData = {
+    DentistID: crypto.randomUUID(), // or some UUID generator
+    UserAccountID: currentUser.UserAccountID,
+    LicenseNumber: document.getElementById('licenseNumber').value,
+    WorkDays: Array.from(document.getElementById('workDays').selectedOptions).map(o => o.value).join(','),
+    OfficeHours: document.getElementById('officeStart').value + '-' + document.getElementById('officeEnd').value
+};
+
+    // 3️⃣ Check if dentist record exists
+    const { data: existingDentist, error: fetchDentistError } = await supabaseClient
+        .from('Dentist')
+        .select('*')
+        .eq('UserAccountID', currentUser.UserAccountID)
+        .maybeSingle();
+
+    if (fetchDentistError) {
+        console.error("❌ Failed to fetch dentist record:", fetchDentistError);
+        return;
+    }
+
+    // 4️⃣ Insert or update dentist
+    if (existingDentist) {
+        console.log("✏️ Updating existing dentist profile...");
+        const { error: dentistUpdateError } = await supabaseClient
+            .from('Dentist')
+            .update(dentistData)
+            .eq('UserAccountID', currentUser.UserAccountID);
+
+        if (dentistUpdateError) {
+            console.error("❌ Failed to update dentist:", dentistUpdateError);
+            return;
+        }
+    } else {
+        console.log("➕ Creating new dentist profile...");
+        const { error: dentistInsertError } = await supabaseClient
+            .from('Dentist')
+            .insert([dentistData]);
+
+        if (dentistInsertError) {
+            console.error("❌ Failed to insert dentist:", dentistInsertError);
+            return;
+        }
+    }
+
+    return showMessage("✅ Profile saved successfully!", "success");
+    await loadProfile();
+}
+editToggleBtn.addEventListener('click', async () => {
+    console.log("✏️ Edit button clicked. isEditing:", isEditing);
+    isEditing = !isEditing;
+    setInputsDisabled(!isEditing);
+
+    editIcon.classList.toggle('hidden');
+    saveIcon.classList.toggle('hidden');
+    editButtonText.textContent = isEditing ? 'Save' : 'Edit';
+
+    if(!isEditing) await saveProfile();
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("📄 DOM ready");
+    try {
+        await checkAuth(false);
+        await loadProfile();
+    } catch(err) {
+        console.error("❌ Error initializing profile page:", err);
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .brand-bg { background-color: #03555E; }
+    .brand-text { color: #03555E; }
+    .brand-hover:hover { background-color: #02464e; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="brand-bg text-white">
+    <div class="container mx-auto px-4 py-4 flex items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1">
+          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <div class="container mx-auto px-8 py-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold mb-2 text-[#03555E]">Create Your Account</h1>
+      <p class="text-gray-600">Join ToothHub for easy appointment booking</p>
+    </div>
+
+    <div class="w-full mx-auto bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-2xl font-bold text-[#03555E] mb-2">Patient Registration</h2>
+      <p class="text-gray-600 mb-6">Create your account to start booking appointments</p>
+
+      <!-- Added form ID -->
+      <form id="signup-form" class="space-y-6">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label for="firstName" class="block text-sm font-medium">First Name <span class="text-red-500">*</span></label>
+            <input id="firstName" type="text" placeholder="Enter your first name"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          </div>
+          <div>
+            <label for="dateOfBirth" class="block text-sm font-medium">Date of Birth <span class="text-red-500">*</span></label>
+            <input id="dateOfBirth" type="date"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label for="middleName" class="block text-sm font-medium">Middle Name</label>
+            <input id="middleName" type="text" placeholder="Enter your middle name"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" />
+          </div>
+          <div>
+            <label for="gender" class="block text-sm font-medium">Gender</label>
+            <select id="gender" class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required>
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label for="lastName" class="block text-sm font-medium">Last Name <span class="text-red-500">*</span></label>
+            <input id="lastName" type="text" placeholder="Enter your last name"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          </div>
+          <div>
+            <label for="phoneNumber" class="block text-sm font-medium">Phone Number <span class="text-red-500">*</span></label>
+            <input id="phoneNumber" type="text" placeholder="Enter your number"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          </div>
+        </div>
+
+        <div>
+          <label for="Address" class="block text-sm font-medium">Address <span class="text-red-500">*</span></label>
+          <input id="Address" type="text" placeholder="Enter your address"
+            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+        </div>
+
+        <div>
+          <label for="username" class="block text-sm font-medium">Username <span class="text-red-500">*</span></label>
+          <input id="username" type="text" placeholder="Create a username"
+            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium">Email Address <span class="text-red-500">*</span></label>
+          <input id="email" type="email" placeholder="Email Address"
+            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          <p class="text-sm text-gray-600 mt-1">This will be used for account verification and appointment notifications</p>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium">Password <span class="text-red-500">*</span></label>
+          <input id="password" type="password" placeholder="Create a password"
+            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+          <p class="text-sm text-gray-600 mt-1">Please use a strong password</p>
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium">Confirm Password <span class="text-red-500">*</span></label>
+          <input id="confirmPassword" type="password" placeholder="Confirm your password"
+            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <input id="terms" type="checkbox" class="h-4 w-4 border rounded" required />
+          <label for="terms" class="text-sm">
+            I agree to the <span class="text-red-500">*</span>
+            <a href="#" id="openTerms" class="text-[#03555E] hover:underline">Terms and Conditions</a>
+            and
+            <a href="#" id="openPrivacy" class="text-[#03555E] hover:underline">Privacy Policy</a>
+          </label>
+        </div>
+
+        <div id="messageBox" class="hidden p-4 mb-4 rounded text-white"></div>
+
+        <button type="submit"
+          class="w-full bg-[#03555E] hover:bg-[#02464E] text-white py-3 rounded-lg font-medium">
+          Submit
+        </button>
+      </form>
+
+      <div class="text-center space-y-2 mt-4">
+        <p class="text-sm text-gray-600">
+          Already have an account?
+          <a href="/Login.html" class="text-[#03555E] hover:underline font-medium">Log in here</a>
+        </p>
+        <a href="/Homepage.html" class="text-sm text-gray-600 hover:underline">Return to homepage</a>
+      </div>
+    </div>
+  </div>
+
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg max-w-2xl w-full relative shadow-lg overflow-y-auto max-h-[80vh]">
+    <button id="closeTerms" class="absolute top-2 right-3 text-gray-500 text-2xl font-bold">&times;</button>
+
+    <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>
+
+    <p class="text-gray-700 mb-4">
+      Welcome to ToothHub. By using this platform, you agree to the following Terms and Conditions. Please read them carefully before proceeding.
+    </p>
+
+    <h3 class="font-semibold mb-2">1. Use of the System</h3>
+    <p class="text-gray-700 mb-4">
+      You agree to provide accurate and truthful information when booking appointments or creating an account. You are responsible for maintaining the confidentiality of your login details.
+    </p>
+
+    <h3 class="font-semibold mb-2">2. Appointment Policies</h3>
+    <p class="text-gray-700 mb-4">
+      Appointment availability may vary depending on the clinic’s schedule. The clinic reserves the right to approve, reschedule, or decline appointment requests. You may receive notifications such as reminders, updates, or status changes.
+    </p>
+
+    <h3 class="font-semibold mb-2">3. Patient Records</h3>
+    <p class="text-gray-700 mb-4">
+      Information you provide including personal and dental/medical data will be used solely for treatment, record keeping, and administrative purposes. Access to these records is limited to authorized clinic personnel.
+    </p>
+
+    <h3 class="font-semibold mb-2">4. Prohibited Actions</h3>
+    <p class="text-gray-700 mb-4">
+      You agree not to misuse the system, including attempting to access unauthorized accounts, tampering with data, or performing actions that may disrupt system operations or security.
+    </p>
+
+    <h3 class="font-semibold mb-2">5. Intellectual Property</h3>
+    <p class="text-gray-700 mb-4">
+      All content, features, design, and system functionalities are the property of the clinic or developers and may not be copied, reproduced, or distributed without permission.
+    </p>
+
+    <h3 class="font-semibold mb-2">6. Limitation of Liability</h3>
+    <p class="text-gray-700 mb-4">
+      The system is provided “as is” and may experience occasional downtime or errors. The clinic is not liable for delays, technical issues, or any losses arising from system unavailability or misuse.
+    </p>
+
+    <h3 class="font-semibold mb-2">7. Changes to Terms</h3>
+    <p class="text-gray-700 mb-4">
+      These Terms and Conditions may be updated or revised at any time. Continued use of the platform indicates acceptance of any changes.
+    </p>
+
+    <h3 class="font-semibold mb-2">8. Contact Information</h3>
+    <p class="text-gray-700 mb-4">
+      For questions or concerns, please contact the clinic directly.
+    </p>
+
+  </div>
+</div>
+
+
+    <div id="privacyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg max-w-2xl w-full relative shadow-lg overflow-y-auto max-h-[80vh]">
+    <button id="closePrivacy" class="absolute top-2 right-3 text-gray-500 text-2xl font-bold">&times;</button>
+
+    <h2 class="text-xl font-bold mb-4">Privacy Policy</h2>
+
+    <p class="text-gray-700 mb-4">
+      This Privacy Policy explains how we collect, use, store, and protect your personal information when using our Appointment and Patient Record Management System. By using this system, you agree to the practices described below.
+    </p>
+
+    <h3 class="font-semibold mb-2">1. Information We Collect</h3>
+    <p class="text-gray-700 mb-4">
+      We may collect the following information when you book an appointment or create an account:
+      <br><br>
+      <strong>Personal Information:</strong> Full name, contact number, email address, address, and other provided details.
+      <br>
+      <strong>Medical/Dental Information:</strong> Treatment history, selected teeth, medical notes, uploaded documents, and consultation details.
+      <br>
+      <strong>System Information:</strong> Appointment logs, device information, and interaction records.
+    </p>
+
+    <h3 class="font-semibold mb-2">2. How We Use Your Information</h3>
+    <p class="text-gray-700 mb-4">
+      Your information is used for:
+      <br>- Managing and confirming appointments  
+      <br>- Maintaining accurate patient records  
+      <br>- Sending notifications and reminders  
+      <br>- Improving clinic operations  
+      <br>- Complying with legal requirements  
+    </p>
+
+    <h3 class="font-semibold mb-2">3. Data Sharing</h3>
+    <p class="text-gray-700 mb-4">
+      We do not sell or share your personal data with third parties.  
+      <br><br>
+      Your information may only be accessed by:
+      <br>- Authorized clinic staff (dentists and secretary)  
+      <br>- Service providers needed for system operations (e.g., hosting, email services)  
+      <br>- Government authorities if legally required  
+    </p>
+
+    <h3 class="font-semibold mb-2">4. Data Protection</h3>
+    <p class="text-gray-700 mb-4">
+      We implement technical and organizational measures to protect your data, including:
+      <br>- Password-protected accounts  
+      <br>- Encrypted database storage  
+      <br>- Role-based access control  
+      <br>- Regular system checks to ensure security  
+    </p>
+
+    <h3 class="font-semibold mb-2">5. Your Rights</h3>
+    <p class="text-gray-700 mb-4">
+      Under the Data Privacy Act of 2012 (RA 10173), you have the right to:
+      <br>- Access your personal data  
+      <br>- Request correction of inaccurate information  
+      <br>- Withdraw consent (where applicable)  
+      <br>- Request deletion based on allowed conditions  
+      <br>- File a complaint with the National Privacy Commission (NPC)  
+    </p>
+
+    <h3 class="font-semibold mb-2">6. Data Retention</h3>
+    <p class="text-gray-700 mb-4">
+      Your data is kept only for as long as necessary for treatment, record-keeping, and legal compliance. Medical and dental records may be retained for the period required by law and professional standards.
+    </p>
+
+    <h3 class="font-semibold mb-2">7. Updates to This Policy</h3>
+    <p class="text-gray-700 mb-4">
+      This Privacy Policy may be updated occasionally. Continued use of the system means you accept any revised terms.
+    </p>
+
+    <h3 class="font-semibold mb-2">8. Contact Information</h3>
+    <p class="text-gray-700 mb-4">
+      For questions or concerns about data privacy, please contact the clinic directly.
+    </p>
+
+  </div>
+</div>
+
+    
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; // replace with your anon key
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('openTerms').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('termsModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closeTerms').addEventListener('click', () => {
+      document.getElementById('termsModal').classList.add('hidden');
+    });
+
+    document.getElementById('openPrivacy').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('privacyModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closePrivacy').addEventListener('click', () => {
+      document.getElementById('privacyModal').classList.add('hidden');
+    });
+
+
+
+    function showMessage(message, type = "error") {
+  const box = document.getElementById("messageBox");
+  if (!box) return;
+
+  box.textContent = message;
+
+  // Reset classes
+  box.className = "p-4 mb-4 rounded text-white";
+
+  // Apply type-specific styling
+  if (type === "success") box.classList.add("bg-green-500");
+  else if (type === "error") box.classList.add("bg-red-500");
+  else if (type === "info") box.classList.add("bg-blue-500");
+
+  box.classList.remove("hidden");
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    box.classList.add("hidden");
+  }, 3000);
+}
+
+
+    const form = document.getElementById('signup-form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      console.log("Form submitted"); // Debug log
+
+      // Gather values
+      const firstName = document.getElementById('firstName').value.trim();
+      const middleName = document.getElementById('middleName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const birthDate = document.getElementById('dateOfBirth').value;
+      const gender = document.getElementById('gender').value;
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phoneNumber = document.getElementById('phoneNumber').value.trim();
+      const address = document.getElementById('Address').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const termsChecked = document.getElementById('terms').checked;
+
+      
+      // Validation
+// Validation
+    if (!termsChecked) return alert("Please agree to the terms.");
+    if (password !== confirmPassword) return showMessage("Passwords do not match.");
+
+    // ✅ DOB required + must be at least 18
+    if (!birthDate) return showMessage("Date of Birth is required.");
+
+    const dob = new Date(birthDate + "T00:00:00"); // avoid timezone issues
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+
+    if (age < 18) return showMessage("You must be at least 18 years old to register.");
+    if (dob > today) return showMessage("Date of Birth cannot be in the future.");
+
+ 
+      try {
+
+        showMessage("Signing up... please wait", "info");
+
+        // Disable button
+        
+
+
+        // --- 1️⃣ Check duplicate email ---
+  let { data: existingEmail, error: emailError } = await supabaseClient
+    .from('UserAccount')
+    .select('"Email"')
+    .eq('Email', email)
+    .maybeSingle();
+
+  if (emailError) {
+    console.error(emailError);
+    return showMessage("Error checking email: " + emailError.message, "error");
+  }
+  if (existingEmail) {
+    return showMessage("This email is already registered.", "error");
+  }
+
+  // --- 2️⃣ Check duplicate username ---
+  let { data: existingUsername, error: usernameError } = await supabaseClient
+    .from('UserAccount')
+    .select('"Username"')
+    .eq('Username', username)
+    .limit(1);
+
+  if (usernameError) {
+    console.error(usernameError);
+    return showMessage("Error checking username: " + usernameError.message, "error");
+  }
+
+  if (existingUsername.length > 0) {
+    return showMessage("This username is already taken.", "error");
+  }
+
+  // --- 3️⃣ Sign up with Supabase Auth ---
+   const { data: authData, error: authError } = await supabaseClient.auth.signUp(
+  {
+    email: email,
+    password: password,
+  },
+);
+
+  if (authError) {
+    return showMessage("Sign up error: " + authError.message, "error");
+  }
+
+  console.log("Auth signup successful:", authData);
+
+  // --- 4️⃣ Insert into UserAccountTable ---
+  const { data: tableData, error: tableError } = await supabaseClient
+    .from('UserAccount')
+    .insert([{
+      UserAccountID: authData.user.id,
+      FirstName: firstName,
+      MiddleName: middleName,
+      LastName: lastName,
+      BirthDate: birthDate,
+      Gender: gender,
+      Username: username,
+      Role: 'patient',
+      ContactNumber: phoneNumber,
+      Email: email,
+      CreatedAt: new Date(),
+      Address: address,
+    }]);
+
+  if (tableError) {
+    console.error(tableError);
+    showMessage("Failed to save user info: " + tableError.message, "error");
+  } else {
+    showMessage("Sign up successful! Please check your email to confirm.", "success");
+    form.reset();
+  }
+
+} catch (err) {
+  console.error(err);
+  showMessage("Unexpected error occurred.", "error");
+}
+    });
+  </script>
+</body>
+</html>

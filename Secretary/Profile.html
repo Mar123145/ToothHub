@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Theme Colors */
+        .bg-primary { background-color: #03555E; }
+        .text-primary { color: #03555E; }
+        .hover\:bg-primary-dark:hover { background-color: #024449; }
+        /* Assuming 'Inter' is loaded or available */
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        /* Input/Textarea Styling to mimic Shadcn/ui */
+        .form-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: all 0.2s;
+            margin-top: 0.25rem;
+            height: 2.5rem; /* Standard input height */
+        }
+        /* Override for textarea/multi-select */
+        .form-input[rows] {
+            height: auto;
+            min-height: 3rem; /* REDUCED HEIGHT FOR ADDRESS */
+        }
+        .form-input[multiple] {
+            height: auto;
+            min-height: 5rem;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #03555E;
+            box-shadow: 0 0 0 1px #03555E;
+        }
+        /* Style for disabled inputs */
+        .form-input:disabled {
+            background-color: #f9fafb; /* bg-gray-50 */
+            cursor: not-allowed;
+            color: #4b5563; /* text-gray-600 */
+        }
+        
+        /* General Label Style (used by both) */
+        .label-style { display:block; font-size:0.875rem; font-weight:500; color:#4b5563; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+    <header class="bg-primary text-white shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
+            <a href="Dashboard.html">
+                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-sm bg-transparent text-white hover:bg-primary-dark">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                    Back
+                </button>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold">Profile</h1>
+                <p class="text-sm opacity-90">Manage your account information</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto space-y-6">
+
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-primary"></i>
+                        Profile Picture
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="user" class="w-10 h-10 text-white"></i>
+                        </div>
+                        <div>
+                            <button class="px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">
+                                Change Photo
+                            </button>
+                            <p class="text-xs text-gray-600 mt-1">JPG, PNG or GIF. Max size 2MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold tracking-tight">Personal Information</h2>
+                        <button id="edit-save-btn" onclick="toggleEditing()" 
+                            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 flex items-center gap-1.5">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                            <span id="edit-save-text">Edit</span>
+                        </button>
+                    </div>
+                </div>
+                <form id="profile-form" class="p-6">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="firstName" class="label-style">First Name</label>
+                            <input id="firstName" value="Juan" disabled class="form-input" />
+                        </div>
+                        <div>
+                            <label for="middleName" class="label-style">Middle Name</label>
+                            <input id="middleName" value="D." disabled class="form-input" />
+                        </div>
+                        <div>
+                            <label for="lastName" class="label-style">Last Name</label>
+                            <input id="lastName" value="Admin" disabled class="form-input" />
+                        </div>
+                        <div>
+                            <label for="birthDate" class="label-style">Date of Birth</label>
+                            <input id="birthDate" type="date" value="1990-01-01" class="form-input" disabled />
+                        </div>
+                        <div>
+                            <label for="email" class="label-style">Email</label>
+                            <input id="email" type="email" value="admin@toothhub.com" disabled class="form-input" />
+                        </div>
+                        <div>
+                            <label for="gender" class="label-style">Gender</label>
+                            <select id="gender" class="form-input" disabled>
+                                <option value="">Select Gender</option>
+                                <option value="Male" selected>Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="phone" class="label-style">Phone Number</label>
+                            <input id="phone" value="+63 912 345 6789" disabled class="form-input" />
+                        </div>
+                        <div class="md:col-span-2"> 
+                            <label for="address" class="label-style">Address</label>
+                            <textarea
+                                id="address"
+                                disabled
+                                rows="2"
+                                class="form-input"
+                            >Makati City, Metro Manila</textarea>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 md:col-span-2">
+                            <div class="mt-0"> 
+                                <label for="workDays" class="label-style">Work Days</label>
+                                <select id="workDays" multiple class="form-input h-40" disabled>
+                                    <option value="Monday" selected>Monday</option>
+                                    <option value="Tuesday" selected>Tuesday</option>
+                                    <option value="Wednesday" selected>Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                                <p class="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple days</p>
+                            </div>
+                            <div class="mt-0"> 
+                                <label for="officeHours" class="label-style">Office Hours</label>
+                                <div class="flex gap-2">
+                                    <input id="officeStart" type="time" class="form-input" disabled />
+                                    <span class="self-center text-gray-500 mt-1">to</span>
+                                    <input id="officeEnd" type="time" class="form-input" disabled />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+            
+            <div id="save-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 z-50">
+                Profile updated successfully!
+            </div>
+        </div>
+    </main>
+    <!-- JavaScript Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- GLOBAL STATE ---
+        
+async function checkAuth(redirect = true) {
+    console.log("🔍 Running checkAuth...");
+
+    const storedFirstName = localStorage.getItem('userFirstName');
+    const storedRole = localStorage.getItem('userRole');
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedId = localStorage.getItem('userId');
+
+    console.log("📦 LocalStorage check:", { storedFirstName, storedRole, storedEmail, storedId });
+
+    // Only use cached data if role is NOT secretary
+    if (storedFirstName && storedRole && storedId && storedRole !== 'secretary') {
+        console.log("✅ Using cached user info from localStorage");
+        return { 
+            FirstName: storedFirstName, 
+            Role: storedRole, 
+            Email: storedEmail, 
+            UserAccountID: storedId 
+        };
+    }
+
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    console.log("🔑 Supabase session:", session);
+    if (sessionError) console.error("❌ Session error:", sessionError);
+
+    if (!session?.user) {
+        console.warn("⚠️ No authenticated user found.");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+    }
+
+    const userId = session.user.id;
+    console.log("🆔 Fetching user from Supabase using UserAccountID:", userId);
+
+    // Fetch full UserAccount data
+    const { data: userData, error } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('UserAccountID', userId)
+        .maybeSingle();
+
+    if (error || !userData) {
+        console.error("❌ Failed to fetch user data:", error || "No user data found");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+    }
+
+    // Save to localStorage for future use (except for secretaries)
+    if (userData.Role !== 'secretary') {
+        localStorage.setItem('userFirstName', userData.FirstName);
+        localStorage.setItem('userRole', userData.Role);
+        localStorage.setItem('userEmail', userData.Email || '');
+        localStorage.setItem('userId', userData.UserAccountID);
+    }
+
+    console.log("✅ Fetched user info from Supabase:", userData);
+    return userData;
+}
+let isEditing = false;
+let formData = {
+    firstName: "",
+    middleName: "", // Added middle name to form data
+    lastName: "",
+    birthDate: "", // Added birth date to form data
+    gender: "", // Added gender to form data
+    email: "",
+    phone: "",
+    address: "",
+    workDays: [],
+    officeStart: "",
+    officeEnd: ""
+};
+let currentUser = null;
+
+// --- DOM REFERENCES ---
+const editSaveBtn = document.getElementById('edit-save-btn');
+const formInputs = document.querySelectorAll('#profile-form input, #profile-form textarea, #profile-form select');
+const saveMessage = document.getElementById('save-message');
+
+async function loadProfile() {
+    currentUser = await checkAuth();
+    if (!currentUser) return;
+
+    // --- Populate UserAccount fields ---
+    document.getElementById('firstName').value = currentUser.FirstName || "";
+    document.getElementById('middleName').value = currentUser.MiddleName || "";
+    document.getElementById('lastName').value = currentUser.LastName || "";
+    document.getElementById('email').value = currentUser.Email || "";
+    document.getElementById('phone').value = currentUser.ContactNumber || "";
+    document.getElementById('address').value = currentUser.Address || "";
+    document.getElementById('gender').value = currentUser.Gender || "";
+    document.getElementById('birthDate').value = currentUser.BirthDate || "";
+
+    // --- Fetch Secretary info ---
+    const { data: secretaryData, error } = await supabaseClient
+        .from('Secretary')
+        .select('*')
+        .eq('UserAccountID', currentUser.UserAccountID)
+        .maybeSingle();
+
+    if (error) {
+        console.error("❌ Failed to fetch secretary data:", error);
+        return;
+    }
+
+    if (secretaryData) {
+        // Work Days (stored as comma-separated string)
+        const workDaysSelect = document.getElementById('workDays');
+        const workDaysArray = secretaryData.WorkDays ? secretaryData.WorkDays.split(',') : [];
+        Array.from(workDaysSelect.options).forEach(opt => {
+            opt.selected = workDaysArray.includes(opt.value);
+        });
+
+        // Office Hours (stored as "HH:MM-HH:MM")
+        if (secretaryData.OfficeHours) {
+            const [start, end] = secretaryData.OfficeHours.split('-');
+            document.getElementById('officeStart').value = start || "";
+            document.getElementById('officeEnd').value = end || "";
+        }
+    }
+}
+
+// --- CORE LOGIC ---
+function renderButton() {
+    if (isEditing) {
+        editSaveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4 mr-2"></i> Save';
+        editSaveBtn.classList.remove('border-gray-300', 'hover:bg-gray-100');
+        editSaveBtn.classList.add('bg-primary', 'text-white', 'hover:bg-primary-dark');
+    } else {
+        editSaveBtn.innerHTML = '<i data-lucide="pencil" class="w-4 h-4 mr-2"></i> Edit';
+        editSaveBtn.classList.add('border-gray-300', 'hover:bg-gray-100');
+        editSaveBtn.classList.remove('bg-primary', 'text-white', 'hover:bg-primary-dark');
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function toggleInputs(disabled) {
+    // Note: This logic correctly targets all input, textarea, and select elements
+    formInputs.forEach(input => input.disabled = disabled);
+}
+
+async function saveProfile() {
+    if (!currentUser) {
+        console.error("❌ No authenticated user to save.");
+        return;
+    }
+
+    // 1️⃣ Collect data from UserAccount form
+    const updatedUser = {
+        FirstName: document.getElementById('firstName').value,
+        MiddleName: document.getElementById('middleName').value,
+        LastName: document.getElementById('lastName').value,
+        Email: document.getElementById('email').value,
+        ContactNumber: document.getElementById('phone').value,
+        Address: document.getElementById('address').value,
+        Gender: document.getElementById('gender').value,
+        BirthDate: document.getElementById('birthDate').value
+    };
+
+    // 2️⃣ Update UserAccount table
+    const { data: userData, error: userError } = await supabaseClient
+        .from('UserAccount')
+        .update(updatedUser)
+        .eq('UserAccountID', currentUser.UserAccountID);
+
+    if (userError) {
+        console.error("❌ Failed to save user account data:", userError);
+    } else {
+        console.log("✅ UserAccount updated:", userData);
+    }
+
+    // 3️⃣ Collect data for Secretary table
+    const workDaysSelect = document.getElementById('workDays');
+    const selectedWorkDays = Array.from(workDaysSelect.selectedOptions).map(opt => opt.value);
+
+    const officeStart = document.getElementById('officeStart').value;
+    const officeEnd = document.getElementById('officeEnd').value;
+
+    const officeHoursStr = `${officeStart} - ${officeEnd}`;
+
+    // 4️⃣ Check if Secretary row exists
+    const { data: existingSecretary, error: fetchError } = await supabaseClient
+        .from('Secretary')
+        .select('*')
+        .eq('UserAccountID', currentUser.UserAccountID)
+        .maybeSingle();
+
+    if (fetchError) {
+        console.error("❌ Failed to fetch secretary data:", fetchError);
+        return;
+    }
+
+    if (existingSecretary) {
+        // 5️⃣ Update existing Secretary row
+        const { data: secData, error: secError } = await supabaseClient
+            .from('Secretary')
+            .update({
+                WorkDays: JSON.stringify(selectedWorkDays),
+                OfficeHours: officeHoursStr
+            })
+            .eq('SecretaryID', existingSecretary.SecretaryID);
+
+        if (secError) {
+            console.error("❌ Failed to update secretary data:", secError);
+        } else {
+            console.log("✅ Secretary updated:", secData);
+        }
+    } else {
+        // 6️⃣ Insert new Secretary row
+        const newSecretaryId = crypto.randomUUID();
+        const { data: secData, error: secError } = await supabaseClient
+            .from('Secretary')
+            .insert([{
+                SecretaryID: newSecretaryId,
+                UserAccountID: currentUser.UserAccountID,
+                WorkDays: JSON.stringify(selectedWorkDays),
+                OfficeHours: officeHoursStr
+            }]);
+
+        if (secError) {
+            console.error("❌ Failed to insert secretary row:", secError);
+        } else {
+            console.log("✅ Secretary row inserted:", secData);
+        }
+    }
+
+    // 7️⃣ Update formData for frontend usage
+    formData = {
+        ...formData,
+        firstName: updatedUser.FirstName,
+        middleName: updatedUser.MiddleName,
+        lastName: updatedUser.LastName,
+        email: updatedUser.Email,
+        phone: updatedUser.ContactNumber,
+        address: updatedUser.Address,
+        gender: updatedUser.Gender,
+        birthDate: updatedUser.BirthDate,
+        workDays: selectedWorkDays,
+        officeHours: officeHoursStr
+    };
+
+    // 8️⃣ Show success message
+    saveMessage.classList.remove('hidden', 'opacity-0');
+    saveMessage.classList.add('opacity-100');
+    setTimeout(() => {
+        saveMessage.classList.remove('opacity-100');
+        saveMessage.classList.add('opacity-0');
+        setTimeout(() => saveMessage.classList.add('hidden'), 300);
+    }, 2000);
+}
+
+function toggleEditing() {
+    if (isEditing) {
+        saveProfile();
+    }
+    isEditing = !isEditing;
+    toggleInputs(!isEditing);
+    renderButton();
+}
+
+// --- INITIALIZATION ---
+window.onload = async function() {
+    renderButton();
+    await loadProfile();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+    </script>
+</body>
+</html>

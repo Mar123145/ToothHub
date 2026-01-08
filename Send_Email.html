@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forgot Password | ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .brand-bg { background-color: #03555E; }
+    .brand-text { color: #03555E; }
+    .brand-hover:hover { background-color: #02464e; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Header (Same as Login) -->
+  <header class="brand-bg text-white shadow">
+    <div class="container mx-auto px-4 py-4 flex items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+          <span class="brand-text font-bold text-xl">TD</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Forgot Password Form -->
+  <div class="flex items-center justify-center py-16 px-4">
+    <div class="w-full max-w-md">
+
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold brand-text mb-2">Happy Tooth Dae</h2>
+        <p class="text-gray-500">Reset your password</p>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="p-6">
+
+          <h3 class="text-2xl font-bold text-center brand-text mb-2">Forgot Password?</h3>
+          <p class="text-gray-600 text-center text-sm mb-6">
+            Enter your registered email and we’ll send you a link to reset your password.
+          </p>
+
+          <form id="forgotPasswordForm" class="space-y-4">
+            <div class="space-y-2">
+              <label for="email" class="brand-text font-medium text-sm">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                class="w-full h-11 px-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E] focus:border-[#03555E]"
+                required
+              />
+            </div>
+
+            <button
+              id="forgotSubmitBtn"
+              type="submit"
+              class="w-full h-11 text-base font-semibold text-white rounded-lg brand-bg brand-hover transition disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              Send Reset Link
+            </button>
+          </form>
+
+          <!-- Message Box -->
+          <div
+            id="forgotMessage"
+            class="hidden mt-4 rounded-lg text-sm p-3 flex items-start gap-2"
+          >
+            <span id="forgotIcon" class="mt-0.5">ℹ️</span>
+            <span id="forgotText"></span>
+          </div>
+
+          <div class="text-center mt-6">
+            <a href="/Login.html" class="brand-text hover:underline flex items-center justify-center gap-2 text-sm">
+              <span>←</span> Back to Login
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="text-center mt-8">
+        <a href="/" class="brand-text hover:underline flex items-center justify-center gap-2 text-sm">
+          <span>←</span> Back to Home
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById("forgotPasswordForm");
+    const emailInput = document.getElementById("email");
+    const messageBox = document.getElementById("forgotMessage");
+    const messageText = document.getElementById("forgotText");
+    const messageIcon = document.getElementById("forgotIcon");
+    const submitBtn = document.getElementById("forgotSubmitBtn");
+
+    function showMessage(text, type = "error") {
+      if (!messageBox) return;
+      messageText.textContent = text;
+      messageBox.classList.remove("hidden");
+
+      // Reset visual state
+      messageBox.classList.remove(
+        "bg-red-50",
+        "text-red-700",
+        "border-red-200",
+        "bg-green-50",
+        "text-green-700",
+        "border-green-200"
+      );
+
+      if (type === "success") {
+        messageBox.classList.add("bg-green-50", "text-green-700", "border", "border-green-200");
+        messageIcon.textContent = "✅";
+      } else {
+        messageBox.classList.add("bg-red-50", "text-red-700", "border", "border-red-200");
+        messageIcon.textContent = "⚠️";
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage("Please enter your email address.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = "Sending...";
+
+      const redirectUrl = `${window.location.origin}/Reset_Password.html`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        console.error(error);
+        showMessage(error.message || "Failed to send reset email.");
+      } else {
+        showMessage("Password reset link sent! Please check your email.", "success");
+        form.reset();
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    });
+  </script>
+</body>
+</html>
