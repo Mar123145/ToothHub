@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dentist Profile</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'custom-primary': '#03555E',
+          'custom-hover': '#024449',
+        },
+      },
+    },
+  };
+</script>
 <style>
     .bg-\[\#03555E\] { background-color: #03555E; }
     .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
@@ -24,24 +37,76 @@
     .label-style { display:block; font-size:0.875rem; font-weight:500; color:#4b5563; margin-bottom:0.25rem; }
 </style>
 </head>
-<body>
-<div class="min-h-screen bg-gray-50">
-<header class="bg-[#03555E] text-white">
-    <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-        <a href="Dashboard.html">
-            <button class="button-style button-ghost text-white hover:bg-[#024449] text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-                Back
-            </button>
-        </a>
-        <div>
-            <h1 class="text-xl font-bold">Profile</h1>
-            <p class="text-sm opacity-90">Manage your professional profile</p>
-        </div>
-    </div>
-</header>
+<body class="min-h-screen bg-gray-50">
 
-<div class="container mx-auto px-4 py-8">
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <!-- Keep bellContainer ID for existing dentist JS (NO function changes) -->
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+
+        <!-- Hidden elements kept for existing dentist JS (mobile menu code expects these IDs) -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto space-y-6">
         <!-- Profile Picture Card -->
         <div class="card">
@@ -116,13 +181,117 @@
         </div>
     </div>
 </div>
-</div>
+      </div>
+    </main>
+  </div>
 
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Hidden mobile menu elements kept for existing dentist JS (NO function changes) -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
 const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('bellContainer');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userAccountId') || localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+
+
 
 let isEditing = false;
 const editToggleBtn = document.getElementById('editToggleBtn');
@@ -376,6 +545,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("📄 DOM ready");
     try {
         await checkAuth(false);
+        try { lucide.createIcons(); } catch(e) {}
+        try { loadNotifications(); } catch(e) {}
         await loadProfile();
     } catch(err) {
         console.error("❌ Error initializing profile page:", err);

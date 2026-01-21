@@ -7,23 +7,24 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Lucide icons (ESM) -->
-  <script type="module">
-    import { createIcons, icons } from 'https://unpkg.com/lucide@latest/dist/esm/lucide.js';
-    window.renderLucideIcons = () => createIcons({ icons });
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
   </script>
-
   <style>
     :root {
       --primary-color: #03555E;
       --hover-color: #024449;
     }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at top left, #e0f2fe 0, #f9fafb 45%, #f3f4f6 100%);
-      min-height: 100vh;
-    }
+    /* Keep page visuals consistent with Dentist Dashboard shell */
     .card {
       border-radius: 0.75rem;
       border: 1px solid #e5e7eb;
@@ -57,11 +58,92 @@
       background: #ffffff;
     }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-  <div id="app-container" class="min-h-screen"></div>
+<body class="min-h-screen bg-gray-50">
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
 
-  <div id="messageBox"
+      <div class="flex items-center gap-2">
+        <!-- Keep bellContainer ID for existing dentist JS (NO function changes) -->
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+
+        <!-- Hidden elements kept for existing dentist JS (mobile menu code expects these IDs) -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (Secretary shell style, Dentist links) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <!-- Page content renders here -->
+        <div id="app-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Hidden mobile menu elements kept so existing shell JS doesn't break if present later -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
+<div id="messageBox"
        class="hidden fixed bottom-6 right-6 px-4 py-3 rounded-lg text-sm text-white font-medium shadow-lg z-50 transition-opacity duration-300">
   </div>
 
@@ -171,25 +253,10 @@
 
     // --- Render pieces ---
     function renderHeader() {
-      return `
-      <header class="bg-[#03555E] text-white shadow-md">
-        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-          <a href="/dentist/Dashboard.html">
-            <button class="h-10 px-4 py-2 rounded-lg text-sm font-medium bg-transparent text-white hover:bg-[#024449] flex items-center">
-              <i data-lucide="arrow-left" class="w-4 h-4 sm:mr-2"></i>
-              <span class="hidden sm:inline">Back</span>
-            </button>
-          </a>
-          <div>
-            <h1 class="text-xl sm:text-2xl font-bold">Patient Records</h1>
-            <p class="text-xs sm:text-sm opacity-90">Review and manage your patients for Happy Tooth Dae</p>
-          </div>
-        </div>
-      </header>
-      `;
+      return '';
     }
 
- function renderPatientControls() {
+function renderPatientControls() {
   return `
     <div class="card mb-6">
       <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -230,8 +297,7 @@
 }
 
 
-
-    function renderAddForm() {
+function renderAddForm() {
       if (!state.showAddForm) return '';
       return `
       <div class="card mb-6 border-2 border-[#03555E]/20">
@@ -472,16 +538,17 @@
 
   const app = document.getElementById('app-container');
   app.innerHTML = `
-    ${renderHeader()}
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="space-y-6">
       ${renderPatientControls()}
       ${renderAddForm()}
       ${renderPatientList(filteredPatients)}
     </div>
   `;
 
-  // render lucide icons
-  if (window.renderLucideIcons) window.renderLucideIcons();
+  // Render Lucide icons (including dynamically injected ones)
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
   console.log('searchTerm:', state.searchTerm, 'filtered:', filteredPatients.length);
 
 
@@ -532,7 +599,112 @@
     window.savePatient = savePatient;
     window.setState = setState;
 
-    document.addEventListener('DOMContentLoaded', renderApp);
+    
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('bellContainer');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderApp();
+  // Render icons for shell + initial page
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+  // load bell notifications (shell)
+  if (typeof loadNotifications === "function") loadNotifications();
+});
   </script>
+
 </body>
 </html>

@@ -4,68 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointments</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
     <style>
-        /* Custom colors and styles */
-        .bg-\[\#03555E\] { background-color: #03555E; }
-        .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
-
-        /* Approximate shadcn/ui styles */
+        /* Approximate shadcn/ui card styles (match Dashboard) */
         .card {
-            border-radius: 0.75rem; /* Increased rounding */
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            background-color: white;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+          border-radius: 0.75rem;
+          border: 1px solid #e5e7eb;
+          background-color: #ffffff;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+          transition: box-shadow 0.2s;
         }
-        .card-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #f3f4f6;
+        .card:hover {
+          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
-        .card-title {
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 700; /* font-bold */
-        }
-        .card-content {
-            padding: 1.5rem;
-            min-height: 200px;
-        }
-        .button-style {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem; /* Increased rounding */
-            line-height: 1.25;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-        }
-        .button-ghost {
-            background-color: transparent;
-            border: none;
-        }
+        .card-header { padding: 1rem 1.5rem; }
+        .card-title { font-size: 1.125rem; font-weight: 600; }
+        .card-content { padding: 1.5rem; }
+
         .skeleton {
-            animation: pulse 1.5s infinite;
-            background-color: #f3f4f6;
-            border-radius: 0.5rem;
+          animation: pulse 1.5s infinite;
+          background-color: #f3f4f6;
+          border-radius: 0.5rem;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* New active button style */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Active filter button style */
         .filter-button.active {
-            background-color: #03555E !important; /* Your primary color */
-            color: white !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          background-color: #03555E !important;
+          color: white !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         @media (max-width: 640px) {
-            .card-content {
-                padding: 1rem;
-            }
+          .card-content { padding: 1rem; }
         }
-    
+
 /* ToothChart styles (from TreatmentRecords) */
-body { font-family: 'Inter', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -164,28 +151,84 @@ body { font-family: 'Inter', sans-serif; }
 
 
 </style>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-50">
-        <header class="bg-[#03555E] text-white shadow-lg">
-            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-                <a href="Dashboard.html">
-                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
-                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
-                        </svg>
-                        Back
-                    </button>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold">Appointments</h1>
-                    <p class="text-sm opacity-90">Manage all patient appointments</p>
-                </div>
-            </div>
-        </header>
 
-        <div class="container mx-auto px-4 py-8 max-w-4xl">
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6 p-4 bg-white rounded-xl shadow-md border border-gray-100">
+<body class="min-h-screen bg-gray-50">
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <!-- Keep bellContainer ID for existing dentist JS (NO function changes) -->
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+
+        <!-- Hidden elements kept for existing dentist JS (mobile menu code expects these IDs) -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-8">
+          <h1 id="appointmentsPageTitle" class="text-2xl font-bold mb-2">Appointments</h1>
+          <p class="text-gray-600">View and manage your appointments</p>
+        </div>
+
+        
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4 p-4 bg-white rounded-xl border border-gray-100">
                 <input type="text" id="searchAppointments" placeholder="Search by patient or service..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#03555E] focus:border-[#03555E] transition focus:outline-none">
                 
                 </div>
@@ -229,10 +272,16 @@ body { font-family: 'Inter', sans-serif; }
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+      </div>
+    </main>
+  </div>
 
-    <!-- Finish Appointment: Set Price Modal -->
+  <!-- Hidden mobile menu elements kept so existing JS doesn't break (NO function changes) -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
+  <!-- Finish Appointment: Set Price Modal -->
 <div id="finish-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
   <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-y-auto p-6 relative">
     <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeFinishModal()">✕</button>
@@ -266,96 +315,123 @@ body { font-family: 'Inter', sans-serif; }
     </div>
 
     <!-- Step contents -->
-    <div id="finish-step-1" class="finish-step space-y-3">
-      <div class="border rounded-lg p-4">
-        <div class="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <p class="font-semibold">Medical Record</p>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Enter measurements in <span class="font-semibold">cm</span> and <span class="font-semibold">kg</span>. Leave blank if unknown.
-            </p>
-          </div>
+<!-- Step contents -->
+<!-- Step 1: Medical (Read-only, same UI as MedicalIntake) -->
+<div id="finish-step-1" class="finish-step space-y-6">
+
+  <div class="grid md:grid-cols-2 gap-8">
+
+    <!-- LEFT COLUMN -->
+    <div class="space-y-4">
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+            EMERGENCY CONTACT NAME
+          </label>
+          <input id="mr-emergency-name" type="text"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+            disabled />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Height -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Height</label>
-            <div class="mt-1 flex rounded-lg border bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#03555E]">
-              <input id="mr-height" type="number" step="0.01"
-                class="w-full px-3 py-2 text-sm outline-none"
-                placeholder="e.g. 165" />
-              <span class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-l">cm</span>
-            </div>
-          </div>
-
-          <!-- Weight -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Weight</label>
-            <div class="mt-1 flex rounded-lg border bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#03555E]">
-              <input id="mr-weight" type="number" step="0.01"
-                class="w-full px-3 py-2 text-sm outline-none"
-                placeholder="e.g. 62" />
-              <span class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-l">kg</span>
-            </div>
-          </div>
-
-          <!-- Blood Type -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Blood Type</label>
-            <input id="mr-bloodtype" type="text"
-              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
-              placeholder="e.g. O+, A-" />
-            <p class="text-[11px] text-gray-500 mt-1">Optional</p>
-          </div>
-
-          <!-- Allergies -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Allergies</label>
-            <input id="mr-allergies" type="text"
-              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
-              placeholder="e.g. Penicillin, Latex" />
-            <p class="text-[11px] text-gray-500 mt-1">Separate with commas</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Emergency Contact Name</label>
-            <input id="mr-emergency-name" type="text"
-              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
-              placeholder="Full name" />
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Emergency Contact Number</label>
-            <input id="mr-emergency-number" type="text" inputmode="numeric"
-              class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none"
-              placeholder="09xxxxxxxxx" />
-            <p class="text-[11px] text-gray-500 mt-1">Digits only if possible</p>
-          </div>
-        </div>
-
-        <div class="mt-3 space-y-2">
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Medication</label>
-            <textarea id="mr-medication" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="2" placeholder="Optional"></textarea>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Medical Conditions</label>
-            <textarea id="mr-conditions" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="2" placeholder="Optional"></textarea>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Notes</label>
-            <textarea id="mr-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="3" placeholder="Any additional notes..."></textarea>
-          </div>
-        </div>
-
-        <div class="mt-4 flex justify-end gap-2">
-          <button type="button" class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeFinishModal()">Cancel</button>
-          <button type="button" id="mr-save-btn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]" onclick="saveMedicalRecordStep()">Save Medical</button>
+        <div>
+          <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+            EMERGENCY CONTACT NUMBER
+          </label>
+          <input id="mr-emergency-number" type="text"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+            disabled />
         </div>
       </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          PREVIOUS HOSPITALIZATIONS
+        </label>
+        <input id="mr-prev-hosp" type="text"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+          disabled />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          PRESCRIBED MEDICATIONS
+        </label>
+        <input id="mr-pres-meds" type="text"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+          disabled />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          ALLERGIES TO MEDICATIONS
+        </label>
+        <input id="mr-allergies" type="text"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+          disabled />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          FAMILY MEDICATION PROBLEMS
+        </label>
+        <input id="mr-family-prob" type="text"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+          disabled />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          OTHER MEDICAL CONCERNS
+        </label>
+          <textarea id="mr-concerns"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+            rows="3" disabled></textarea>
+                </div>
+
     </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+          MEDICAL ALERT
+        </label>
+        <input id="mr-alerts" type="text"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+          disabled />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-3">Medical Conditions</label>
+
+        <div id="mr-conditionsGrid"
+             class="grid grid-cols-2 gap-y-2 gap-x-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <!-- checkboxes injected by JS -->
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+      </div>
+
+      <div class="pt-3">
+                <button type="button"
+          class="px-3 py-2 rounded-lg bg-[#03555E] text-white text-sm font-medium hover:bg-[#024449]"
+          onclick="openConsentsListFromFinish()">
+          View Consent Form
+        </button>
+        <button type="button"
+          class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
+          onclick="goToFinishStep(2)">
+          Next: Treatment
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
 <div id="finish-step-2" class="finish-step hidden space-y-3">
       <div class="border rounded-lg p-4">
         <div class="flex items-start justify-between gap-3 mb-3">
@@ -386,34 +462,60 @@ body { font-family: 'Inter', sans-serif; }
                 <p class="text-xs text-gray-500">Select a tool, then tap teeth.</p>
               </div>
 
-              <div class="flex items-center gap-3 text-xs text-gray-600">
-                <span class="inline-flex items-center gap-1">
-                  <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Treatment Needed
-                </span>
-                <span class="inline-flex items-center gap-1">
-                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Completed
-                </span>
-              </div>
+              <div class="flex items-center gap-3 text-xs text-gray-600 flex-wrap">
+                <span class="font-semibold text-gray-700">Tooth Status:</span>
 
-              <div class="flex bg-white p-1 rounded-lg shadow-sm border">
-                <button type="button" id="tool-treatment" class="px-3 py-1.5 rounded-md text-sm font-medium" onclick="setActiveToothTool('treatment')">
-                  Treatment Needed
-                </button>
-                <button type="button" id="tool-completed" class="px-3 py-1.5 rounded-md text-sm font-medium" onclick="setActiveToothTool('completed')">
-                  Completed
-                </button>
+                <select id="toothStatusSelect"
+                  class="px-3 py-2 rounded-lg border bg-white text-sm"
+                  onchange="setActiveToothStatus(this.value)"
+                >
+                  <option value="Clear">Clear (remove status)</option>
+                  <option value="Cavity">Cavity</option>
+                  <option value="OK/Pasta">OK/Pasta</option>
+                  <option value="Root Fragments">Root Fragments</option>
+                  <option value="Impacted">Impacted</option>
+                  <option value="Missing">Missing</option>
+                  <option value="Amalgam">Amalgam</option>
+                  <option value="Composite">Composite</option>
+                  <option value="Complete Denture">Complete Denture</option>
+                  <option value="Crowns">Crowns</option>
+                </select>
+
+                <span class="text-xs text-gray-500">
+                  Select a status, then tap teeth. Choose “Clear” to remove.
+                </span>
               </div>
             </div>
 
             <div id="toothchart-grid" class="bg-white p-4 rounded-xl border shadow-inner"></div>
 
             <div class="mt-4 p-3 bg-white rounded-lg border text-sm">
-              <p><span class="font-semibold text-red-600">Treatment:</span> <span id="summary-treatment">None</span></p>
-              <p><span class="font-semibold text-blue-600">Completed:</span> <span id="summary-completed">None</span></p>
+              <p class="font-semibold text-gray-700 mb-1">Selected Tooth Statuses</p>
+              <p class="text-sm text-gray-700">
+                <span id="summary-statuses">None</span>
+              </p>
+              <div class="mt-4">
+  <label class="text-xs font-semibold text-gray-600 block">Attachments (X-ray / Images / PDFs)</label>
+  <input
+    id="tr-files"
+    type="file"
+    multiple
+    accept="image/*,application/pdf"
+    class="mt-2 w-full text-sm"
+    onchange="queueTreatmentFiles(this.files)"
+  />
+
+  <p class="text-xs text-gray-500 mt-1">
+    You can upload X-ray images, photos, or PDF files. These will be saved under this Treatment Record.
+  </p>
+
+  <div id="tr-files-list" class="mt-3 space-y-2"></div>
+</div>
             </div>
           </div>
         </div>
       </div>
+      <!-- Attachments -->
     </div>
 <div id="finish-step-3" class="finish-step hidden space-y-3">
       <div class="border rounded-lg p-4">
@@ -466,7 +568,7 @@ body { font-family: 'Inter', sans-serif; }
 
   </div>
 </div>
-    
+   
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // --- Supabase client (replace with your values) ---
@@ -668,11 +770,12 @@ let finishSteps = {
 };
 
 let currentFinishStep = 1;
+let pendingTreatmentFiles = []; // File[]
+let uploadedTreatmentFiles = []; // existing from DB to render list
 
 function goToFinishStep(step) {
   // Guard: step 2 requires medical saved; step 3 requires treatment saved
-  if (step === 2 && !finishSteps.medicalSaved) return;
-  if (step === 3 && !(finishSteps.medicalSaved && finishSteps.treatmentSaved)) return;
+  if (step === 3 && !finishSteps.treatmentSaved) return;
 
   currentFinishStep = step;
 
@@ -716,80 +819,111 @@ function lockPricingUI(lock) {
 
 
 // ---------------- ToothChart (vanilla JS, same numbering + styling as TreatmentRecords) ----------------
-let activeToothTool = 'treatment'; // 'treatment' | 'completed'
-let teethStatus = {}; // { "1": "treatment" | "completed", ... }
+let activeToothStatus = 'Clear';  // default = remove
+let teethStatus = {}; // { "11": "Cavity", "12": "Composite", ... }
 
-function setActiveToothTool(tool) {
-  activeToothTool = tool;
-  // Toggle button styles
-  const btnTreatment = document.getElementById('tool-treatment');
-  const btnCompleted = document.getElementById('tool-completed');
-  if (!btnTreatment || !btnCompleted) return;
-
-  if (tool === 'treatment') {
-    btnTreatment.className = "px-3 py-1.5 rounded-md text-sm font-medium bg-red-100 text-red-800";
-    btnCompleted.className = "px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50";
-  } else {
-    btnCompleted.className = "px-3 py-1.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800";
-    btnTreatment.className = "px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50";
-  }
+function setActiveToothStatus(status) {
+  activeToothStatus = status || 'Clear';
 }
+
 
 function updateToothSummary() {
-  const treatment = [];
-  const completed = [];
-  Object.entries(teethStatus || {}).forEach(([k, v]) => {
-    const n = Number(k);
-    if (v === 'treatment') treatment.push(n);
-    if (v === 'completed') completed.push(n);
-  });
-  treatment.sort((a,b)=>a-b);
-  completed.sort((a,b)=>a-b);
+  const entries = Object.entries(teethStatus || {})
+    .map(([tooth, status]) => ({ tooth: Number(tooth), status }))
+    .sort((a, b) => a.tooth - b.tooth)
+    .map(x => `${x.tooth}: ${x.status}`);
 
-  const tEl = document.getElementById('summary-treatment');
-  const cEl = document.getElementById('summary-completed');
-  if (tEl) tEl.textContent = treatment.length ? treatment.join(', ') : 'None';
-  if (cEl) cEl.textContent = completed.length ? completed.join(', ') : 'None';
+  const el = document.getElementById('summary-statuses');
+  if (el) el.textContent = entries.length ? entries.join(' • ') : 'None';
 }
 
+
 function toothButtonClasses(status) {
-  let baseStyles = "bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 shadow-sm";
+  // Default (Clear / no status)
+  let baseStyles =
+    "bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 shadow-sm";
   let numberColor = "text-gray-700";
   let indicator = "";
 
-  if (status === 'treatment') {
-    baseStyles = "bg-red-100 border-red-500 ring-2 ring-red-300 shadow-sm";
-    numberColor = "text-red-900";
-    indicator = "bg-red-600";
-  }
-  if (status === 'completed') {
-    baseStyles = "bg-blue-100 border-blue-500 ring-2 ring-blue-300 shadow-sm";
-    numberColor = "text-blue-900";
-    indicator = "bg-blue-600";
-  }
-  return { baseStyles, numberColor, indicator };
+  const map = {
+    "Cavity": {
+      base: "bg-red-100 border-red-500 ring-2 ring-red-300",
+      number: "text-red-900",
+      dot: "bg-red-600"
+    },
 
-  if (status === 'completed') {
-    baseStyles = "bg-blue-200 border-blue-600 shadow-xl ring-2 ring-blue-400";
-    numberColor = "text-blue-900";
-    indicator = "bg-blue-600";
+    "Root Fragments": {
+      base: "bg-amber-100 border-amber-600 ring-2 ring-amber-300",
+      number: "text-amber-900",
+      dot: "bg-amber-700"
+    },
+
+    "Impacted": {
+      base: "bg-orange-100 border-orange-500 ring-2 ring-orange-300",
+      number: "text-orange-900",
+      dot: "bg-orange-600"
+    },
+
+    "Missing": {
+      base: "bg-white border-gray-500 border-dashed ring-2 ring-gray-200",
+      number: "text-gray-700",
+      dot: "" // no dot for missing (less confusing)
+    },
+
+    "Amalgam": {
+      base: "bg-slate-200 border-slate-600 ring-2 ring-slate-300",
+      number: "text-slate-900",
+      dot: "bg-slate-700"
+    },
+
+    "OK/Pasta": {
+      base: "bg-green-100 border-green-500 ring-2 ring-green-300",
+      number: "text-green-900",
+      dot: "bg-green-600"
+    },
+
+    "Composite": {
+      base: "bg-cyan-100 border-cyan-500 ring-2 ring-cyan-300",
+      number: "text-cyan-900",
+      dot: "bg-cyan-600"
+    },
+
+    "Crowns": {
+      base: "bg-purple-100 border-purple-500 ring-2 ring-purple-300",
+      number: "text-purple-900",
+      dot: "bg-purple-600"
+    },
+
+    "Complete Denture": {
+      base: "bg-indigo-100 border-indigo-500 ring-2 ring-indigo-300",
+      number: "text-indigo-900",
+      dot: "bg-indigo-600"
+    }
+  };
+
+  if (status && map[status]) {
+    baseStyles = `${map[status].base} shadow-sm`;
+    numberColor = map[status].number;
+    indicator = map[status].dot;
   }
+
   return { baseStyles, numberColor, indicator };
 }
 
 
 function handleToothClick(number) {
   const key = String(number);
-  const current = teethStatus[key] || null;
 
-  if (current === activeToothTool) {
+  if (activeToothStatus === 'Clear') {
     delete teethStatus[key];
   } else {
-    teethStatus[key] = activeToothTool;
+    teethStatus[key] = activeToothStatus;
   }
+
   renderToothChart();
   updateToothSummary();
 }
+
 
 function renderQuadrant(numbers, isUpperArch) {
   const wrap = document.createElement('div');
@@ -851,6 +985,15 @@ function createToothBtn(n, isUpper) {
   inner.appendChild(num);
   btn.appendChild(inner);
 
+  if (status === "Missing") {
+  const x = document.createElement("div");
+  x.className =
+    "absolute inset-0 flex items-center justify-center text-2xl font-extrabold text-gray-500 pointer-events-none";
+  x.textContent = "×";
+  btn.appendChild(x);
+}
+
+
   if (indicator) {
     const dot = document.createElement('div');
     dot.className = `absolute w-2.5 h-2.5 rounded-full ${indicator}`;
@@ -858,9 +1001,6 @@ function createToothBtn(n, isUpper) {
     dot.style.right = '10%';
     btn.appendChild(dot);
   }
-
-  return btn;
-
 
   return btn;
 
@@ -908,6 +1048,11 @@ bottomLabel.textContent = "Mandibular (Lower)";
 const bottom = document.createElement('div');
 bottom.className = "tooth-chart-container lower-arch";
 renderRow(bottom, Q4, Q3, false);
+const sel = document.getElementById('toothStatusSelect');
+if (sel) {
+  sel.value = activeToothStatus || 'Clear';
+}
+
 
     host.appendChild(topLabel);
   host.appendChild(top);
@@ -915,7 +1060,6 @@ renderRow(bottom, Q4, Q3, false);
   host.appendChild(bottomLabel);
   host.appendChild(bottom);
 
-  setActiveToothTool(activeToothTool);
   updateToothSummary();
 }
 // -------------------------------------------------------------------------------------------
@@ -985,7 +1129,7 @@ async function openFinishModal(appointmentId, filter) {
   // Load appointment
   const { data: appt, error: apptErr } = await supabaseClient
     .from('Appointment')
-    .select('AppointmentID, Service, ServiceType, UserAccountID, DentistID')
+    .select('AppointmentID, Service, ServiceType, UserAccountID, DentistID, AddOns')
     .eq('AppointmentID', appointmentId)
     .eq('DentistID', dentistId)
     .maybeSingle();
@@ -1007,18 +1151,22 @@ async function openFinishModal(appointmentId, filter) {
     if (patient) patientName = `${patient.FirstName || ''} ${patient.LastName || ''}`.trim() || 'Unknown';
   }
 
-  finishContext.appointment = appt;
-  finishContext.patientName = patientName;
+finishContext.appointment = appt;
+finishContext.patientName = patientName;
 
-  document.getElementById('finish-patient').textContent = patientName;
-  document.getElementById('finish-service').textContent = appt.Service || appt.ServiceType || '—';
+document.getElementById('finish-patient').textContent = patientName;
+document.getElementById('finish-service').textContent = appt.Service || appt.ServiceType || '—';
 
-  // reset fields
-  document.getElementById('finish-base-price').value = '';
-  document.getElementById('finish-addons').innerHTML = '';
-  document.getElementById('finish-error').classList.add('hidden');
-  document.getElementById('finish-error').textContent = '';
-  document.getElementById('finish-total').textContent = peso(0);
+// reset fields FIRST
+document.getElementById('finish-base-price').value = '';
+document.getElementById('finish-addons').innerHTML = '';
+document.getElementById('finish-error').classList.add('hidden');
+document.getElementById('finish-error').textContent = '';
+document.getElementById('finish-total').textContent = peso(0);
+console.log("AddOns from DB:", appt.AddOns, "TotalAmount:", appt.TotalAmount);
+// THEN hydrate from Appointment table
+hydratePricingFromAppointment(appt);
+  
 
   // Optional: start with one row
   // addAddonRow();
@@ -1032,8 +1180,8 @@ async function openFinishModal(appointmentId, filter) {
   // reset to step 1 view
   goToFinishStep(1);
   // Load existing records (if any) then lock/unlock steps accordingly
-  await loadExistingStepsForAppointment();
-
+renderMedicalConditionsReadOnly();
+await loadExistingStepsForAppointment();
   computeFinishTotal();
 }
 
@@ -1074,15 +1222,17 @@ async function confirmFinishAppointment() {
   // IMPORTANT:
   // Requires Appointment.TotalAmount column.
   // PriceBreakdown is optional (remove if you don't have it).
-  const { data: updatedRows, error } = await supabaseClient
-    .from('Appointment')
-    .update({
-      TotalAmount: total,
-      Status: 'Finished',
-    })
-    .eq('AppointmentID', finishContext.appointmentId)
-    .eq('DentistID', dentistId)
-    .select('AppointmentID, TotalAmount, Status');
+const { data: updatedRows, error } = await supabaseClient
+  .from('Appointment')
+  .update({
+    TotalAmount: total,
+    AddOns: addons,
+    Status: 'Finished',
+  })
+  .eq('AppointmentID', finishContext.appointmentId)
+  .eq('DentistID', dentistId)
+  .select('AppointmentID, Status, AddOns');
+
 
   // IMPORTANT: PostgREST can return no error even if 0 rows matched (e.g. DentistID mismatch or RLS).
   if (!error && (!updatedRows || updatedRows.length === 0)) {
@@ -1136,22 +1286,22 @@ function lockPrice(lock) {
 }
 
 function refreshFinishLocks() {
-  setStepStatus('mr-status', finishSteps.medicalSaved);
+  // Medical is view-only; mark as Done if it exists, otherwise "Missing"
+  setStepStatus('mr-status', finishSteps.medicalSaved, 'Loaded');
   setStepStatus('tr-status', finishSteps.treatmentSaved);
 
-  // Step 2 can only be used after medical is saved
-  unlockTab('tab-step-2', finishSteps.medicalSaved);
-  lockTreatment(!finishSteps.medicalSaved);
+  // Step 2 should ALWAYS be accessible (dentist can still treat even if intake missing)
+  unlockTab('tab-step-2', true);
+  lockTreatment(false);
 
-  // Step 3 (pricing) only after medical + treatment saved
-  const canPrice = finishSteps.medicalSaved && finishSteps.treatmentSaved;
+  // Pricing only after treatment saved
+  const canPrice = finishSteps.treatmentSaved;
   unlockTab('tab-step-3', canPrice);
   lockPricingUI(!canPrice);
 
-  // If user is currently on a step that is no longer allowed, bounce back.
   if (currentFinishStep === 3 && !canPrice) goToFinishStep(2);
-  if (currentFinishStep === 2 && !finishSteps.medicalSaved) goToFinishStep(1);
 }
+
 
 async function loadExistingStepsForAppointment() {
   const appointmentId = finishContext.appointmentId;
@@ -1166,19 +1316,25 @@ async function loadExistingStepsForAppointment() {
     .eq('AppointmentID', appointmentId)
     .maybeSingle();
 
-  if (mr) {
-    finishSteps.medicalSaved = true;
-    // prefill fields
-    document.getElementById('mr-height').value = mr.Height ?? '';
-    document.getElementById('mr-weight').value = mr.Weight ?? '';
-    document.getElementById('mr-bloodtype').value = mr.BloodType ?? '';
-    document.getElementById('mr-allergies').value = mr.Allergies ?? '';
-    document.getElementById('mr-medication').value = mr.Medication ?? '';
-    document.getElementById('mr-conditions').value = mr.MedicalConditions ?? '';
-    document.getElementById('mr-notes').value = mr.MedicalRecordNotes ?? '';
-    document.getElementById('mr-emergency-name').value = mr.EmergencyContactName ?? '';
-    document.getElementById('mr-emergency-number').value = mr.EmergencyContactNumber ?? '';
-  }
+if (mr) {
+  finishSteps.medicalSaved = true;
+
+  document.getElementById('mr-emergency-name').value = mr.EmergencyContactName ?? '';
+  document.getElementById('mr-emergency-number').value = mr.EmergencyContactNumber ?? '';
+  document.getElementById('mr-prev-hosp').value = mr.PreviousHospitalizations ?? '';
+  document.getElementById('mr-pres-meds').value = mr.PrescribedMedications ?? '';
+  document.getElementById('mr-allergies').value = mr.AllergiesToMedications ?? '';
+  document.getElementById('mr-family-prob').value = mr.FamilyMedicationProblems ?? '';
+  document.getElementById('mr-concerns').value = mr.OtherMedicalConcerns ?? '';
+  document.getElementById('mr-alerts').value = mr.MedicalAlert ?? '';
+
+  // fill conditions JSON
+  const condObj = mr.MedicalConditions || {};
+  document.querySelectorAll("#mr-conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => {
+      cb.checked = !!condObj[cb.dataset.condKey];
+    });
+}
 
   // TreatmentRecord exists?
   const { data: tr } = await supabaseClient
@@ -1207,13 +1363,28 @@ async function loadExistingStepsForAppointment() {
     }
     renderToothChart();
     updateToothSummary();
+// Load attachments list for this treatment record (if any)
+uploadedTreatmentFiles = [];
+if (tr?.TreatmentRecordID) {
+  const { data: files, error: fErr } = await supabaseClient
+    .from("treatmentattachment")
+.select("filepath, filename, mimetype, sizebytes, createdat")
+.eq("treatmentrecordid", tr.TreatmentRecordID)
+.order("createdat", { ascending: false });
+
+
+  if (!fErr && files) uploadedTreatmentFiles = files;
+}
+renderTreatmentFilesList();
 
   }
 
   // Price exists?
-  if (appt?.TotalAmount && Number(appt.TotalAmount) > 0) {
-    finishSteps.priceSaved = true;
-  }
+const addons = safeParseAddons(appt?.AddOns);
+if (addons.length > 0) {
+  finishSteps.priceSaved = true; // or keep false if you require base > 0
+}
+
 
   refreshFinishLocks();
 }
@@ -1223,23 +1394,26 @@ async function saveMedicalRecordStep() {
   const appt = finishContext.appointment;
   if (!appointmentId || !appt?.UserAccountID) return;
 
-  const payload = {
-    MedicalRecordID: crypto.randomUUID(), // will overwrite if updating; we'll fix below
-    AppointmentID: appointmentId,
-    UserAccountID: appt.UserAccountID,
+const payload = {
+  AppointmentID: appointmentId,
+  UserAccountID: appt.UserAccountID,
 
-    Height: Number(document.getElementById('mr-height').value || 0) || null,
-    Weight: Number(document.getElementById('mr-weight').value || 0) || null,
-    BloodType: document.getElementById('mr-bloodtype').value || null,
-    Allergies: document.getElementById('mr-allergies').value || null,
-    Medication: document.getElementById('mr-medication').value || null,
-    MedicalConditions: document.getElementById('mr-conditions').value || null,
-    MedicalRecordNotes: document.getElementById('mr-notes').value || null,
-    EmergencyContactName: document.getElementById('mr-emergency-name').value || null,
-    EmergencyContactNumber: document.getElementById('mr-emergency-number').value || null,
+  EmergencyContactName: document.getElementById('mr-emergency-name').value || null,
+  EmergencyContactNumber: document.getElementById('mr-emergency-number').value || null,
 
-    UpdatedAt: new Date().toISOString(),
-  };
+  PreviousHospitalizations: document.getElementById('mr-prev-hosp').value || null,
+  PrescribedMedications: document.getElementById('mr-pres-meds').value || null,
+  AllergiesToMedications: document.getElementById('mr-allergies').value || null,
+  FamilyMedicationProblems: document.getElementById('mr-family-prob').value || null,
+  OtherMedicalConcerns: document.getElementById('mr-concerns').value || null,
+  MedicalAlert: document.getElementById('mr-alerts').value || null,
+
+  // If you implement checkbox grid on dentist side:
+  // MedicalConditions: collectMedicalConditions(),
+
+  UpdatedAt: new Date().toISOString(),
+};
+
 
   // check existing by AppointmentID
   const { data: existing } = await supabaseClient
@@ -1274,88 +1448,118 @@ async function saveMedicalRecordStep() {
 
 
 async function saveTreatmentRecordStep() {
-  if (!finishSteps.medicalSaved) {
-    showToast('Please save Medical Record first.');
-    return;
-  }
-
   const appointmentId = finishContext.appointmentId;
   if (!appointmentId) return;
 
-  const notes = document.getElementById('tr-notes').value || '';
-  const details = document.getElementById('tr-details').value || '';
-  const hasContent = notes.trim() || details.trim();
+  const btn = document.getElementById('tr-save-btn');
+  const oldText = btn?.textContent || 'Save Treatment';
 
-  if (!hasContent) {
-    showToast('Please enter Treatment Notes or Treatment Details.');
-    return;
+  const restoreBtn = () => {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = oldText;
+  };
+
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '.7';
+    btn.textContent = 'Saving...';
   }
 
-  // check existing
-  const { data: existing, error: exErr } = await supabaseClient
-    .from('TreatmentRecord')
-    .select('TreatmentRecordID')
-    .eq('AppointmentID', appointmentId)
-    .maybeSingle();
+  try {
+    const notes = document.getElementById('tr-notes').value || '';
+    const details = document.getElementById('tr-details').value || '';
+    const hasContent = notes.trim() || details.trim();
 
-  if (exErr) console.error(exErr);
+    if (!hasContent) {
+      showToast('Please enter Treatment Notes or Treatment Details.', 'error');
+      return;
+    }
 
-  let res;
-  if (existing?.TreatmentRecordID) {
-    res = await supabaseClient
+    // check existing
+    const { data: existing, error: exErr } = await supabaseClient
       .from('TreatmentRecord')
-      .update({ TreatmentNotes: notes, TreatmentDetails: details })
-      .eq('AppointmentID', appointmentId);
-  } else {
-    res = await supabaseClient
+      .select('TreatmentRecordID')
+      .eq('AppointmentID', appointmentId)
+      .maybeSingle();
+
+    if (exErr) console.error(exErr);
+
+    let res;
+    if (existing?.TreatmentRecordID) {
+      res = await supabaseClient
+        .from('TreatmentRecord')
+        .update({ TreatmentNotes: notes, TreatmentDetails: details })
+        .eq('AppointmentID', appointmentId);
+    } else {
+      res = await supabaseClient
+        .from('TreatmentRecord')
+        .insert({
+          TreatmentRecordID: crypto.randomUUID(),
+          AppointmentID: appointmentId,
+          TreatmentNotes: notes,
+          TreatmentDetails: details,
+        });
+    }
+
+    if (res.error) {
+      console.error(res.error);
+      showToast('Failed to save Treatment Record.', 'error');
+      return;
+    }
+
+    // fetch TreatmentRecordID (needed for ToothChart)
+    const { data: trRow, error: trErr } = await supabaseClient
       .from('TreatmentRecord')
-      .insert({
-        TreatmentRecordID: crypto.randomUUID(),
-        AppointmentID: appointmentId,
-        TreatmentNotes: notes,
-        TreatmentDetails: details,
-      });
+      .select('TreatmentRecordID')
+      .eq('AppointmentID', appointmentId)
+      .maybeSingle();
+
+    if (trErr || !trRow?.TreatmentRecordID) {
+      console.error(trErr);
+      showToast('Saved treatment, but failed to resolve TreatmentRecordID for ToothChart.', 'error');
+      return;
+    }
+
+    // upsert ToothChart (one per TreatmentRecord)
+    const { error: tcErr } = await supabaseClient
+      .from('ToothChart')
+      .upsert(
+        { TreatmentRecordID: trRow.TreatmentRecordID, TeethStatus: teethStatus || {} },
+        { onConflict: ['TreatmentRecordID'] }
+      );
+
+    if (tcErr) {
+      console.error(tcErr);
+      showToast('Failed to save ToothChart.', 'error');
+      return;
+    }
+
+    await uploadPendingTreatmentFiles(trRow.TreatmentRecordID, appointmentId);
+
+    // refresh files list (lowercase)
+    const { data: files, error: fErr } = await supabaseClient
+      .from("treatmentattachment")
+      .select("filepath, filename, mimetype, sizebytes, createdat")
+      .eq("treatmentrecordid", trRow.TreatmentRecordID)
+      .order("createdat", { ascending: false });
+
+    if (fErr) console.error("Attachment refresh error:", fErr);
+
+    uploadedTreatmentFiles = files || [];
+    renderTreatmentFilesList();
+
+    finishSteps.treatmentSaved = true;
+    refreshFinishLocks();
+
+    showToast('Treatment record saved successfully.', 'success');
+  } finally {
+    // ALWAYS restore the button, even if something returns early
+    restoreBtn();
   }
-
-  if (res.error) {
-    console.error(res.error);
-    showToast('Failed to save Treatment Record.');
-    return;
-  }
-
-  // fetch TreatmentRecordID (needed for ToothChart)
-  const { data: trRow, error: trErr } = await supabaseClient
-    .from('TreatmentRecord')
-    .select('TreatmentRecordID')
-    .eq('AppointmentID', appointmentId)
-    .maybeSingle();
-
-  if (trErr || !trRow?.TreatmentRecordID) {
-    console.error(trErr);
-    showToast('Saved treatment, but failed to resolve TreatmentRecordID for ToothChart.');
-    return;
-  }
-
-  // upsert ToothChart (one per TreatmentRecord)
-  const { error: tcErr } = await supabaseClient
-    .from('ToothChart')
-    .upsert(
-      {
-        TreatmentRecordID: trRow.TreatmentRecordID,
-        TeethStatus: teethStatus || {}
-      },
-      { onConflict: ['TreatmentRecordID'] }
-    );
-
-  if (tcErr) {
-    console.error(tcErr);
-    showToast('Failed to save ToothChart.');
-    return;
-  }
-
-  finishSteps.treatmentSaved = true;
-  refreshFinishLocks();
 }
+
 
 let toastTimer = null;
 
@@ -1387,6 +1591,127 @@ function showToast(message, type = 'info') {
     toast.classList.add('hidden');
   }, 3000);
 }
+function queueTreatmentFiles(fileList) {
+  pendingTreatmentFiles = Array.from(fileList || []);
+  renderTreatmentFilesList();
+}
+
+function renderTreatmentFilesList() {
+  const wrap = document.getElementById("tr-files-list");
+  if (!wrap) return;
+
+  const items = [];
+
+  // Existing uploaded files
+  (uploadedTreatmentFiles || []).forEach(f => {
+    items.push(`
+      <div class="flex items-center justify-between gap-3 border rounded-lg p-3 bg-white">
+        <div class="min-w-0">
+          <div class="font-semibold text-sm truncate">${escapeHtml(f.filename || "File")}</div>
+          <div class="text-xs text-gray-500 truncate">${escapeHtml(f.mimetype || "")}</div>
+        </div>
+        <button class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+          onclick="openTreatmentAttachment('${f.filepath}')">Open</button>
+      </div>
+    `);
+  });
+
+  // Pending (not yet uploaded)
+  pendingTreatmentFiles.forEach((file, idx) => {
+    items.push(`
+      <div class="flex items-center justify-between gap-3 border rounded-lg p-3 bg-gray-50">
+        <div class="min-w-0">
+          <div class="font-semibold text-sm truncate">🕓 ${escapeHtml(file.name)}</div>
+          <div class="text-xs text-gray-500 truncate">${escapeHtml(file.type || "unknown")} • ${Math.round((file.size||0)/1024)} KB</div>
+        </div>
+        <button class="px-3 py-2 rounded-lg border hover:bg-white text-sm font-medium"
+          onclick="removePendingTreatmentFile(${idx})">Remove</button>
+      </div>
+    `);
+  });
+
+  wrap.innerHTML = items.length ? items.join("") : `<div class="text-sm text-gray-500">No files added.</div>`;
+}
+
+function removePendingTreatmentFile(idx) {
+  pendingTreatmentFiles.splice(idx, 1);
+  renderTreatmentFilesList();
+}
+
+// minimal safe helper
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+async function uploadPendingTreatmentFiles(treatmentRecordId, appointmentId) {
+  if (!pendingTreatmentFiles.length) return;
+
+  const dentistId = localStorage.getItem("userId") || "unknown";
+  const bucket = "treatment-files";
+
+  for (const file of pendingTreatmentFiles) {
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+    const fileId = crypto.randomUUID();
+    const path = `${dentistId}/${appointmentId}/${treatmentRecordId}/${fileId}.${ext}`;
+
+    const { error: upErr } = await supabaseClient
+      .storage
+      .from(bucket)
+      .upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false
+      });
+
+    if (upErr) {
+      console.error("Upload failed:", upErr);
+      showToast(`Failed to upload: ${file.name}`, "error");
+      continue;
+    }
+
+const row = {
+  attachmentid: crypto.randomUUID(),
+  treatmentrecordid: treatmentRecordId,
+  appointmentid: appointmentId,
+  filepath: path,
+  filename: file.name,
+  mimetype: file.type || null,
+  sizebytes: file.size || null
+};
+
+
+    const { error: insErr } = await supabaseClient
+      .from("treatmentattachment")
+      .insert(row);
+
+    if (insErr) {
+      console.error("DB insert failed:", insErr);
+      showToast(`Uploaded but failed to save record: ${file.name}`, "error");
+    }
+  }
+
+  pendingTreatmentFiles = [];
+  const inp = document.getElementById("tr-files");
+if (inp) inp.value = "";
+renderTreatmentFilesList();
+
+}
+async function openTreatmentAttachment(filePath) {
+  const { data } = supabaseClient
+    .storage
+    .from("treatment-files")
+    .getPublicUrl(filePath);
+
+  const url = data?.publicUrl;
+  if (!url) return showToast("Failed to open file.", "error");
+  window.open(url, "_blank");
+}
+
+
+
 
         // =================================================================================
         // *** START OF USER-PROTECTED BLOCK (loadDentistAppointments) - MODIFIED FOR RENDER/SEARCH ***
@@ -1481,6 +1806,463 @@ function showToast(message, type = 'info') {
             renderAppointments(appointments, filter, appointmentsList, appointmentCount);
         }
 
+        async function openConsentsListFromFinish() {
+  if (!finishContext?.appointmentId) return showToast('Missing appointment.', 'error');
+
+  // Reuse your secretary-side openConsentsList logic, but use finishContext.appointmentId
+  const appointmentId = finishContext.appointmentId;
+
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select(`
+      ConsentID,
+      ServiceSnapshot,
+      Status,
+      ConsentDate,
+      CreatedAt,
+      ConsentTemplate:TemplateID ( Title )
+    `)
+    .eq("AppointmentID", appointmentId)
+    .order("CreatedAt", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return showToast('Failed to load consents.', 'error');
+  }
+
+  const wrap = document.getElementById("consentsListContainer");
+if (!wrap) {
+  console.error("Missing #consentsListContainer in HTML.");
+  return showToast("Consents UI is missing in the page.", "error");
+}
+
+  if (!data || data.length === 0) {
+    wrap.innerHTML = `<div class="text-gray-600">No saved consents yet.</div>`;
+  } else {
+    wrap.innerHTML = data.map(c => `
+      <div class="border rounded-lg p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="font-semibold truncate">${c.ConsentTemplate?.Title || c.ServiceSnapshot || "Consent"}</div>
+          <div class="text-sm text-gray-500">
+            Status: <span class="font-semibold">${c.Status || "DRAFT"}</span>
+            • Date: ${c.ConsentDate || "—"}
+          </div>
+        </div>
+        <button class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+          onclick="loadConsentById('${c.ConsentID}')">
+          Open
+        </button>
+      </div>
+    `).join("");
+  }
+
+  // open list modal
+  const m = document.getElementById("consentsListModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+}
+async function getSignedUrl(bucket, path, expiresInSeconds = 60 * 60) {
+  if (!path) return null;
+
+  const { data, error } = await supabaseClient
+    .storage
+    .from(bucket)
+    .createSignedUrl(path, expiresInSeconds);
+
+  if (error) {
+    console.error("getSignedUrl error:", error);
+    return null;
+  }
+
+  return data?.signedUrl || null;
+}
+
+async function loadConsentById(consentId) {
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select("*")
+    .eq("ConsentID", consentId)
+    .single();
+  if (data.Status === "COMPLETED") {
+  document.querySelector("#consentModal h2").innerText = "Consent Form (Read-only)";
+} else {
+  document.querySelector("#consentModal h2").innerText = "Consent Form";
+}
+
+  if (error || !data) {
+    console.error("loadConsentById error:", error);
+    return showToast("Failed to open consent.", "error");
+  }
+
+  // Fill consent modal with existing record
+  const templates = await fetchActiveConsentTemplates();
+  const sel = document.getElementById("consentTemplateSelect");
+  sel.innerHTML = templates.map(t => {
+    const svc = t.Service ? ` • ${t.Service}` : " • (Generic)";
+    return `<option value="${t.TemplateID}">${t.Title}${svc}</option>`;
+  }).join("");
+  if (data.TemplateID) sel.value = data.TemplateID;
+
+  document.getElementById("consentPatientName").value = data.PatientName || "";
+  document.getElementById("consentStaffName").value = data.StaffName || "";
+  document.getElementById("consentDate").value = data.ConsentDate || todayPHDateISO();
+  document.getElementById("consentText").value = data.ConsentText || "";
+  document.getElementById("consentStatus").innerText = data.Status || "DRAFT";
+ lockConsentUI(true); // dentist is always view-only
+
+
+  const cm = document.getElementById("consentModal");
+  cm.dataset.consentId = data.ConsentID;
+  cm.dataset.mode = "existing";
+
+closeConsentsList();
+showConsentModal();
+initConsentSignaturePads();
+
+// clear first
+window.patientPad?.clear();
+window.staffPad?.clear();
+
+const patientUrl = await getSignedUrl("consent-signatures", data.PatientSignaturePath);
+if (patientUrl) await window.patientPad?.loadFromUrl(patientUrl);
+
+const staffUrl = await getSignedUrl("consent-signatures", data.StaffSignaturePath);
+if (staffUrl) await window.staffPad?.loadFromUrl(staffUrl);
+
+// Force dentist view-only (locks inputs + disables drawing + hides clear/save)
+lockConsentUI(true);
+
+
+
+}
+function renderMedicalConditionsReadOnly() {
+  const grid = document.getElementById('mr-conditionsGrid');
+  if (!grid) return;
+
+  // same list as MedicalIntake (keys must match saved JSON)
+  const conditionsList = [
+    { key: "kidneyProblems", label: "Kidney Problems" },
+    { key: "glandularProblems", label: "Glandular Problems" },
+    { key: "heartTrouble", label: "Heart Trouble" },
+    { key: "learningDisability", label: "Learning Disability" },
+    { key: "diabetes", label: "Diabetes" },
+    { key: "tuberculosis", label: "Tuberculosis" },
+    { key: "mentalDisorder", label: "Mental Disorder" },
+    { key: "bleedingDisorder", label: "Bleeding Disorder" },
+    { key: "asthma", label: "Asthma" },
+    { key: "brainInjury", label: "Brain Injury" },
+    { key: "rheumaticFever", label: "Rheumatic Fever" },
+    { key: "tumors", label: "Tumors" },
+    { key: "liverProblems", label: "Liver Problems" },
+    { key: "neurological", label: "Neurological" },
+    { key: "hyperactivity", label: "Hyperactivity" },
+    { key: "seizures", label: "Seizures" },
+    { key: "earInfection", label: "Ear Infection" },
+    { key: "skinDisorder", label: "Skin Disorder" },
+    { key: "other", label: "Other (specify)" }
+  ];
+
+  grid.innerHTML = conditionsList.map(cond => `
+    <label class="flex items-center gap-2 cursor-not-allowed opacity-90">
+      <input
+        type="checkbox"
+        class="w-4 h-4 text-[#03555E] border-gray-300 rounded focus:ring-[#03555E]"
+        data-cond-key="${cond.key}"
+        id="mr_cond_${cond.key}"
+        disabled
+      >
+      <span class="text-gray-700 text-sm">${cond.label}</span>
+    </label>
+  `).join("");
+}
+window.patientPad = window.patientPad || null;
+window.staffPad = window.staffPad || null;
+
+function createSignaturePad(canvas, opts = {}) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  const state = {
+    drawing: false,
+    lastX: 0,
+    lastY: 0,
+    hasInk: false,
+    // you can track strokes for undo if you want later
+  };
+
+  const settings = {
+    lineWidth: opts.lineWidth ?? 2.2,
+    lineColor: opts.lineColor ?? "#111",
+    background: opts.background ?? "#fff",
+  };
+
+  function resizeCanvasToDisplaySize() {
+    // Canvas CSS size (display size)
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // Set actual pixel size (for crisp lines)
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    // Scale drawing operations to match CSS pixels
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Fill background (so WebP/PNG isn't transparent unless you want it)
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Re-apply stroke style
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = settings.lineColor;
+    ctx.lineWidth = settings.lineWidth;
+  }
+
+  function getPointFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+    const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+    return {
+      x: (clientX - rect.left),
+      y: (clientY - rect.top),
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    state.drawing = true;
+    const p = getPointFromEvent(e);
+    state.lastX = p.x;
+    state.lastY = p.y;
+
+    // start a new path
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+  }
+
+  function draw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    const p = getPointFromEvent(e);
+
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    state.lastX = p.x;
+    state.lastY = p.y;
+    state.hasInk = true;
+  }
+
+  function endDraw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    state.drawing = false;
+    ctx.closePath();
+  }
+
+  function clear() {
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    // refill background
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    state.hasInk = false;
+  }
+
+  async function toWebPBlob(quality = 0.82) {
+    // returns null if empty
+    if (!state.hasInk) return null;
+
+    return await new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => resolve(blob),
+        "image/webp",
+        quality
+      );
+    });
+  }
+async function loadFromUrl(url) {
+  if (!url) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  // clear + background
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.fillStyle = settings.background;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
+  await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const w = rect.width;
+      const h = rect.height;
+
+      const scale = Math.min(w / img.width, h / img.height);
+      const drawW = img.width * scale;
+      const drawH = img.height * scale;
+      const dx = (w - drawW) / 2;
+      const dy = (h - drawH) / 2;
+
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+      state.hasInk = true;
+      resolve();
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+
+  // Pointer events (best for tablet)
+  canvas.addEventListener("pointerdown", startDraw);
+  canvas.addEventListener("pointermove", draw);
+  window.addEventListener("pointerup", endDraw);
+  window.addEventListener("pointercancel", endDraw);
+
+  // Resize once now
+  resizeCanvasToDisplaySize();
+
+  // Resize when layout changes (modal open / rotate)
+  const ro = new ResizeObserver(() => {
+    // preserve existing signature? (optional)
+    // simplest: clear on resize to avoid stretched ink
+    resizeCanvasToDisplaySize();
+    state.hasInk = false; // you can remove this if you implement re-draw logic later
+  });
+  ro.observe(canvas);
+
+  return {
+    clear,
+    toWebPBlob,
+    hasInk: () => state.hasInk,
+    loadFromUrl, 
+    destroy: () => ro.disconnect()
+  };
+}
+function initConsentSignaturePads() {
+  const patientCanvas = document.getElementById("patientSigCanvas");
+  const staffCanvas = document.getElementById("staffSigCanvas");
+
+  if (patientCanvas && !window.patientPad) {
+    window.patientPad = createSignaturePad(patientCanvas, { lineWidth: 2.2 });
+    document.getElementById("patientSigClear")?.addEventListener("click", () => window.patientPad?.clear());
+  }
+
+  if (staffCanvas && !window.staffPad) {
+    window.staffPad = createSignaturePad(staffCanvas, { lineWidth: 2.2 });
+    document.getElementById("staffSigClear")?.addEventListener("click", () => window.staffPad?.clear());
+  }
+
+  window.patientPad?.clear();
+  window.staffPad?.clear();
+}
+
+async function getPatientSignatureBlob() {
+  if (!patientPad) return null;
+  return await patientPad.toWebPBlob(0.82); // quality 0.7–0.9 is good
+}
+async function getStaffSignatureBlob() {
+  if (!staffPad) return null;
+  return await staffPad.toWebPBlob(0.82);
+}
+function closeConsentsList() {
+  const m = document.getElementById("consentsListModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.style.overflow = "";
+}
+function showConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.style.overflow = "hidden";
+}
+async function fetchActiveConsentTemplates() {
+  const { data, error } = await supabaseClient
+    .from("ConsentTemplate")
+    .select("TemplateID, Service, Title, Body, IsActive")
+    .eq("IsActive", true)
+    .order("Title", { ascending: true });
+
+  if (error) {
+    console.error("fetchActiveConsentTemplates error:", error);
+    return [];
+  }
+  return data || [];
+}
+function todayPHDateISO() {
+  const now = new Date();
+  // Create a date string in Asia/Manila
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const y = parts.find(p => p.type === "year")?.value;
+  const m = parts.find(p => p.type === "month")?.value;
+  const d = parts.find(p => p.type === "day")?.value;
+  return `${y}-${m}-${d}`; // YYYY-MM-DD
+}
+function closeConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.style.overflow = "";
+}
+function lockConsentUI(lock) {
+  document.getElementById("consentTemplateSelect").disabled = lock;
+  document.getElementById("consentPatientName").disabled = lock;
+  document.getElementById("consentStaffName").disabled = lock;
+  document.getElementById("consentDate").disabled = lock;
+  document.getElementById("consentText").disabled = lock;
+
+  // Hide save button on dentist side
+  const btn = document.getElementById("btnSaveConsent");
+  if (btn) btn.style.display = lock ? "none" : "block";
+
+  // Lock signature pads completely
+  const pc = document.getElementById("patientSigCanvas");
+  const sc = document.getElementById("staffSigCanvas");
+  if (pc) pc.style.pointerEvents = lock ? "none" : "auto";
+  if (sc) sc.style.pointerEvents = lock ? "none" : "auto";
+
+  // Hide clear buttons when locked
+  const pClear = document.getElementById("patientSigClear");
+  const sClear = document.getElementById("staffSigClear");
+  if (pClear) pClear.style.display = lock ? "none" : "inline-flex";
+  if (sClear) sClear.style.display = lock ? "none" : "inline-flex";
+}
+function safeParseAddons(addonsRaw) {
+  if (!addonsRaw) return [];
+  if (Array.isArray(addonsRaw)) return addonsRaw;
+  try {
+    const parsed = typeof addonsRaw === "string" ? JSON.parse(addonsRaw) : addonsRaw;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function sumAddonPrices(addons) {
+  return (addons || []).reduce((sum, a) => sum + (Number(a?.price) || 0), 0);
+}
+
+function hydratePricingFromAppointment(appt) {
+  const wrap = document.getElementById('finish-addons');
+  if (wrap) wrap.innerHTML = '';
+
+  const addons = safeParseAddons(appt?.AddOns);
+
+  // Only render existing add-ons; base price stays whatever the dentist types.
+  addons.forEach(a => addAddonRow({ name: a?.name || '', price: a?.price ?? '' }));
+
+  // Do NOT touch base price here because you don't store it in Appointment now.
+  computeFinishTotal();
+}
+
         // =================================================================================
         // *** END OF USER-PROTECTED BLOCK (loadDentistAppointments) - MODIFIED FOR RENDER/SEARCH ***
         // =================================================================================
@@ -1525,7 +2307,108 @@ function showToast(message, type = 'info') {
             });
         }
 
-        window.addEventListener('load', initializeAppointments);
+        
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('bellContainer');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+
+window.addEventListener('load', initializeAppointments);
+
+        // Shell notifications (bell)
+        window.addEventListener('load', async function loadNotificationsOnLoad(){
+          try { await loadNotifications(); } catch (e) { console.warn(e); }
+        });
     </script>
 
 <!-- Toast Message -->
@@ -1540,6 +2423,128 @@ function showToast(message, type = 'info') {
   </div>
 </div>
 
+<div id="consentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consent Form</h2>
+      <button onclick="closeConsentModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
 
+    <div class="p-6 space-y-6">
+      <div class="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border">
+        <div>
+          <label class="text-sm text-gray-600">Template</label>
+          <select id="consentTemplateSelect" class="w-full mt-1 px-3 py-2 border rounded-lg bg-white">
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Patient Name</label>
+          <input id="consentPatientName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Date</label>
+          <input id="consentDate" type="date" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-sm text-gray-600">Staff Name</label>
+          <input id="consentStaffName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Status</label>
+          <div id="consentStatus" class="mt-2 text-sm font-semibold">DRAFT</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Consent Text (editable)</label>
+        <textarea id="consentText" rows="12"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm"></textarea>
+      </div>
+
+      <!-- Signature placeholders (we’ll wire later) -->
+ <!-- SIGNATURE PADS -->
+<div class="grid md:grid-cols-2 gap-4">
+
+  <!-- PATIENT SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Patient Signature</div>
+      <button type="button" id="patientSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="patientSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Patient signs here using finger or stylus.
+    </div>
+  </div>
+
+  <!-- STAFF SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Staff Signature</div>
+      <button type="button" id="staffSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="staffSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Staff signs here.
+    </div>
+  </div>
+</div>
+
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+        <button id="btnSaveConsent" class="flex-1 bg-[#03555E] text-white py-2 rounded-lg hover:bg-[#024449] font-medium">
+          Save Consent
+        </button>
+        <button onclick="closeConsentModal()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="consentsListModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consents for this Appointment</h2>
+      <button onclick="closeConsentsList()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+
+    <div class="p-6">
+      <div id="consentsListContainer" class="space-y-3"></div>
+    </div>
+
+    <div class="p-6 border-t flex gap-3">
+      <button onclick="closeConsentsList()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">Close</button>
+    </div>
+  </div>
+
+
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    try { if (window.lucide) window.lucide.createIcons(); } catch (e) {}
+  });
+</script>
 </body>
+
 </html>

@@ -1,297 +1,490 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dentist Account Settings</title>
-    <!-- Load Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Custom Theme Colors */
-        .bg-primary { background-color: #03555E; }
-        .text-primary { color: #03555E; }
-        .hover\:bg-primary-dark:hover { background-color: #024449; }
-        .font-sans { font-family: 'Inter', sans-serif; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
 
-        /* Custom Switch Styling (Simulating shadcn/ui switch) */
-        .custom-switch {
-            @apply w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-200;
-            background-color: #e5e7eb; /* gray-200 */
-        }
-        .custom-switch.checked {
-            @apply bg-primary;
-        }
-        .custom-switch-thumb {
-            @apply w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 transform;
-        }
-        .custom-switch.checked .custom-switch-thumb {
-            transform: translateX(1.25rem); /* 20px */
-        }
-    </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <style>
+    /* Approximate shadcn/ui card styles */
+    .card {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      background-color: #ffffff;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    .card-header { padding: 1rem 1.5rem; }
+    .card-title { font-size: 1.125rem; font-weight: 600; }
+    .card-content { padding: 1.5rem; }
+
+    /* Custom Switch Styling (Mimics shadcn/ui) */
+    .custom-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .custom-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 9999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    input:checked + .slider {
+      background-color: #03555E; /* custom-primary */
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
 
-    <!-- Header -->
-    <header class="bg-primary text-white shadow-xl">
-        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-            <!-- Back Button Link -->
-            <a href="Dashboard.html">
-                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
-                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-                    Back
-                </button>
-            </a>
-            <div>
-                <h1 class="text-xl font-bold">Settings</h1>
-                <p class="text-sm opacity-90">Manage your account preferences</p>
-            </div>
+<body class="min-h-screen bg-gray-50 font-sans">
+  <!-- Top Header (same shell as Dashboard.html) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TH</span>
         </div>
-    </header>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+
+        <!-- Hidden elements kept for existing JS that expects these IDs -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same shell as Dashboard.html) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto space-y-6">
-
-            <!-- 1. Notification Settings Card -->
-            <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2 text-gray-800">
-                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-                        Notifications
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4" id="notifications-settings">
-                        <!-- Content will be generated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Privacy & Security Card -->
-            <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2 text-gray-800">
-                        <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
-                        Privacy & Security
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4" id="security-settings">
-                        <!-- Content will be generated by JS -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 3. Appearance Card -->
-            <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2 text-gray-800">
-                        <i data-lucide="moon" class="w-5 h-5 text-primary"></i>
-                        Appearance
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4" id="appearance-settings">
-                        <!-- Content will be generated by JS -->
-                    </div>
-                </div>
-            </div>
-
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold mb-2">Settings</h1>
+          <p class="text-gray-600">Manage your preferences</p>
         </div>
+
+        <div class="max-w-2xl space-y-6">
+          <!-- Notification Settings Card -->
+          <div class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6 border-b">
+              <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                <i data-lucide="bell" class="w-5 h-5 text-custom-primary"></i>
+                Notifications
+              </h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Email Notifications</h3>
+                    <p class="text-sm text-gray-600">Receive appointment confirmations via email</p>
+                  </div>
+                  <label class="custom-switch">
+                    <input type="checkbox" id="email-switch" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Payment Alerts</h3>
+                    <p class="text-sm text-gray-600">Get notified of new payments</p>
+                  </div>
+                  <label class="custom-switch">
+                    <input type="checkbox" id="payment-switch">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Appointment Reminders</h3>
+                    <p class="text-sm text-gray-600">Daily appointment schedule reminders</p>
+                  </div>
+                  <label class="custom-switch">
+                    <input type="checkbox" id="reminder-switch" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Settings Card -->
+          <div class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6 border-b">
+              <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                <i data-lucide="shield" class="w-5 h-5 text-custom-primary"></i>
+                Security
+              </h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Two-Factor Authentication</h3>
+                    <p class="text-sm text-gray-600">Add extra security to your account</p>
+                  </div>
+                  <button onclick="handleSecurityAction('2fa')" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">
+                    Enable
+                  </button>
+                </div>
+
+                <div>
+                  <button onclick="handleSecurityAction('password')" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 bg-white">
+                    Change Password
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance Card -->
+          <div class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6 border-b">
+              <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                <i data-lucide="moon" class="w-5 h-5 text-custom-primary"></i>
+                Appearance
+              </h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Dark Mode</h3>
+                    <p class="text-sm text-gray-600">Switch to dark theme</p>
+                  </div>
+                  <label class="custom-switch">
+                    <input type="checkbox" id="dark-mode-switch" onclick="toggleDarkMode(this.checked)">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden Message Box (for feedback) -->
+          <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0"></div>
+        </div>
+      </div>
     </main>
-    
-    <!-- Hidden Message Box (for feedback) -->
-    <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50">
-        <!-- Message content injected here -->
-    </div>
+  </div>
 
-    <!-- JavaScript Logic -->
-    <script>
-        // --- STATE MANAGEMENT (SIMULATED) ---
-        let settingsState = {
-            emailNotifications: true,
-            smsNotifications: false,
-            pushNotifications: true,
-            twoFactorAuth: false,
-            patientDataPrivacy: true,
-            darkMode: false,
-            language: 'English'
-        };
+  <!-- Hidden mobile menu elements kept so existing JS doesn't break (matches Dashboard shell) -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
 
-        const preferenceMap = [
-            // Notifications
-            { id: 'emailNotifications', group: 'notifications-settings', type: 'switch', title: 'Email Notifications', description: 'Receive appointment reminders via email' },
-            { id: 'smsNotifications', group: 'notifications-settings', type: 'switch', title: 'SMS Notifications', description: 'Get text message reminders' },
-            { id: 'pushNotifications', group: 'notifications-settings', type: 'switch', title: 'Push Notifications', description: 'Browser notifications for updates' },
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-            // Privacy & Security
-            { id: 'twoFactorAuth', group: 'security-settings', type: 'button-toggle', title: 'Two-Factor Authentication', description: 'Add extra security to your account', buttonText: 'Enable', buttonToggleText: 'Disable' },
-            { id: 'patientDataPrivacy', group: 'security-settings', type: 'switch', title: 'Patient Data Privacy', description: 'Control access to patient information' },
-            { id: 'changePassword', group: 'security-settings', type: 'button-full', title: 'Change Password', buttonText: 'Change Password', icon: 'lock' },
+  <!-- Settings logic (kept from your file) -->
+  <script>
+    // --- DATA STATE (for persistence simulation) ---
+    const settings = {
+      emailNotifications: true,
+      paymentAlerts: false,
+      appointmentReminders: true,
+      darkMode: false,
+    };
 
-            // Appearance
-            { id: 'darkMode', group: 'appearance-settings', type: 'switch', title: 'Dark Mode', description: 'Switch to dark theme' },
-            { id: 'language', group: 'appearance-settings', type: 'button-value', title: 'Language', description: 'Choose your preferred language', buttonText: 'English' },
-        ];
+    // --- UTILITY FUNCTIONS ---
+    function showFeedback(message, isError = false) {
+      const feedbackBox = document.getElementById('feedback-message');
+      feedbackBox.textContent = message;
 
+      feedbackBox.classList.remove('hidden', 'bg-green-600', 'bg-red-600');
+      feedbackBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
 
-        // --- UTILITY FUNCTIONS ---
-        function showFeedback(message, isError = false) {
-            const feedbackBox = document.getElementById('feedback-message');
-            feedbackBox.textContent = message;
-            
-            feedbackBox.classList.remove('hidden', 'bg-green-600', 'bg-red-600');
-            feedbackBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
-            
-            feedbackBox.classList.add('opacity-100');
-            
-            setTimeout(() => {
-                feedbackBox.classList.remove('opacity-100');
-                setTimeout(() => {
-                    feedbackBox.classList.add('hidden');
-                }, 300); 
-            }, 2500);
+      // Show message
+      feedbackBox.classList.add('opacity-100');
+
+      // Hide message after 2 seconds
+      setTimeout(() => {
+        feedbackBox.classList.remove('opacity-100');
+        setTimeout(() => {
+          feedbackBox.classList.add('hidden');
+        }, 300);
+      }, 2000);
+    }
+
+    function updateSetting(settingName, value) {
+      settings[settingName] = value;
+      showFeedback(`${settingName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} ${value ? 'enabled' : 'disabled'}.`);
+      console.log(`Setting updated: ${settingName} = ${value}`);
+    }
+
+    function handleSecurityAction(action) {
+      if (action === '2fa') {
+        showFeedback('Two-Factor Authentication setup process started (simulated).', false);
+      } else if (action === 'password') {
+        showFeedback('Redirecting to Change Password form (simulated).', false);
+      }
+    }
+
+    function toggleDarkMode(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark');
+        document.body.classList.remove('bg-gray-50');
+        document.body.classList.add('bg-gray-900');
+        showFeedback('Dark Mode activated.');
+      } else {
+        document.body.classList.remove('dark');
+        document.body.classList.remove('bg-gray-900');
+        document.body.classList.add('bg-gray-50');
+        showFeedback('Light Mode activated.');
+      }
+      settings.darkMode = isDark;
+    }
+
+    // --- INITIALIZATION ---
+    window.onload = function () {
+      const emailSwitch = document.getElementById('email-switch');
+      emailSwitch.checked = settings.emailNotifications;
+      emailSwitch.addEventListener('change', (e) => updateSetting('emailNotifications', e.target.checked));
+
+      const paymentSwitch = document.getElementById('payment-switch');
+      paymentSwitch.checked = settings.paymentAlerts;
+      paymentSwitch.addEventListener('change', (e) => updateSetting('paymentAlerts', e.target.checked));
+
+      const reminderSwitch = document.getElementById('reminder-switch');
+      reminderSwitch.checked = settings.appointmentReminders;
+      reminderSwitch.addEventListener('change', (e) => updateSetting('appointmentReminders', e.target.checked));
+
+      const darkModeSwitch = document.getElementById('dark-mode-switch');
+      darkModeSwitch.checked = settings.darkMode;
+
+      if (settings.darkMode) {
+        toggleDarkMode(true);
+      }
+
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    };
+  </script>
+
+  <!-- Auth + Notifications (fixed: lucide script separated; added Supabase client) -->
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
+
+      if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+      if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
+
+      return userData;
+    }
+
+    async function loadNotifications() {
+      await new Promise(r => setTimeout(r, 100));
+
+      const bellContainer = document.getElementById('bellContainer');
+      if (!bellContainer) return console.warn('Bell icon container not found');
+
+      const userId = localStorage.getItem('userAccountId') || localStorage.getItem('userId');
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from('Notifications')
+        .select(`
+          NotificationID,
+          Message,
+          Status,
+          DateSent,
+          AppointmentID,
+          Appointment:AppointmentID (
+            AppointmentID,
+            UserAccountID,
+            User:UserAccountID (FirstName, LastName)
+          )
+        `)
+        .eq('UserAccountID', userId)
+        .eq('Status', 'Unread')
+        .order('DateSent', { ascending: false });
+
+      if (error) return console.error(error);
+
+      const existingBadge = document.getElementById('notif-badge');
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+      }
+
+      const prevDropdown = document.getElementById('notif-dropdown');
+      if (prevDropdown) prevDropdown.remove();
+
+      bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'p-4 text-gray-500 text-sm';
+          emptyMsg.textContent = 'No new notifications';
+          dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach(n => {
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            dropdown.appendChild(item);
+          });
         }
 
-        function handleSwitchToggle(id) {
-            const currentState = settingsState[id];
-            settingsState[id] = !currentState;
-            
-            renderSettings(); // Re-render all switches to update state visually
-            
-            const action = settingsState[id] ? 'enabled' : 'disabled';
-            const readableTitle = preferenceMap.find(p => p.id === id).title;
-            showFeedback(`${readableTitle} has been ${action}.`);
-        }
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+      };
+    }
 
-        function handleButtonClick(id) {
-            const item = preferenceMap.find(p => p.id === id);
-            
-            if (id === 'changePassword') {
-                showFeedback(`Redirecting to ${item.buttonText} screen...`);
-                return;
-            } 
-            
-            if (id === 'twoFactorAuth') {
-                settingsState[id] = !settingsState[id];
-                renderSettings();
-                const action = settingsState[id] ? 'enabled' : 'disabled';
-                showFeedback(`Two-Factor Authentication ${action}.`);
-                return;
-            }
-            
-            if (id === 'language') {
-                // Simplified language selector: always sets to Spanish on click
-                const newLang = settingsState.language === 'English' ? 'Spanish' : 'English';
-                settingsState.language = newLang;
-                renderSettings();
-                showFeedback(`Language set to ${newLang}.`);
-                return;
-            }
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
 
-            // Default feedback for other buttons
-            showFeedback(`Action for ${item.title} triggered.`);
-        }
+    window.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user || user.Role !== 'dentist') { window.location.href = "/Login.html"; return; }
 
-        // --- RENDER LOGIC ---
-        function renderSettings() {
-            // Clear existing content
-            document.getElementById('notifications-settings').innerHTML = '';
-            document.getElementById('security-settings').innerHTML = '';
-            document.getElementById('appearance-settings').innerHTML = '';
-
-            preferenceMap.forEach(item => {
-                const container = document.getElementById(item.group);
-                
-                let html = '';
-
-                if (item.type === 'switch') {
-                    const isChecked = settingsState[item.id];
-                    html = `
-                        <div class="flex items-center justify-between border-b last:border-b-0 py-2">
-                            <div>
-                                <h3 class="font-medium text-gray-800">${item.title}</h3>
-                                <p class="text-sm text-gray-600">${item.description}</p>
-                            </div>
-                            <div id="switch-${item.id}" 
-                                class="custom-switch ${isChecked ? 'checked' : ''}"
-                                onclick="handleSwitchToggle('${item.id}')">
-                                <div class="custom-switch-thumb"></div>
-                            </div>
-                        </div>
-                    `;
-                } else if (item.type === 'button-toggle') {
-                    const isEnabled = settingsState[item.id];
-                    html = `
-                        <div class="flex items-center justify-between border-b last:border-b-0 py-2">
-                            <div>
-                                <h3 class="font-medium text-gray-800">${item.title}</h3>
-                                <p class="text-sm text-gray-600">${item.description}</p>
-                            </div>
-                            <button id="btn-${item.id}"
-                                onclick="handleButtonClick('${item.id}')"
-                                class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-sm border 
-                                ${isEnabled ? 'bg-primary text-white hover:bg-primary-dark' : 'border-gray-300 hover:bg-gray-100 bg-transparent text-gray-700'}"
-                                >
-                                ${isEnabled ? item.buttonToggleText : item.buttonText}
-                            </button>
-                        </div>
-                    `;
-                } else if (item.type === 'button-value') {
-                    html = `
-                        <div class="flex items-center justify-between border-b last:border-b-0 py-2">
-                            <div>
-                                <h3 class="font-medium text-gray-800">${item.title}</h3>
-                                <p class="text-sm text-gray-600">${item.description}</p>
-                            </div>
-                            <button id="btn-${item.id}"
-                                onclick="handleButtonClick('${item.id}')"
-                                class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-100 bg-transparent text-gray-700"
-                                >
-                                ${settingsState[item.id]}
-                            </button>
-                        </div>
-                    `;
-                } else if (item.type === 'button-full') {
-                    html = `
-                        <div class="pt-2">
-                            <button id="btn-${item.id}"
-                                onclick="handleButtonClick('${item.id}')"
-                                class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 w-full py-2.5 text-sm border border-gray-300 hover:bg-gray-100 bg-transparent text-gray-700"
-                                >
-                                <i data-lucide="${item.icon}" class="w-4 h-4 mr-2"></i>
-                                ${item.buttonText}
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                if (html) {
-                    // Use a temporary div to append elements safely and handle Lucide icons
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html.trim();
-                    container.appendChild(tempDiv.firstChild);
-                }
-            });
-            
-            // Re-render Lucide icons for dynamically added content
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        }
-
-
-        // --- INITIALIZATION ---
-        window.onload = function() {
-            renderSettings();
-
-            // Render Lucide icons for static header elements
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        };
-    </script>
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      loadNotifications();
+    });
+  </script>
 </body>
 </html>

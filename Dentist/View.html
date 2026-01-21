@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Record Page</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'custom-primary': '#03555E',
+              'custom-hover': '#024449',
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -77,25 +90,97 @@
 
     </style>
 </head>
-<body>
-    <div id="app-container" class="min-h-screen flex flex-col">
-        <!-- Initial loading state -->
-        <div id="loading-spinner" class="flex-grow flex items-center justify-center p-8 text-gray-500">
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#03555E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading patient data...
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (match Dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell text-lg"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
     </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (match Dashboard) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div id="app-container" class="w-full">
+        <!-- Initial loading state -->
+        <div id="loading-spinner" class="flex items-center justify-center p-8 text-gray-500">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#03555E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading patient data...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Hidden mobile menu elements kept so existing JS won't crash if referenced -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
 
     <!-- Toast / message box -->
     <div id="messageBox"
         class="hidden fixed bottom-6 right-6 p-4 rounded text-white font-medium shadow-lg z-50 transition-all duration-300">
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.259.0/dist/lucide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
@@ -138,6 +223,82 @@
     appointments: []   // 🔹 appointment history for this patient
 };
 
+// ===== Appointment Record modal state (Dentist) =====
+const TREATMENT_FILES_BUCKET = "treatment-files";
+
+let _apptModal = {
+  appointmentId: null,
+  treatmentRecordId: null,
+  editMode: false,
+
+  activeTool: "Cavity",
+  // current working values
+  teethStatus: {},           // { "11": "Cavity", ... }
+  treatmentNotes: "",
+  treatmentDetails: "",
+
+  // snapshots for cancel
+  snap: null,
+
+  // attachments
+  uploadedFiles: [],         // rows from treatmentattachment
+  pendingFiles: [],          // File[] selected locally
+};
+
+// Same mapping used in TreatmentRecords (outline/border-based)
+
+const TOOTH_STATUS_META = {
+  "Cavity": {
+    border: "border-red-600",
+    chip: "bg-red-100 text-red-800 border-red-200"
+  },
+  "OK/Pasta": {
+    border: "border-emerald-600",
+    chip: "bg-emerald-100 text-emerald-800 border-emerald-200"
+  },
+  "Root Fragments": {
+    border: "border-orange-600",
+    chip: "bg-orange-100 text-orange-800 border-orange-200"
+  },
+  "Impacted": {
+    border: "border-yellow-500",
+    chip: "bg-yellow-100 text-yellow-800 border-yellow-200"
+  },
+  "Missing": {
+    border: "border-gray-700",
+    chip: "bg-gray-100 text-gray-800 border-gray-200",
+    overlay: "X"
+  },
+  "Amalgam": {
+    border: "border-slate-600",
+    chip: "bg-slate-100 text-slate-800 border-slate-200"
+  },
+  "Composite": {
+    border: "border-sky-600",
+    chip: "bg-sky-100 text-sky-800 border-sky-200"
+  },
+  "Complete Denture": {
+    border: "border-violet-600",
+    chip: "bg-violet-100 text-violet-800 border-violet-200"
+  },
+  "Crowns": {
+    border: "border-indigo-600",
+    chip: "bg-indigo-100 text-indigo-800 border-indigo-200"
+  },
+  "Clear": {
+    border: "border-gray-300",
+    chip: "bg-white text-gray-700 border-gray-200"
+  }
+};
+
+
+const TOOTH_STATUS_OPTIONS = Object.keys(TOOTH_STATUS_META);
+
+function safeStatusMeta(s) {
+  if (s === "treatment") return TOOTH_STATUS_META["Cavity"];
+  if (s === "completed") return TOOTH_STATUS_META["OK/Pasta"];
+  return TOOTH_STATUS_META[s] || { border: "border-gray-300", chip: "bg-gray-50 text-gray-700 border-gray-200" };
+}
 
     function setState(newState) {
         state = { ...state, ...newState };
@@ -208,7 +369,7 @@
         return `
             <div class="${gridSpan}">
                 <label for="${name}" class="text-xs font-medium text-gray-600 block mb-1">${label}</label>
-                <input type="${type}" id="${name}" name="${name}" value="${val}" 
+                <input type="${type}" id="${name}" name="${name}"value="${escapeHtml(val)}"
                     ${isDisabled ? 'disabled' : ''} 
                     class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${disabledClass}" />
             </div>`;
@@ -237,130 +398,65 @@
     }
 
 async function savePatient() {
-    const form = document.getElementById('patient-form');
-    const formData = new FormData(form);
-    const patientID = state.patient.UserAccountID;
+  const form = document.getElementById('patient-form');
+  const formData = new FormData(form);
 
-    // 1) Update UserAccount
-    const { error: patientError } = await supabaseClient
-        .from('UserAccount')
-        .update({
-            FirstName: formData.get('firstName'),
-            MiddleName: formData.get('middleName'),
-            LastName: formData.get('lastName'),
-            Email: formData.get('email'),
-            ContactNumber: formData.get('phone'),
-            BirthDate: formData.get('dateOfBirth'),
-            Gender: formData.get('gender'),
-            Address: formData.get('address')
-        })
-        .eq('UserAccountID', patientID);
+  // --- Address handling (same as Signup) ---
+  const addrStreet = (formData.get("addrStreet") || "").trim();
+  const addrBarangay = (formData.get("addrBarangay") || "").trim();
+  const addrCity = (formData.get("addrCity") || "").trim();
+  const addrProvince = (formData.get("addrProvince") || "").trim();
+  const addrZip = (formData.get("addrZip") || "").trim();
 
-    if (patientError) {
-        return showMessage("Error updating patient: " + patientError.message, "error");
-    }
+  const address = composeAddressFromParts({
+    street: addrStreet,
+    barangay: addrBarangay,
+    city: addrCity,
+    province: addrProvince,
+    zip: addrZip,
+  });
 
-    // 2) Prepare MedicalRecord data
-    const heightRaw = (formData.get('height') || '').trim();
-    const weightRaw = (formData.get('weight') || '').trim();
+  const patientID = state.patient.UserAccountID;
 
-    let height = null;
-    let weight = null;
+  // 1) Update UserAccount ONLY
+  const { error: patientError } = await supabaseClient
+    .from('UserAccount')
+    .update({
+      FirstName: formData.get('firstName'),
+      MiddleName: formData.get('middleName'),
+      LastName: formData.get('lastName'),
+      Email: formData.get('email'),
+      ContactNumber: formData.get('phone'),
+      BirthDate: formData.get('dateOfBirth'),
+      Gender: formData.get('gender'),
+      Address: address,
+    })
+    .eq('UserAccountID', patientID);
 
-    if (heightRaw !== '') {
-        const n = Number(heightRaw);
-        if (Number.isNaN(n)) {
-            showMessage("Height must be a valid number.", "error");
-            return;
-        }
-        height = n;
-    }
+  if (patientError) {
+    return showMessage("Error updating patient: " + patientError.message, "error");
+  }
 
-    if (weightRaw !== '') {
-        const n = Number(weightRaw);
-        if (Number.isNaN(n)) {
-            showMessage("Weight must be a valid number.", "error");
-            return;
-        }
-        weight = n;
-    }
+  // 2) Update local state (patient only)
+  const updatedPatient = {
+    ...state.patient,
+    FirstName: formData.get('firstName') || '',
+    MiddleName: formData.get('middleName') || '',
+    LastName: formData.get('lastName') || '',
+    Email: formData.get('email') || '',
+    ContactNumber: formData.get('phone') || '',
+    BirthDate: formData.get('dateOfBirth') || '',
+    Gender: formData.get('gender') || '',
+    Address: address,
+  };
 
-    const mrUpdate = {
-        UserAccountID: patientID,
-        Height: height,
-        Weight: weight,
-        BloodType: formData.get('bloodType') || null,
-        Allergies: formData.get('allergies') || null,
-        Medication: formData.get('medication') || null,
-        MedicalConditions: formData.get('medicalConditions') || null,
-        MedicalRecordNotes: formData.get('medicalRecordNotes') || null,
-        EmergencyContactName: formData.get('emergencyContactName') || null,
-        EmergencyContactNumber: formData.get('emergencyContactNumber') || null,
-    };
+  setState({
+    patient: updatedPatient,
+    isEditing: false,
+  });
 
-    // 3) Check if a medical record already exists for this user (by PK = UserAccountID)
-    const { data: existingRecord, error: existingError } = await supabaseClient
-        .from('MedicalRecord')
-        .select('UserAccountID')
-        .eq('UserAccountID', patientID)
-        .maybeSingle();
-
-    if (existingError) {
-        return showMessage("Error checking medical record: " + existingError.message, "error");
-    }
-
-    let mrData, mrError;
-
-    if (existingRecord) {
-        // ✅ Update existing medical record
-        const { data, error } = await supabaseClient
-            .from('MedicalRecord')
-            .update(mrUpdate)
-            .eq('UserAccountID', patientID)  // PK in Option B
-            .select()
-            .single();
-
-        mrData = data;
-        mrError = error;
-    } else {
-        // ✅ Insert new medical record
-        const { data, error } = await supabaseClient
-            .from('MedicalRecord')
-            .insert(mrUpdate)
-            .select()
-            .single();
-
-        mrData = data;
-        mrError = error;
-    }
-
-    if (mrError) {
-        return showMessage("Error updating medical record: " + mrError.message, "error");
-    }
-
-    // 4) Update local state
-    const updatedPatient = {
-        ...state.patient,
-        FirstName: formData.get('firstName') || '',
-        MiddleName: formData.get('middleName') || '',
-        LastName: formData.get('lastName') || '',
-        Email: formData.get('email') || '',
-        ContactNumber: formData.get('phone') || '',
-        BirthDate: formData.get('dateOfBirth') || '',
-        Gender: formData.get('gender') || '',
-        Address: formData.get('address') || '',
-    };
-
-    setState({
-        patient: updatedPatient,
-        medicalRecord: mrData,   // row keyed by UserAccountID
-        isEditing: false,
-    });
-
-    showMessage("Patient and Medical Record saved successfully!", "success");
+  showMessage("Patient information saved successfully!", "success");
 }
-
-
     
 // --- Open appointment history (VIEW ONLY modal) ---
 async function openAppointmentRecord(appointmentId) {
@@ -409,10 +505,20 @@ async function openAppointmentRecord(appointmentId) {
 
     // Fetch MedicalRecord by AppointmentID
     const { data: mr } = await supabaseClient
-        .from('MedicalRecord')
-        .select('*')
-        .eq('AppointmentID', appointmentId)
-        .maybeSingle();
+    .from('MedicalRecord')
+    .select(`
+        EmergencyContactName,
+        EmergencyContactNumber,
+        PreviousHospitalizations,
+        PrescribedMedications,
+        AllergiesToMedications,
+        FamilyMedicationProblems,
+        OtherMedicalConcerns,
+        MedicalAlert,
+        MedicalConditions
+    `)
+    .eq('AppointmentID', appointmentId)
+    .maybeSingle();
 
     // Fetch TreatmentRecord by AppointmentID
     const { data: tr } = await supabaseClient
@@ -431,6 +537,39 @@ async function openAppointmentRecord(appointmentId) {
             .maybeSingle();
         teethStatus = tc?.TeethStatus || null;
     }
+
+    // Fetch attachments by TreatmentRecordID (if any)
+        let attachments = [];
+        if (tr?.TreatmentRecordID) {
+        const { data: att, error: attErr } = await supabaseClient
+            .from("treatmentattachment")
+            .select("filepath, filename, mimetype, sizebytes, createdat")
+            .eq("treatmentrecordid", tr.TreatmentRecordID)   // ✅ lowercase
+            .order("createdat", { ascending: false }); 
+
+        if (attErr) console.error(attErr);
+        attachments = att || [];
+        }
+
+        _apptModal.appointmentId = appointmentId;
+        _apptModal.treatmentRecordId = tr?.TreatmentRecordID || null;
+
+        _apptModal.editMode = false;
+        _apptModal.activeTool = "Cavity";
+        _apptModal.teethStatus = teethStatus || {};
+        _apptModal.treatmentNotes = tr?.TreatmentNotes || "";
+        _apptModal.treatmentDetails = tr?.TreatmentDetails || "";
+
+        _apptModal.uploadedFiles = attachments;
+        _apptModal.pendingFiles = [];
+
+        _apptModal.snap = JSON.parse(JSON.stringify({
+        treatmentRecordId: _apptModal.treatmentRecordId,
+        teethStatus: _apptModal.teethStatus,
+        treatmentNotes: _apptModal.treatmentNotes,
+        treatmentDetails: _apptModal.treatmentDetails,
+        uploadedFiles: _apptModal.uploadedFiles
+        }));
 
     // Render view-only sections
     body.innerHTML = `
@@ -452,28 +591,55 @@ async function openAppointmentRecord(appointmentId) {
                     <p class="text-xs text-gray-500 mt-0.5">View-only snapshot for this appointment</p>
                 </div>
                 <div class="p-5 bg-white">
-                    ${renderMedicalView(mr)}
+                    ${renderMedicalView(mr, appointmentId)}
                 </div>
             </section>
 
-            <section class="border rounded-xl overflow-hidden">
-                <div class="px-5 py-3 bg-white border-b">
-                    <h3 class="text-sm font-semibold text-gray-900">Treatment Record</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Notes and details for this appointment</p>
-                </div>
-                <div class="p-5 bg-white space-y-4">
-                    ${renderTreatmentView(tr)}
-                    ${renderToothChartView(teethStatus)}
-                </div>
-            </section>
+<section class="border rounded-xl overflow-hidden">
+  <div class="px-5 py-3 bg-white border-b flex items-start justify-between gap-3">
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900">Treatment Record</h3>
+      <p class="text-xs text-gray-500 mt-0.5">Notes, tooth chart, and files</p>
+    </div>
+
+    <div id="appt-edit-actions" class="flex gap-2">
+      <button type="button"
+        class="px-3 py-2 rounded-lg bg-[#03555E] text-white hover:bg-[#024449] text-sm font-medium"
+        onclick="enterApptEditMode()"
+      >
+        Edit Treatment
+      </button>
+    </div>
+  </div>
+
+  <div class="p-5 bg-white space-y-4">
+    <!-- Notes/details -->
+    <div id="appt-treatment-fields"></div>
+
+    <!-- Tooth chart -->
+    <div id="appt-toothchart-wrap"></div>
+
+    <!-- Files -->
+    <div id="appt-files-wrap"></div>
+  </div>
+</section>
+
         </div>
     `;
+    renderApptTreatmentUI();
+    renderApptToothChart();
+    renderApptFiles();
+
 }
 
 function closeHistoryModal() {
     const modal = document.getElementById('history-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    document.getElementById('history-modal-title').textContent = '';
+document.getElementById('history-modal-subtitle').textContent = '';
+document.getElementById('history-modal-body').innerHTML = '';
+
 }
 
 function renderKV(label, value) {
@@ -486,26 +652,571 @@ function renderKV(label, value) {
     `;
 }
 
-function renderMedicalView(mr) {
-    if (!mr) {
-        return `<p class="text-sm text-gray-500">No medical record was recorded for this appointment.</p>`;
-    }
-    return `
-        <div class="grid md:grid-cols-2 gap-3">
-            ${renderKV('Height', mr.Height ? `${mr.Height} cm` : '—')}
-            ${renderKV('Weight', mr.Weight ? `${mr.Weight} kg` : '—')}
-            ${renderKV('Blood Type', mr.BloodType)}
-            ${renderKV('Allergies', mr.Allergies)}
-            ${renderKV('Medication', mr.Medication)}
-            ${renderKV('Medical Conditions', mr.MedicalConditions)}
-            ${renderKV('Emergency Contact Name', mr.EmergencyContactName)}
-            ${renderKV('Emergency Contact Number', mr.EmergencyContactNumber)}
+function renderApptTreatmentUI() {
+  const el = document.getElementById("appt-treatment-fields");
+  if (!el) return;
+
+  if (!_apptModal.editMode) {
+    el.innerHTML = `
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl border bg-gray-50">
+          <p class="text-xs font-semibold text-gray-600">Treatment Notes</p>
+          <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">${_apptModal.treatmentNotes || "—"}</p>
         </div>
-        <div class="mt-3">
-            ${renderKV('Medical Record Notes', mr.MedicalRecordNotes)}
+        <div class="p-4 rounded-xl border bg-gray-50">
+          <p class="text-xs font-semibold text-gray-600">Treatment Details</p>
+          <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">${_apptModal.treatmentDetails || "—"}</p>
         </div>
+      </div>
     `;
+  } else {
+    el.innerHTML = `
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">TREATMENT NOTES</label>
+          <textarea id="appt-notes" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
+            rows="4">${_apptModal.treatmentNotes || ""}</textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">TREATMENT DETAILS</label>
+          <textarea id="appt-details" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
+            rows="4">${_apptModal.treatmentDetails || ""}</textarea>
+        </div>
+      </div>
+    `;
+  }
 }
+
+function renderApptToothChart() {
+  const wrap = document.getElementById("appt-toothchart-wrap");
+  if (!wrap) return;
+
+  wrap.innerHTML = renderToothChartOutline(_apptModal.teethStatus, _apptModal.editMode);
+}
+
+// --- Escaping helpers (REQUIRED for file rendering safety) ---
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function escapeJs(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r");
+}
+
+
+function renderApptFiles() {
+  const wrap = document.getElementById("appt-files-wrap");
+  if (!wrap) return;
+
+  const uploaded = _apptModal.uploadedFiles || [];
+  const pending = _apptModal.pendingFiles || [];
+
+  wrap.innerHTML = `
+    <div class="border p-4 rounded-xl bg-white">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div>
+          <div class="text-sm font-bold text-gray-700">Uploaded Files</div>
+          <div class="text-xs text-gray-500">X-ray, photos, documents</div>
+        </div>
+        ${_apptModal.editMode ? `
+          <label class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium cursor-pointer">
+            Add files
+            <input id="appt-file-input" type="file" multiple class="hidden" />
+          </label>
+        ` : ``}
+      </div>
+
+      ${_apptModal.editMode ? `
+        <div class="mb-3">
+          <div class="text-xs font-semibold text-gray-500 mb-1">Pending</div>
+          ${pending.length === 0 ? `<div class="text-sm text-gray-500">No pending uploads.</div>` : `
+            <div class="space-y-2">
+              ${pending.map((f, i) => `
+                <div class="flex items-center justify-between border rounded-lg px-3 py-2">
+                  <div class="min-w-0">
+                    <div class="text-sm font-semibold truncate">${escapeHtml(f.name)}</div>
+                    <div class="text-xs text-gray-500">${Math.round((f.size||0)/1024)} KB</div>
+                  </div>
+                  <button type="button" class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+                    onclick="removePendingFile(${i})">Remove</button>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </div>
+      ` : ``}
+
+      <div>
+        <div class="text-xs font-semibold text-gray-500 mb-1">Uploaded</div>
+        ${uploaded.length === 0 ? `<div class="text-sm text-gray-500">No files uploaded.</div>` : `
+          <div class="space-y-2">
+            ${uploaded.map((f) => `
+              <div class="flex items-center justify-between border rounded-lg px-3 py-2">
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold truncate">${escapeHtml(f.filename || "File")}</div>
+                  <div class="text-xs text-gray-500 truncate">${escapeHtml(f.mimetype || "")}</div>
+                </div>
+                <button type="button" class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+                  onclick="openFilePreview('${escapeJs(f.filepath)}','${escapeJs(f.filename||"File")}','${escapeJs(f.mimetype||"")}')">
+                  Preview
+                </button>
+              </div>
+            `).join("")}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  // wire file input
+  if (_apptModal.editMode) {
+    const input = document.getElementById("appt-file-input");
+    if (input) {
+      input.onchange = () => {
+        const files = Array.from(input.files || []);
+        _apptModal.pendingFiles = _apptModal.pendingFiles.concat(files);
+        renderApptFiles();
+      };
+    }
+  }
+}
+
+function removePendingFile(i) {
+  _apptModal.pendingFiles.splice(i, 1);
+  renderApptFiles();
+}
+
+function renderToothChartOutline(teethStatus, editable) {
+  const status = teethStatus || {};
+
+  const legend = TOOTH_STATUS_OPTIONS.map((s) => {
+    const meta = safeStatusMeta(s);
+    return `<span class="inline-flex items-center gap-2 px-2 py-1 rounded-full border text-xs ${meta.chip}">
+      <span class="inline-block w-2.5 h-2.5 rounded-full border-4 ${meta.border}"></span>${s}
+    </span>`;
+  }).join(" ");
+
+  const Q1 = [8,7,6,5,4,3,2,1];
+  const Q2 = [9,10,11,12,13,14,15,16];
+  const Q4 = [32,31,30,29,28,27,26,25];
+  const Q3 = [24,23,22,21,20,19,18,17];
+
+  const toothCell = (n, isUpperArch) => {
+    const s = status[String(n)];
+    const meta = safeStatusMeta(s);
+    const borderClass = s ? `${meta.border} border-4` : "border-gray-200 border-2";
+    const missing = s === "Missing";
+
+    return `
+      <button type="button"
+        class="w-full aspect-square transition-all duration-200 flex items-center justify-center relative bg-white ${borderClass} tooth-shape
+               ${editable ? "cursor-pointer hover:opacity-90" : "cursor-default"}"
+        ${editable ? `onclick="toggleToothStatus(${n})"` : "disabled"}
+        title="Tooth ${n}${s ? ` • ${s}` : ""}">
+        <div class="tooth-button-inner">
+          <span class="text-xl font-bold text-gray-900">${n}</span>
+          ${missing ? `<div class="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-gray-700/70">×</div>` : ``}
+        </div>
+      </button>
+    `;
+  };
+
+  const quadrant = (numbers, isUpperArch) => `
+    <div class="quadrant-grid ${isUpperArch ? "upper-arch" : "lower-arch"}">
+      ${numbers.map(n => toothCell(n, isUpperArch)).join("")}
+    </div>
+  `;
+
+  return `
+    <div class="border p-4 rounded-xl bg-white">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <div class="text-sm font-bold text-gray-700">Tooth Chart</div>
+          <div class="text-xs text-gray-500">${editable ? "Select status then click teeth" : "Recorded selections (view-only)"}</div>
+        </div>
+
+        ${editable ? `
+            <select id="appt-status-select"
+            class="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700"
+            onchange="_apptModal.activeTool = this.value"
+            >
+            ${TOOTH_STATUS_OPTIONS.map((k) =>
+                `<option value="${k}" ${k === _apptModal.activeTool ? "selected" : ""}>${k}</option>`
+            ).join("")}
+            </select>
+        ` : ``}
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4">${legend}</div>
+
+      <div class="bg-white p-4 rounded-xl border shadow-inner">
+        <h4 class="text-center text-xs font-semibold text-gray-500 mb-2 uppercase tracking-widest">
+          Maxillary Arch (Upper)
+        </h4>
+
+        <div class="tooth-chart-container">
+          ${quadrant(Q1, true)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quadrant(Q2, true)}
+        </div>
+
+        <div class="w-full h-1 bg-gray-100 my-4 rounded-full"></div>
+
+        <div class="tooth-chart-container">
+          ${quadrant(Q4, false)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quadrant(Q3, false)}
+        </div>
+
+        <h4 class="text-center text-xs font-semibold text-gray-500 mt-2 uppercase tracking-widest">
+          Mandibular Arch (Lower)
+        </h4>
+      </div>
+    </div>
+  `;
+}
+
+
+function toggleToothStatus(toothNumber) {
+  if (!_apptModal.editMode) return;
+
+  const active = _apptModal.activeTool || "Cavity";
+
+  const key = String(toothNumber);
+  const cur = _apptModal.teethStatus[key];
+
+  if (active === "Clear") {
+    delete _apptModal.teethStatus[key];
+  } else if (cur === active) {
+    delete _apptModal.teethStatus[key];
+  } else {
+    _apptModal.teethStatus[key] = active;
+  }
+
+  renderApptToothChart();
+}
+
+function enterApptEditMode() {
+  _apptModal.editMode = true;
+
+  // replace action buttons
+  const actions = document.getElementById("appt-edit-actions");
+  if (actions) {
+    actions.innerHTML = `
+      <button type="button"
+        class="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
+        onclick="cancelApptEditMode()"
+      >Cancel</button>
+
+      <button type="button"
+        class="px-3 py-2 rounded-lg bg-[#03555E] text-white hover:bg-[#024449] text-sm font-medium"
+        onclick="saveApptTreatment()"
+      >Save</button>
+    `;
+  }
+
+  renderApptTreatmentUI();
+  renderApptToothChart();
+  renderApptFiles();
+}
+
+function cancelApptEditMode() {
+  const s = _apptModal.snap;
+  if (!s) return;
+
+  _apptModal.editMode = false;
+  _apptModal.treatmentRecordId = s.treatmentRecordId;
+  _apptModal.teethStatus = JSON.parse(JSON.stringify(s.teethStatus || {}));
+  _apptModal.treatmentNotes = s.treatmentNotes || "";
+  _apptModal.treatmentDetails = s.treatmentDetails || "";
+  _apptModal.pendingFiles = [];
+
+  const actions = document.getElementById("appt-edit-actions");
+  if (actions) {
+    actions.innerHTML = `
+      <button type="button"
+        class="px-3 py-2 rounded-lg bg-[#03555E] text-white hover:bg-[#024449] text-sm font-medium"
+        onclick="enterApptEditMode()"
+      >Edit Treatment</button>
+    `;
+  }
+
+  renderApptTreatmentUI();
+  renderApptToothChart();
+  renderApptFiles();
+}
+
+async function saveApptTreatment() {
+  try {
+    const apptId = _apptModal.appointmentId;
+    if (!apptId) return;
+
+    // read edited fields
+    const notesEl = document.getElementById("appt-notes");
+    const detailsEl = document.getElementById("appt-details");
+    _apptModal.treatmentNotes = notesEl ? notesEl.value.trim() : _apptModal.treatmentNotes;
+    _apptModal.treatmentDetails = detailsEl ? detailsEl.value.trim() : _apptModal.treatmentDetails;
+
+    // 1) Ensure TreatmentRecord exists for this appointment
+    let trId = _apptModal.treatmentRecordId;
+
+    if (!trId) {
+      // Try fetch existing first
+      const { data: existingTR } = await supabaseClient
+        .from("TreatmentRecord")
+        .select("TreatmentRecordID")
+        .eq("AppointmentID", apptId)
+        .maybeSingle();
+
+      if (existingTR?.TreatmentRecordID) {
+        trId = existingTR.TreatmentRecordID;
+      } else {
+        const { data: newTR, error: insErr } = await supabaseClient
+          .from("TreatmentRecord")
+          .insert({
+            AppointmentID: apptId,
+            TreatmentNotes: _apptModal.treatmentNotes || null,
+            TreatmentDetails: _apptModal.treatmentDetails || null,
+          })
+          .select("TreatmentRecordID")
+          .single();
+
+        if (insErr) throw insErr;
+        trId = newTR.TreatmentRecordID;
+      }
+    }
+
+    // 2) Update TreatmentRecord notes/details
+    {
+      const { error: updErr } = await supabaseClient
+        .from("TreatmentRecord")
+        .update({
+          TreatmentNotes: _apptModal.treatmentNotes || null,
+          TreatmentDetails: _apptModal.treatmentDetails || null,
+        })
+        .eq("TreatmentRecordID", trId);
+
+      if (updErr) throw updErr;
+    }
+
+    // 3) Upsert ToothChart (by TreatmentRecordID)
+    {
+      const { data: existingTC } = await supabaseClient
+        .from("ToothChart")
+        .select("ToothChartID")
+        .eq("TreatmentRecordID", trId)
+        .maybeSingle();
+
+      if (existingTC?.ToothChartID) {
+        const { error: tcUpdErr } = await supabaseClient
+          .from("ToothChart")
+          .update({ TeethStatus: _apptModal.teethStatus || {} })
+          .eq("ToothChartID", existingTC.ToothChartID);
+
+        if (tcUpdErr) throw tcUpdErr;
+      } else {
+        const { error: tcInsErr } = await supabaseClient
+          .from("ToothChart")
+          .insert({ TreatmentRecordID: trId, TeethStatus: _apptModal.teethStatus || {} });
+
+        if (tcInsErr) throw tcInsErr;
+      }
+    }
+
+    // 4) Upload pending files + insert into treatmentattachment
+    for (const file of (_apptModal.pendingFiles || [])) {
+      const safeName = `${Date.now()}_${file.name}`.replace(/[^\w.\-]/g, "_");
+      const path = `${trId}/${safeName}`;
+
+      const { error: upErr } = await supabaseClient.storage
+        .from(TREATMENT_FILES_BUCKET)
+        .upload(path, file, { upsert: false });
+
+      if (upErr) throw upErr;
+
+    const { error: attErr } = await supabaseClient
+    .from("treatmentattachment")
+    .insert({
+        treatmentrecordid: trId,        // ✅
+        appointmentid: apptId,          // ✅
+        filepath: path,                 // ✅
+        filename: file.name,            // ✅
+        mimetype: file.type || null,    // ✅
+        sizebytes: file.size || null,   // ✅
+        createdat: new Date().toISOString(), // ✅ (only if your table allows setting it)
+    });
+
+      if (attErr) throw attErr;
+    }
+
+    // 5) Refresh attachments list
+    const { data: att2, error: att2Err } = await supabaseClient
+      .from("treatmentattachment")
+      .select("filepath, filename, mimetype, sizebytes, createdat")
+      .eq("treatmentrecordid", trId)
+      .order("createdat", { ascending: false });
+
+    if (att2Err) console.error(att2Err);
+
+    _apptModal.treatmentRecordId = trId;
+    _apptModal.uploadedFiles = att2 || [];
+    _apptModal.pendingFiles = [];
+
+    // update snapshot + exit edit mode
+    _apptModal.snap = JSON.parse(JSON.stringify({
+      treatmentRecordId: _apptModal.treatmentRecordId,
+      teethStatus: _apptModal.teethStatus,
+      treatmentNotes: _apptModal.treatmentNotes,
+      treatmentDetails: _apptModal.treatmentDetails,
+      uploadedFiles: _apptModal.uploadedFiles
+    }));
+
+    showMessage("Treatment record saved.", "success");
+    cancelApptEditMode(); // switches back to view mode but keeps saved values
+  } catch (err) {
+    console.error(err);
+    showMessage("Failed to save treatment record.", "error");
+  }
+}
+
+
+function renderMedicalView(mr, appointmentId) {
+  if (!mr) {
+    return `<p class="text-sm text-gray-500">No medical intake was recorded for this appointment.</p>`;
+  }
+
+  let cond = mr.MedicalConditions || {};
+  if (typeof cond === "string") { try { cond = JSON.parse(cond); } catch { cond = {}; } }
+
+  const safe = (v) => (v == null || String(v).trim() === "" ? "—" : String(v));
+
+  return `
+    <div class="border p-4 rounded-xl bg-white shadow-sm">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <label class="block text-sm font-bold text-gray-700">Medical Intake</label>
+          <p class="text-xs text-gray-500 mt-0.5">Saved by secretary • View only</p>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            class="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
+            type="button"
+            onclick="openConsentsListForAppointment('${appointmentId}')"
+          >
+            View Consents
+          </button>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+
+        <!-- LEFT COLUMN -->
+        <div class="space-y-4">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">EMERGENCY CONTACT NAME</label>
+              <input value="${safe(mr.EmergencyContactName)}" disabled
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">EMERGENCY CONTACT NUMBER</label>
+              <input value="${safe(mr.EmergencyContactNumber)}" disabled
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">PREVIOUS HOSPITALIZATIONS</label>
+            <input value="${safe(mr.PreviousHospitalizations)}" disabled
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">PRESCRIBED MEDICATIONS</label>
+            <input value="${safe(mr.PrescribedMedications)}" disabled
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">ALLERGIES TO MEDICATIONS</label>
+            <input value="${safe(mr.AllergiesToMedications)}" disabled
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">FAMILY MEDICATION PROBLEMS</label>
+            <input value="${safe(mr.FamilyMedicationProblems)}" disabled
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">OTHER MEDICAL CONCERNS</label>
+            <textarea disabled rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50">${safe(mr.OtherMedicalConcerns)}</textarea>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">MEDICAL ALERT</label>
+            <input value="${safe(mr.MedicalAlert)}" disabled
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">Medical Conditions</label>
+
+            <div class="grid grid-cols-2 gap-y-2 gap-x-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              ${[
+                ["kidneyProblems","Kidney Problems"],
+                ["glandularProblems","Glandular Problems"],
+                ["heartTrouble","Heart Trouble"],
+                ["learningDisability","Learning Disability"],
+                ["diabetes","Diabetes"],
+                ["tuberculosis","Tuberculosis"],
+                ["mentalDisorder","Mental Disorder"],
+                ["bleedingDisorder","Bleeding Disorder"],
+                ["asthma","Asthma"],
+                ["brainInjury","Brain Injury"],
+                ["rheumaticFever","Rheumatic Fever"],
+                ["tumors","Tumors"],
+                ["liverProblems","Liver Problems"],
+                ["neurological","Neurological"],
+                ["hyperactivity","Hyperactivity"],
+                ["earInfection","Ear Infection"],
+                ["seizures","Seizures"],
+                ["skinDisorder","Skin Disorder"],
+                ["other","Other (specify)"],
+              ].map(([k,label]) => `
+                <label class="flex items-center gap-2 cursor-not-allowed opacity-90">
+                  <input type="checkbox" disabled ${cond?.[k] ? "checked" : ""} class="w-4 h-4 border-gray-300 rounded" />
+                  <span class="text-gray-700 text-sm">${label}</span>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
 
 function renderTreatmentView(tr) {
     if (!tr) {
@@ -520,105 +1231,6 @@ function renderTreatmentView(tr) {
         </div>
     `;
 }
-
-
-function renderToothChartView(teethStatus) {
-    if (!teethStatus || Object.keys(teethStatus).length === 0) {
-        return `
-            <div class="mt-2 p-4 rounded-xl border bg-gray-50">
-                <p class="text-sm font-semibold text-gray-800">Tooth Chart</p>
-                <p class="text-sm text-gray-500 mt-1">No tooth chart selections recorded.</p>
-            </div>
-        `;
-    }
-
-    const Q1 = [8,7,6,5,4,3,2,1];
-    const Q2 = [9,10,11,12,13,14,15,16];
-    const Q4 = [32,31,30,29,28,27,26,25];
-    const Q3 = [24,23,22,21,20,19,18,17];
-
-    const toothCell = (n, status, isUpperArch) => {
-        let base = "bg-white border-gray-300 text-gray-700";
-        let num = "text-gray-700";
-        let dot = "";
-
-        if (status === "treatment") {
-            base = "bg-red-200 border-red-600 shadow-xl ring-2 ring-red-400";
-            num = "text-red-900";
-            dot = "bg-red-600";
-        } else if (status === "completed") {
-            base = "bg-blue-200 border-blue-600 shadow-xl ring-2 ring-blue-400";
-            num = "text-blue-900";
-            dot = "bg-blue-600";
-        } else {
-            base = "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 shadow-md";
-        }
-
-        return `
-            <button type="button" disabled
-                class="w-full aspect-square transition-all duration-200 flex items-center justify-center relative border-2 ${base} tooth-shape"
-                title="Tooth ${n}">
-                <div class="tooth-button-inner">
-                    <span class="text-xl font-bold ${num}">${n}</span>
-                    ${status ? `
-                        <div class="absolute w-3 h-3 rounded-full border border-white shadow-md ${dot}"
-                             style="top:${isUpperArch ? '70%' : '10%'}; right:10%;">
-                        </div>
-                    ` : ``}
-                </div>
-            </button>
-        `;
-    };
-
-    const quadrant = (numbers, isUpperArch) => `
-        <div class="quadrant-grid ${isUpperArch ? 'upper-arch' : 'lower-arch'}">
-            ${numbers.map(n => toothCell(n, teethStatus[n] || null, isUpperArch)).join('')}
-        </div>
-    `;
-
-    return `
-        <div class="mt-2 p-4 rounded-xl border bg-white">
-            <div class="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                    <p class="text-sm font-semibold text-gray-900">Tooth Chart</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Recorded selections (view-only)</p>
-                </div>
-                <div class="flex items-center gap-3 text-xs text-gray-600">
-                    <span class="inline-flex items-center gap-1">
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Treatment Needed
-                    </span>
-                    <span class="inline-flex items-center gap-1">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Completed
-                    </span>
-                </div>
-            </div>
-
-            <div class="mt-4 bg-white p-4 rounded-xl border shadow-inner">
-                <h4 class="text-center text-xs font-semibold text-gray-500 mb-2 uppercase tracking-widest">
-                    Maxillary Arch (Upper)
-                </h4>
-                <div class="tooth-chart-container">
-                    ${quadrant(Q1, true)}
-                    <div class="text-sm font-light text-gray-300">|</div>
-                    ${quadrant(Q2, true)}
-                </div>
-
-                <div class="w-full h-1 bg-gray-100 my-4 rounded-full"></div>
-
-                <div class="tooth-chart-container">
-                    ${quadrant(Q4, false)}
-                    <div class="text-sm font-light text-gray-300">|</div>
-                    ${quadrant(Q3, false)}
-                </div>
-
-                <h4 class="text-center text-xs font-semibold text-gray-500 mt-2 uppercase tracking-widest">
-                    Mandibular Arch (Lower)
-                </h4>
-            </div>
-        </div>
-    `;
-}
-
 
 // --- Toast / message ---
     function showMessage(message, type = "error") {
@@ -638,38 +1250,10 @@ function renderToothChartView(teethStatus) {
 
     // --- Header ---
     function renderHeader() {
-    const patient = state.patient;
-    if (!patient) return '';
-
-    const fullName = [patient.FirstName, patient.MiddleName, patient.LastName]
-        .filter(Boolean)
-        .join(' ');
-    const initials = (patient.FirstName?.[0] || '?') + (patient.LastName?.[0] || '');
-    const age = computeAge(patient.BirthDate);
-    const gender = patient.Gender || 'N/A';
-
-    return `
-    <header class="bg-[#03555E] text-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4 lg:px-6 py-4 flex items-center gap-4">
-            <a href="/Dentist/Viewing_PatientRecord.html">
-                <button class="h-10 px-4 py-2 rounded-lg text-sm font-medium bg-white/5 text-white hover:bg-white/10 flex items-center gap-2">
-                    <!-- Back icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                    <span class="hidden sm:inline">Back to Patient List</span>
-                </button>
-            </a>
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-lg font-semibold">
-                    ${initials.toUpperCase()}
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold">${fullName || 'Patient Record'}</h1>
-</div>
-            </div>
-        </div>
-    </header>`;
+    // Shell header is already provided by the Dashboard layout.
+    // We intentionally return an empty string here to avoid duplicating headers
+    // and to remove the patient name from the top header area.
+    return '';
 }
 
 function formatDateTimeFriendly(dateStr) {
@@ -708,6 +1292,53 @@ function getStatusPill(status) {
     return `<span class="${base} bg-gray-50 text-gray-700 border-gray-200">${status || 'Unknown'}</span>`;
 }
 
+function parseAddressParts(address) {
+  const a = (address || "").trim();
+
+  // Expected format from Signup:
+  // "Street, Brgy. Barangay, City, Province 1234"
+  const parts = { street: "", barangay: "", city: "", province: "", zip: "" };
+  if (!a) return parts;
+
+  const chunks = a.split(",").map(s => s.trim());
+
+  // street
+  parts.street = chunks[0] || "";
+
+  // barangay chunk: "Brgy. X" or "Barangay X"
+  if (chunks[1]) {
+    parts.barangay = chunks[1].replace(/^Brgy\.\s*/i, "").replace(/^Barangay\s*/i, "").trim();
+  }
+
+  // city
+  parts.city = chunks[2] || "";
+
+  // province + zip might be together
+  const provZip = (chunks[3] || "").trim();
+  if (provZip) {
+    const m = provZip.match(/^(.*?)(?:\s+(\d{4}))?$/);
+    parts.province = (m?.[1] || "").trim();
+    parts.zip = (m?.[2] || "").trim();
+  }
+
+  return parts;
+}
+
+function composeAddressFromParts({ street, barangay, city, province, zip }) {
+  const s = (street || "").trim();
+  const b = (barangay || "").trim();
+  const c = (city || "").trim();
+  const p = (province || "").trim();
+  const z = (zip || "").trim();
+
+  // Same composition rule as Signup.html
+  // `${addrStreet}, Brgy. ${addrBarangay}, ${addrCity}, ${addrProvince}${addrZip ? ' ' + addrZip : ''}`
+  if (!s && !b && !c && !p && !z) return "";
+  return `${s}, Brgy. ${b}, ${c}, ${p}${z ? " " + z : ""}`.trim();
+}
+
+
+
     // --- Main content ---
 function renderMainContent() {
     const patient = state.patient;
@@ -720,6 +1351,14 @@ function renderMainContent() {
     return `
     <main class="flex-grow">
         <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 space-y-6">
+          
+          <div class="flex items-center">
+            <a href="Viewing_PatientRecord.html"
+              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#03555E] transition">
+              <i class="fa-solid fa-arrow-left"></i>
+              Back to Patient Records
+            </a>
+          </div>
             <!-- ✅ ONE form wrapping both personal + medical sections -->
             <form id="patient-form" onsubmit="event.preventDefault(); handleEditToggle();">
                 <!-- Top row: summary + personal info -->
@@ -767,7 +1406,45 @@ function renderMainContent() {
                                 ${renderInputField("Phone", "phone", p.ContactNumber)}
                                 ${renderInputField("Date of Birth", "dateOfBirth", p.BirthDate, 'date')}
                                 ${renderInputField("Gender", "gender", p.Gender)}
-                                ${renderInputField("Address", "address", p.Address || '', 'text', 3)} 
+                                <div class="lg:col-span-3">
+                                    <label class="text-xs font-medium text-gray-600 block mb-1">Address</label>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        <div class="md:col-span-2">
+                                        <input id="addrStreet" name="addrStreet" type="text" placeholder="House No. / Street"
+                                            value="${escapeHtml(parseAddressParts(p.Address).street)}"
+                                            ${!state.isEditing ? "disabled" : ""}
+                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
+                                        </div>
+
+                                        <div>
+                                        <input id="addrBarangay" name="addrBarangay" type="text" placeholder="Barangay"
+                                            value="${escapeHtml(parseAddressParts(p.Address).barangay)}"
+                                            ${!state.isEditing ? "disabled" : ""}
+                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
+                                        </div>
+
+                                        <div>
+                                        <input id="addrCity" name="addrCity" type="text" placeholder="City / Municipality"
+                                            value="${escapeHtml(parseAddressParts(p.Address).city)}"
+                                            ${!state.isEditing ? "disabled" : ""}
+                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
+                                        </div>
+
+                                        <div>
+                                        <input id="addrProvince" name="addrProvince" type="text" placeholder="Province"
+                                            value="${escapeHtml(parseAddressParts(p.Address).province)}"
+                                            ${!state.isEditing ? "disabled" : ""}
+                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
+                                        </div>
+
+                                        <div>
+                                        <input id="addrZip" name="addrZip" type="text" inputmode="numeric" placeholder="ZIP (optional)"
+                                            value="${escapeHtml(parseAddressParts(p.Address).zip)}"
+                                            ${!state.isEditing ? "disabled" : ""}
+                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
+                                        </div>
+                                    </div>
+                                    </div>
                             </div>
                         </div>
                     </section>
@@ -826,13 +1503,10 @@ function renderMainContent() {
         if (!state.patient) return;
 
         appContainer.innerHTML = `
-            ${renderHeader()}
             ${renderMainContent()}
         `;
-
       if (window.lucide) {
-            window.lucide.createIcons();
-        } else {
+              } else {
             setTimeout(() => {
                 if (window.lucide) window.lucide.createIcons();
             }, 100);
@@ -841,13 +1515,509 @@ function renderMainContent() {
 
     }
 
+    window.patientPad = window.patientPad || null;
+window.staffPad = window.staffPad || null;
+
+function createSignaturePad(canvas, opts = {}) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  const state = {
+    drawing: false,
+    lastX: 0,
+    lastY: 0,
+    hasInk: false,
+  };
+
+  const settings = {
+    lineWidth: opts.lineWidth ?? 2.2,
+    lineColor: opts.lineColor ?? "#111",
+    background: opts.background ?? "#fff",
+  };
+
+  function resizeCanvasToDisplaySize() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = settings.lineColor;
+    ctx.lineWidth = settings.lineWidth;
+  }
+
+  function getPointFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    state.drawing = true;
+    const p = getPointFromEvent(e);
+    state.lastX = p.x;
+    state.lastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+  }
+
+  function draw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    const p = getPointFromEvent(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    state.lastX = p.x;
+    state.lastY = p.y;
+    state.hasInk = true;
+  }
+
+  function endDraw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    state.drawing = false;
+    ctx.closePath();
+  }
+
+  function clear() {
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+    state.hasInk = false;
+  }
+
+  async function loadFromUrl(url) {
+    if (!url) return;
+    const rect = canvas.getBoundingClientRect();
+
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(rect.width / img.width, rect.height / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (rect.width - w) / 2, (rect.height - h) / 2, w, h);
+        state.hasInk = true;
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  canvas.addEventListener("pointerdown", startDraw);
+  canvas.addEventListener("pointermove", draw);
+  window.addEventListener("pointerup", endDraw);
+  window.addEventListener("pointercancel", endDraw);
+
+  resizeCanvasToDisplaySize();
+
+  const ro = new ResizeObserver(() => {
+    resizeCanvasToDisplaySize();
+    state.hasInk = false;
+  });
+  ro.observe(canvas);
+
+  return {
+    clear,
+    loadFromUrl,
+    hasInk: () => state.hasInk,
+    destroy: () => ro.disconnect(),
+  };
+}
+function initConsentSignaturePads() {
+  const patientCanvas = document.getElementById("patientSigCanvas");
+  const staffCanvas = document.getElementById("staffSigCanvas");
+
+  if (patientCanvas && !window.patientPad) {
+    window.patientPad = createSignaturePad(patientCanvas, { lineWidth: 2.2 });
+  }
+  if (staffCanvas && !window.staffPad) {
+    window.staffPad = createSignaturePad(staffCanvas, { lineWidth: 2.2 });
+  }
+
+}
+const _signedUrlCache = new Map();
+async function getSignedUrlCached(bucket, path, expiresInSeconds = 3600) {
+  if (!path) return null;
+
+  const key = `${bucket}:${path}`;
+  const now = Date.now();
+
+  const cached = _signedUrlCache.get(key);
+  if (cached && cached.expAt > now + 10_000) { // still valid (10s buffer)
+    return cached.url;
+  }
+
+  const { data, error } = await supabaseClient.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresInSeconds);
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+  const url = data?.signedUrl || null;
+  if (url) _signedUrlCache.set(key, { url, expAt: now + expiresInSeconds * 1000 });
+  return url;
+}
+
+async function openFilePreview(filepath, filename, mimetype) {
+  const url = await getSignedUrlCached(TREATMENT_FILES_BUCKET, filepath, 3600);
+  if (!url) return showMessage("Failed to open file preview.", "error");
+
+  const modal = document.getElementById("file-preview-modal");
+  const nameEl = document.getElementById("file-preview-name");
+  const typeEl = document.getElementById("file-preview-type");
+  const bodyEl = document.getElementById("file-preview-body");
+  const openEl = document.getElementById("file-preview-open");
+
+  nameEl.textContent = filename || "File";
+  typeEl.textContent = mimetype || "—";
+  openEl.href = url;
+
+  const mt = String(mimetype || "");
+  if (mt.startsWith("image/")) {
+    bodyEl.innerHTML = `<div class="w-full flex justify-center">
+      <img src="${url}" class="max-h-[70vh] rounded-lg border bg-white" />
+    </div>`;
+  } else {
+    bodyEl.innerHTML = `
+      <div class="p-6 bg-white rounded-lg border">
+        <div class="text-sm text-gray-700">Preview not available for this file type.</div>
+        <a href="${url}" target="_blank" rel="noreferrer"
+           class="inline-flex mt-3 px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+          Open file
+        </a>
+      </div>
+    `;
+  }
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+}
+
+function closeFilePreview() {
+  const modal = document.getElementById("file-preview-modal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+  document.getElementById("file-preview-body").innerHTML = "";
+}
+
+
+function lockConsentUI(lock) {
+  document.getElementById("consentTemplateSelect").disabled = true;
+  document.getElementById("consentPatientName").disabled = true;
+  document.getElementById("consentStaffName").disabled = true;
+  document.getElementById("consentDate").disabled = true;
+  document.getElementById("consentText").disabled = true;
+
+  const btn = document.getElementById("btnSaveConsent");
+  if (btn) btn.style.display = "none";
+
+  // stop drawing / editing signatures
+  const pc = document.getElementById("patientSigCanvas");
+  const sc = document.getElementById("staffSigCanvas");
+  if (pc) pc.style.pointerEvents = "none";
+  if (sc) sc.style.pointerEvents = "none";
+
+  const pClear = document.getElementById("patientSigClear");
+  const sClear = document.getElementById("staffSigClear");
+  if (pClear) pClear.style.display = "none";
+  if (sClear) sClear.style.display = "none";
+}
+
+function showConsentsList() {
+  const m = document.getElementById("consentsListModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+}
+
+function closeConsentsList() {
+  const m = document.getElementById("consentsListModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+}
+
+function showConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.style.overflow = "hidden";
+  lockConsentUI(true);
+}
+
+function closeConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.style.overflow = "";
+}
+
+async function loadConsentById(consentId) {
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select("*")
+    .eq("ConsentID", consentId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error(error);
+    return showMessage("Failed to open consent.", "error");
+  }
+
+  console.log("CONSENT DATA:", data);
+  // 1) Close list and show modal immediately (feels instant)
+  closeConsentsList();
+  showConsentModal();
+  lockConsentUI(true); // dentist view-only
+
+  // 2) Fill fields (fast)
+  document.getElementById("consentPatientName").value = data.PatientName || "";
+  document.getElementById("consentStaffName").value = data.StaffName || "";
+  document.getElementById("consentDate").value = data.ConsentDate || "";
+  document.getElementById("consentText").value = data.ConsentText || "";
+  const statusEl = document.getElementById("consentStatus");
+  if (statusEl) statusEl.textContent = data.Status || "—";
+
+  // 3) Show a readable "title" even though template select is disabled
+  const title =
+    data.ConsentTitle ||
+    data.TemplateTitle ||
+    data.ServiceSnapshot ||
+    "Consent";
+
+  const sel = document.getElementById("consentTemplateSelect");
+  if (sel) {
+    sel.innerHTML = `<option>${title}</option>`;
+    sel.value = title;
+  }
+
+  // 4) IMPORTANT: init pads ONLY after modal is visible, so canvases have real size
+  requestAnimationFrame(async () => {
+    // build pads now that the modal is visible
+    initConsentSignaturePads();
+
+    // clear + load signatures
+    window.patientPad?.clear();
+    window.staffPad?.clear();
+
+    // Use cached signed URLs for speed
+    const patientUrl = await getSignedUrlCached("consent-signatures", data.PatientSignaturePath);
+    if (patientUrl) await window.patientPad?.loadFromUrl(patientUrl);
+
+    const staffUrl = await getSignedUrlCached("consent-signatures", data.StaffSignaturePath);
+    if (staffUrl) await window.staffPad?.loadFromUrl(staffUrl);
+  });
+}
+
+// 🔹 OPEN CONSENTS LIST FOR AN APPOINTMENT (Dentist View)
+window.openConsentsListForAppointment = async function (appointmentId) {
+  if (!appointmentId) return;
+
+  const container = document.getElementById("consentsListContainer");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="text-sm text-gray-500 p-4">
+      Loading consents...
+    </div>
+  `;
+
+  showConsentsList();
+
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select(`
+      ConsentID,
+      ConsentTitle,
+      Status,
+      ConsentDate,
+      CreatedAt,
+      ServiceSnapshot
+    `)
+    .eq("AppointmentID", appointmentId)
+    .order("CreatedAt", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    container.innerHTML = `
+      <div class="text-sm text-red-600 p-4">
+        Failed to load consents.
+      </div>
+    `;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = `
+      <div class="text-sm text-gray-500 p-4">
+        No consents found for this appointment.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = data
+    .map((c) => {
+      const title =
+        c.ConsentTitle ||
+        c.ServiceSnapshot ||
+        "Consent";
+
+      const date = c.ConsentDate
+        ? new Date(c.ConsentDate).toLocaleDateString("en-PH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : "—";
+
+      const status = c.Status || "—";
+
+      return `
+        <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="font-semibold text-gray-900">
+                ${title}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                ${date}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-semibold px-2 py-1 rounded-full border bg-white">
+                ${status}
+              </span>
+
+              <button
+                class="px-3 py-1.5 text-sm rounded-md border border-gray-300
+                       hover:bg-gray-100 transition font-medium"
+                onclick="loadConsentById('${c.ConsentID}')"
+              >
+                Open
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+};
+
+
     // expose handlers for inline calls
     window.handleEditToggle = handleEditToggle;
     window.savePatient = savePatient;
     window.openAppointmentRecord = openAppointmentRecord;
     window.closeHistoryModal = closeHistoryModal;
 
-    document.addEventListener('DOMContentLoaded', fetchPatientData);
+    
+
+// --- Shell helpers (same behavior as Dashboard) ---
+async function logout() {
+  try { await supabaseClient.auth.signOut(); } catch (e) { console.warn(e); }
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+async function loadNotifications() {
+  // This is copied from Dashboard behavior (safe for other pages)
+  await new Promise(r => setTimeout(r, 100));
+
+  const bellContainer = document.getElementById('bellContainer');
+  if (!bellContainer) return;
+
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+      NotificationID,
+      Message,
+      Status,
+      DateSent,
+      AppointmentID,
+      Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+      )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+  if (error) { console.error(error); return; }
+
+  const existingBadge = document.getElementById('notif-badge');
+  if (existingBadge) existingBadge.remove();
+
+  if (notifications && notifications.length > 0) {
+    const badge = document.createElement('span');
+    badge.id = 'notif-badge';
+    badge.textContent = notifications.length;
+    badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+    bellContainer.appendChild(badge);
+  }
+
+  const prevDropdown = document.getElementById('notif-dropdown');
+  if (prevDropdown) prevDropdown.remove();
+
+  bellContainer.onclick = () => {
+    let dropdown = document.getElementById('notif-dropdown');
+    if (dropdown) return dropdown.remove();
+
+    dropdown = document.createElement('div');
+    dropdown.id = 'notif-dropdown';
+    dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+    dropdown.style.maxHeight = '320px';
+
+    if (!notifications || notifications.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'p-4 text-gray-500 text-sm';
+      emptyMsg.textContent = 'No new notifications';
+      dropdown.appendChild(emptyMsg);
+    } else {
+      notifications.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+        const first = n.Appointment?.User?.FirstName ?? '';
+        const last  = n.Appointment?.User?.LastName ?? '';
+        const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+        const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+        item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+        dropdown.appendChild(item);
+      });
+    }
+
+    bellContainer.style.position = 'relative';
+    bellContainer.appendChild(dropdown);
+  };
+}
+document.addEventListener('DOMContentLoaded', async () => {
+  try { await loadNotifications(); } catch (e) { console.warn(e); }
+  fetchPatientData();
+});
     </script>
 
 <!-- History View Modal (View-only) -->
@@ -866,6 +2036,152 @@ function renderMainContent() {
     <div id="history-modal-body" class="max-h-[75vh] overflow-y-auto"></div>
   </div>
 </div>
+
+<div id="consentModal" class="fixed inset-0 bg-black bg-opacity-50 z-[60] hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consent Form</h2>
+      <button onclick="closeConsentModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <div class="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border">
+        <div>
+          <label class="text-sm text-gray-600">Template</label>
+          <select id="consentTemplateSelect" class="w-full mt-1 px-3 py-2 border rounded-lg bg-white">
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Patient Name</label>
+          <input id="consentPatientName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Date</label>
+          <input id="consentDate" type="date" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-sm text-gray-600">Staff Name</label>
+          <input id="consentStaffName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Status</label>
+          <div id="consentStatus" class="mt-2 text-sm font-semibold">DRAFT</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Consent Text (editable)</label>
+        <textarea id="consentText" rows="12"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm"></textarea>
+      </div>
+
+      <!-- Signature placeholders (we’ll wire later) -->
+ <!-- SIGNATURE PADS -->
+<div class="grid md:grid-cols-2 gap-4">
+
+  <!-- PATIENT SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Patient Signature</div>
+      <button type="button" id="patientSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="patientSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Patient signs here using finger or stylus.
+    </div>
+  </div>
+
+  <!-- STAFF SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Staff Signature</div>
+      <button type="button" id="staffSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="staffSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Staff signs here.
+    </div>
+  </div>
+</div>
+
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+        <button id="btnSaveConsent" class="flex-1 bg-[#03555E] text-white py-2 rounded-lg hover:bg-[#024449] font-medium">
+          Save Consent
+        </button>
+        <button onclick="closeConsentModal()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="consentsListModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consents for this Appointment</h2>
+      <button onclick="closeConsentsList()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+
+    <div class="p-6">
+      <div id="consentsListContainer" class="space-y-3"></div>
+    </div>
+
+    <div class="p-6 border-t flex gap-3">
+      <button onclick="closeConsentsList()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Preview Modal -->
+<div id="file-preview-modal" class="hidden fixed inset-0 bg-black/70 z-[90] items-center justify-center p-4">
+  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between p-4 border-b">
+      <div class="min-w-0">
+        <div id="file-preview-name" class="font-bold truncate">File</div>
+        <div id="file-preview-type" class="text-xs text-gray-500 truncate">—</div>
+      </div>
+      <button type="button" onclick="closeFilePreview()" class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+        ✕
+      </button>
+    </div>
+
+    <div class="p-4 bg-gray-50">
+      <div id="file-preview-body"></div>
+    </div>
+
+    <div class="p-4 border-t flex justify-end gap-2 bg-white">
+      <a id="file-preview-open" href="#" target="_blank" rel="noreferrer"
+         class="px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+        Open in new tab
+      </a>
+      <button type="button" onclick="closeFilePreview()"
+        class="px-4 py-2 rounded-lg bg-[#03555E] text-white hover:bg-[#024449] text-sm font-medium">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>

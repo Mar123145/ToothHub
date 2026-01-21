@@ -4,17 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analytics & Reports</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <!-- Load Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
+<style>
         /* Custom Theme Colors */
         .bg-primary { background-color: #03555E; }
         .text-primary { color: #03555E; }
         .hover\:bg-primary-dark:hover { background-color: #024449; }
-        .font-sans { font-family: 'Inter', sans-serif; }
-
         /* Custom Styles for Charts */
         /* Ensure responsive height for chart containers */
         .chart-container {
@@ -53,45 +62,74 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
+<body class="min-h-screen bg-gray-50">
 
-    <!-- Header -->
-  <header class="bg-primary text-white shadow-xl">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <a href="Dashboard.html">
-          <button
-            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-[#024449]">
-            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-            Back
-          </button>
-        </a>
-        <div>
-          <h1 class="text-xl font-bold">Analytics & Reports</h1>
-          <p class="text-sm opacity-90">View your performance metrics</p>
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
-      </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
 
-      <!-- Right side buttons -->
-      <div class="flex items-center gap-3">
-        <button onclick="generatePdfReport()"
-          id="generateReportBtn"
-          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-white text-primary hover:bg-gray-100 shadow-lg">
-          <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-          Generate Analytics Report
+      <div class="flex items-center gap-2">
+        <!-- Keep bellContainer ID for existing dentist JS (NO function changes) -->
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
         </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
 
-        <button onclick="generateDentistRawReport()"
-          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-white text-primary hover:bg-gray-100 shadow-lg">
-          <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
-          Generate Report
-        </button>
+        <!-- Hidden elements kept for existing dentist JS (mobile menu code expects these IDs) -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
       </div>
     </div>
   </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8" id="analyticsReportRoot">
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+    <main class="flex-1 p-6" id="analyticsReportRoot">
+      <div class="max-w-6xl mx-auto">
 
         <!-- Filters Bar -->
 <div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
@@ -137,6 +175,13 @@
 
   <!-- Export buttons -->
   <div class="flex gap-2">
+    <button class="px-3 py-1.5 rounded-lg bg-primary text-white text-xs hover:bg-primary-dark" onclick="generatePdfReport()">
+      Generate Analytics PDF
+    </button>
+    <button class="px-3 py-1.5 rounded-lg bg-primary text-white text-xs hover:bg-primary-dark" onclick="generateDentistRawReport()">
+      Generate Raw Report PDF
+    </button>
+
     <button
       class="px-3 py-1.5 rounded-lg border text-xs text-gray-700 hover:bg-gray-50"
       onclick="exportRevenueCSV()">
@@ -179,15 +224,7 @@
         <div id="metricPatientsServed" class="text-3xl font-bold">0</div>
         <p class="text-xs text-gray-500 mt-2">Patients with finished appointments</p>
       </div>
-
-      <!-- Reviews Overview -->
-      <div class="rounded-xl border bg-white shadow-lg p-6 mb-8">
-        <h3 class="text-sm font-medium text-gray-600 pb-2">Reviews Overview</h3>
-        <p id="reviewsSummaryText" class="text-sm text-gray-600">
-          Loading reviews...
-        </p>
-      </div>
-    </div>
+</div>
 
         <!-- Charts -->
         <div class="grid lg:grid-cols-2 gap-6 mb-8">
@@ -247,15 +284,119 @@
   </div>
   <div id="serviceRevenue-chart"></div>
 </div>
+          </div>
     </main>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Hidden mobile menu elements kept so existing dentist JS doesn't break (NO function changes) -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
   const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('bellContainer');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userAccountId') || localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+
+
 
   const PRIMARY_COLOR = '#03555E';
   const SECONDARY_COLOR = '#0FA3B1';
@@ -282,16 +423,10 @@ let customEndDate = null;
 
 let rawAppointments = [];
 let rawBilling = [];
-let rawReviews = [];
 
 let loggedDentistId = null;
 let currentDentistName = "";
 
-let reviewStats = {
-  totalReviews: 0,
-  averageRating: 0,
-  reviews: [] // dentist filtered reviews
-};
 
 // compare metrics
 let compareMetrics = {
@@ -367,6 +502,34 @@ if (storedFirstName && storedRole) {
     totalRevenue: 0,
     paidTransactionsCount: 0,
   };
+
+
+  let userNameById = {};
+
+  async function hydrateUserNames(userIds) {
+    const ids = Array.from(new Set((userIds || []).filter(Boolean)));
+    const missing = ids.filter(id => !userNameById[id]);
+    if (missing.length === 0) return;
+
+    const { data, error } = await supabaseClient
+      .from('UserAccount')
+      .select('UserAccountID, FirstName, LastName')
+      .in('UserAccountID', missing);
+
+    if (error) {
+      console.error('Failed loading user names:', error);
+      return;
+    }
+
+    (data || []).forEach(u => {
+      const name = `${u.FirstName || ''} ${u.LastName || ''}`.trim() || 'Unnamed';
+      userNameById[u.UserAccountID] = name;
+    });
+  }
+
+  function getUserName(id) {
+    return userNameById[id] || id || '';
+  }
 
   // --- HELPERS ---
 
@@ -561,55 +724,60 @@ async function generateDentistRawReport() {
     cursorY += 5;
   }
 
-  function addSimpleTable(headers, rows) {
-    const availableWidth = pageWidth - marginX * 2;
-    const colWidth = availableWidth / headers.length;
-    const headerHeight = 6;
-    const rowHeight = 5;
+ function addSimpleTable(headers, rows, colWidths = null) {
+  const availableWidth = pageWidth - marginX * 2;
+  const widths =
+    Array.isArray(colWidths) && colWidths.length === headers.length
+      ? colWidths
+      : Array(headers.length).fill(availableWidth / headers.length);
 
-    // Header
-    addPageIfNeeded(headerHeight + 3);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setFillColor(243, 244, 246);
-    doc.setDrawColor(220);
-    doc.rect(marginX, cursorY - (headerHeight - 3), availableWidth, headerHeight, 'FD');
+  const headerHeight = 6;
+  const rowHeight = 5;
 
-    let x = marginX;
-    headers.forEach(h => {
-      doc.setTextColor(55, 65, 81);
-      doc.text(String(h), x + 2, cursorY + 1);
-      x += colWidth;
+  // Header
+  addPageIfNeeded(headerHeight + 3);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setFillColor(243, 244, 246);
+  doc.setDrawColor(220);
+  doc.rect(marginX, cursorY - (headerHeight - 3), availableWidth, headerHeight, 'FD');
+
+  let x = marginX;
+  headers.forEach((h, i) => {
+    doc.setTextColor(55, 65, 81);
+    doc.text(String(h), x + 2, cursorY + 1);
+    x += widths[i];
+  });
+  cursorY += headerHeight + 1;
+
+  // Body
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(31, 41, 55);
+
+  rows.forEach((row, idx) => {
+    addPageIfNeeded(rowHeight + 1);
+
+    if (idx % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(marginX, cursorY - 2, availableWidth, rowHeight + 2, 'F');
+    }
+
+    let colX = marginX;
+    row.forEach((cell, i) => {
+      const text = cell == null ? '' : String(cell);
+      doc.text(text, colX + 2, cursorY + 2);
+      colX += widths[i];
     });
-    cursorY += headerHeight + 1;
 
-    // Body
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(31, 41, 55);
+    cursorY += rowHeight;
+    doc.setDrawColor(235);
+    doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
+  });
 
-    rows.forEach((row, idx) => {
-      addPageIfNeeded(rowHeight + 1);
+  cursorY += 4;
+}
 
-      if (idx % 2 === 0) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(marginX, cursorY - 2, availableWidth, rowHeight + 2, 'F');
-      }
-
-      let colX = marginX;
-      row.forEach(cell => {
-        const text = cell == null ? '' : String(cell);
-        doc.text(text, colX + 2, cursorY + 2);
-        colX += colWidth;
-      });
-
-      cursorY += rowHeight;
-      doc.setDrawColor(235);
-      doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
-    });
-
-    cursorY += 4;
-  }
 
   // HEADER
   const now = new Date();
@@ -639,10 +807,16 @@ async function generateDentistRawReport() {
     await reloadAllAnalytics();
   }
 
+  const patientIds = [
+    ...(rawAppointments || []).map(a => a.UserAccountID),
+    ...(rawBilling || []).map(b => b.UserAccountID),
+  ];
+  await hydrateUserNames(patientIds);
+
   // SECTION: Appointments (no IDs)
   addSectionTitle(
     'Appointments (filtered)',
-    'Summarized by schedule and status; IDs hidden for readability.'
+    'Summarized by schedule and status.'
   );
 
   const apptRows = (rawAppointments || []).map(a => {
@@ -651,24 +825,29 @@ async function generateDentistRawReport() {
       : '';
     return [
       dateStr,
+      getUserName(a.UserAccountID),
+      a.Service || '',
       (a.Status || ''),
     ];
   });
-
-  if (apptRows.length === 0) {
+if (apptRows.length === 0) {
     addPageIfNeeded(8);
     doc.setFontSize(9);
     doc.setTextColor(107, 114, 128);
     doc.text('No appointments for this filter.', marginX, cursorY + 3);
     cursorY += 10;
   } else {
-    addSimpleTable(['Date / Time', 'Status'], apptRows);
+    addSimpleTable(
+  ['Date/Time', 'Patient', 'Service', 'Status'],
+  apptRows,
+  [35, 40, 70, 25] // mm widths
+);
   }
 
   // SECTION: Billing (no IDs)
   addSectionTitle(
     'Billing (filtered, PAID)',
-    'Payment status and amounts only; IDs removed.'
+    'Payment status and amounts only.'
   );
 
   const billRows = (rawBilling || []).map(b => {
@@ -677,19 +856,24 @@ async function generateDentistRawReport() {
       : '';
     return [
       dateStr,
-      (b.PaymentStatus || ''),
-      formatCurrency(b.Amount || 0),
+      getUserName(b.UserAccountID),
+      b.PaymentType || '',
+      b.PaymentMethod || '',
+      b.PaymentStatus || '',
+      `PHP ${Number(b.Amount || 0).toLocaleString("en-PH", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})}`
     ];
   });
-
-  if (billRows.length === 0) {
+if (billRows.length === 0) {
     addPageIfNeeded(8);
     doc.setFontSize(9);
     doc.setTextColor(107, 114, 128);
     doc.text('No billing data for this filter.', marginX, cursorY + 3);
     cursorY += 10;
   } else {
-    addSimpleTable(['Date Issued', 'Payment Status', 'Amount'], billRows);
+    addSimpleTable(['Date', 'Patient', 'Type', 'Method', 'Status', 'Amount'], billRows);
   }
 
   // FOOTER (page numbers)
@@ -702,34 +886,6 @@ async function generateDentistRawReport() {
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - marginX - 22, pageHeight - 8);
     doc.text('Generated by ToothHub', marginX, pageHeight - 8);
   }
-
-  // --- SECTION: Reviews ---
-addSectionTitle(
-  'Reviews (filtered)',
-  'Ratings & comments submitted by patients'
-);
-
-if (!rawReviews || rawReviews.length === 0) {
-  addPageIfNeeded(8);
-  doc.setFontSize(9);
-  doc.setTextColor(120);
-  doc.text("No reviews found in this range.", marginX, cursorY + 3);
-  cursorY += 10;
-} else {
-  const reviewRows = rawReviews.map(r => {
-    const dateStr = new Date(r.CreatedAt).toLocaleString('en-PH');
-    let comment = r.Comment || '';
-    if (comment.length > 70) comment = comment.slice(0, 67) + "...";
-
-    return [
-      dateStr,
-      Number(r.Rating).toFixed(1),
-      comment,
-    ];
-  });
-
-  addSimpleTable(['Date', 'Rating', 'Comment'], reviewRows);
-}
 
   const iso = now.toISOString().slice(0, 10);
   doc.save(`ToothHub-Dentist-Report-${iso}.pdf`);
@@ -807,8 +963,7 @@ async function reloadAllAnalytics() {
       loadRevenueAnalytics(),
       loadServiceAnalytics(),
       loadHeatmapAnalytics(),
-      loadServiceRevenueAnalytics(),
-      loadReviewAnalytics(),        // NEW
+      loadServiceRevenueAnalytics()
   ]);
 }
 
@@ -822,7 +977,7 @@ async function reloadAllAnalytics() {
   // main range
   let query = supabaseClient
     .from('Appointment')
-    .select('AppointmentID, AppointmentSchedule, Status, UserAccountID, DentistID');
+    .select('AppointmentID, AppointmentSchedule, Status, UserAccountID, DentistID, Service');
 
   if (start && end) {
     query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
@@ -920,18 +1075,17 @@ async function loadServiceRevenueAnalyticsSource() {
 
   let query = supabaseClient
     .from('Appointment')
-    .select('ServiceType, TotalAmount, Status, DentistID');
+    .select('Service, TotalAmount, Status, DentistID, AppointmentSchedule');
 
   if (start && end) {
     query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
   }
 
-  // Count only finished / completed for revenue
   query = query.in('Status', ['Finished', 'Completed']);
 
-if (loggedDentistId) {
-  query = query.eq('DentistID', loggedDentistId);
-}
+  if (loggedDentistId) {
+    query = query.eq('DentistID', loggedDentistId);
+  }
 
   const { data, error } = await query;
   if (error) {
@@ -943,39 +1097,37 @@ if (loggedDentistId) {
 
 async function loadServiceRevenueAnalytics() {
   const appts = await loadServiceRevenueAnalyticsSource();
-  const revenueById = {};
+
+  // Aggregate by SERVICE NAME (Appointment.Service)
+  const revenueByName = {};
 
   appts.forEach(appt => {
-    if (!appt.ServiceType) return;
     const total = Number(appt.TotalAmount || 0);
     if (!total) return;
 
-    const ids = appt.ServiceType.toString().split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(Number);
+    const raw = (appt.Service || "").toString().trim();
+    if (!raw) return;
 
-    const share = ids.length || 1;
-    const perService = total / share; // split revenue evenly across services
+    // if multiple services are stored as "A, B"
+    const names = raw.split(",").map(s => s.trim()).filter(Boolean);
+    const share = names.length || 1;
+    const perService = total / share;
 
-    ids.forEach(id => {
-      if (!revenueById[id]) revenueById[id] = 0;
-      revenueById[id] += perService;
+    names.forEach(name => {
+      revenueByName[name] = (revenueByName[name] || 0) + perService;
     });
   });
 
-  const serviceIds = Object.keys(revenueById).map(Number);
-  if (serviceIds.length === 0) {
+  const rows = Object.keys(revenueByName).map(name => ({
+    name,
+    amount: revenueByName[name],
+  })).sort((a, b) => b.amount - a.amount);
+
+  if (rows.length === 0) {
     document.getElementById('serviceRevenue-chart').innerHTML =
       '<div class="h-[200px] flex items-center justify-center text-gray-400 text-xs">No revenue data yet.</div>';
     return;
   }
-
-  const rows = serviceIds.map(id => ({
-    id,
-    name: getServiceNameById(id),
-    amount: revenueById[id],
-  })).sort((a, b) => b.amount - a.amount);
 
   renderServiceRevenueChart(rows);
 }
@@ -1037,54 +1189,6 @@ if (loggedDentistId) {
   renderHeatmapChart(counts);
 }
 
-async function loadReviewAnalytics() {
-  const { start, end } = getCurrentRangeBounds();
-
-  let query = supabaseClient
-    .from('Review')
-    .select('ReviewID, Rating, Comment, CreatedAt, DentistID')
-    .eq('DentistID', loggedDentistId);
-
-  if (start && end) {
-    query = query.gte('CreatedAt', start).lt('CreatedAt', end);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error loading reviews:", error);
-    rawReviews = [];
-    reviewStats = { totalReviews: 0, averageRating: 0, reviews: [] };
-    updateReviewSummary();
-    return;
-  }
-
-  rawReviews = data || [];
-  reviewStats.reviews = rawReviews;
-  reviewStats.totalReviews = rawReviews.length;
-
-  let sum = 0;
-  rawReviews.forEach(r => sum += Number(r.Rating || 0));
-  reviewStats.averageRating = rawReviews.length ? sum / rawReviews.length : 0;
-
-  updateReviewSummary();
-}
-
-function updateReviewSummary() {
-  const el = document.getElementById('reviewsSummaryText');
-  if (!el) return;
-
-  if (reviewStats.totalReviews === 0) {
-    el.textContent = "No reviews in this range.";
-    return;
-  }
-
-  el.innerHTML = `
-    <span class="font-semibold">${reviewStats.totalReviews}</span> review${reviewStats.totalReviews !== 1 ? 's' : ''}
-    • Average rating: 
-    <span class="font-semibold">${reviewStats.averageRating.toFixed(1)}</span> / 5
-  `;
-}
 
 function renderHeatmapChart(counts) {
   const container = document.getElementById('heatmap-chart');
@@ -1218,7 +1322,7 @@ async function loadRevenueAnalytics() {
   // 2) Load Billing rows only for those appointments
   let query = supabaseClient
     .from('Billing')
-    .select('BillingID, AppointmentID, Amount, PaymentStatus, DateIssued')
+    .select('BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued')
     .eq('PaymentStatus', 'PAID')
     .in('AppointmentID', allowedIds);
 
@@ -1315,48 +1419,46 @@ async function loadRevenueAnalytics() {
 
 
   // 3) Service distribution: most booked services using ServiceType IDs
- async function loadServiceAnalytics() {
+async function loadServiceAnalytics() {
   const { start, end } = getCurrentRangeBounds();
 
   let query = supabaseClient
     .from('Appointment')
-    .select('ServiceType, Status, DentistID')
-    .not('ServiceType', 'is', null);
+    .select('Service, Status, DentistID, AppointmentSchedule')
+    .not('Service', 'is', null);
 
   if (start && end) {
-    query = query
-      .gte('AppointmentSchedule', start)
-      .lt('AppointmentSchedule', end);
+    query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
   }
 
   if (loggedDentistId) {
     query = query.eq('DentistID', loggedDentistId);
   }
 
-  const { data: appts, error: apptErr } = await query;
-  if (apptErr) {
-    console.error('Error loading appointments for services analytics:', apptErr);
+  const { data: appts, error } = await query;
+  if (error) {
+    console.error('Error loading appointments for services analytics:', error);
     return;
   }
 
-  const countsById = {};
+  const countsByName = {};
 
   (appts || []).forEach(row => {
-    if (!row.ServiceType) return;
-    const ids = row.ServiceType.toString().split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
+    const raw = (row.Service || "").toString().trim();
+    if (!raw) return;
 
-    ids.forEach(idStr => {
-      const id = Number(idStr);
-      if (!id) return;
-      if (!countsById[id]) countsById[id] = 0;
-      countsById[id] += 1;
+    const names = raw.split(",").map(s => s.trim()).filter(Boolean);
+    names.forEach(name => {
+      countsByName[name] = (countsByName[name] || 0) + 1;
     });
   });
 
-  const serviceIds = Object.keys(countsById).map(Number);
-  if (serviceIds.length === 0) {
+  const entries = Object.keys(countsByName).map(name => ({
+    name,
+    count: countsByName[name],
+  }));
+
+  if (entries.length === 0) {
     serviceData = [];
     renderServiceChart();
     return;
@@ -1364,25 +1466,19 @@ async function loadRevenueAnalytics() {
 
   const colors = ["#03555E", "#0FA3B1", "#2BB8D6", "#5ECEE8", "#A8E1F7", "#FBBF24", "#F97316"];
 
-  const rawServices = serviceIds.map((id, idx) => ({
-    id,
-    name: getServiceNameById(id),
-    count: countsById[id],
-    color: colors[idx % colors.length],
-  }));
-
-  const top = rawServices.sort((a, b) => b.count - a.count).slice(0, 6);
+  const top = entries.sort((a, b) => b.count - a.count).slice(0, 6);
   const totalTop = top.reduce((sum, s) => sum + s.count, 0) || 1;
 
-  serviceData = top.map(s => ({
+  serviceData = top.map((s, idx) => ({
     name: s.name,
     value: (s.count / totalTop) * 100,
-    color: s.color,
+    color: colors[idx % colors.length],
     count: s.count,
   }));
 
   renderServiceChart();
 }
+
 
   // --- CHART RENDER FUNCTIONS (using globals) ---
 
@@ -1610,6 +1706,13 @@ async function loadRevenueAnalytics() {
     `;
   }
 
+function formatPdfCurrency(amount) {
+  return `PHP ${Number(amount || 0).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+}
+
   async function generatePdfReport() {
   const btn = document.getElementById('generateReportBtn');
   if (btn) {
@@ -1822,7 +1925,7 @@ async function loadRevenueAnalytics() {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(37, 99, 235);
-    doc.text(formatCurrency(metrics.totalRevenue || 0), marginX + col * 2 + 4, cursorY + 6);
+    doc.text(formatPdfCurrency(metrics.totalRevenue || 0), marginX + col * 2 + 4, cursorY + 6);
 
     cursorY = boxTop + boxHeight + 10;
 
@@ -1830,11 +1933,6 @@ async function loadRevenueAnalytics() {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(55, 65, 81);
-    doc.text(
-      `Reviews: ${reviewStats.totalReviews} (avg ${reviewStats.totalReviews ? reviewStats.averageRating.toFixed(1) : "0.0"}/5)`,
-      marginX,
-      cursorY
-    );
     cursorY += 5;
     if (compareMetrics && compareMetrics.appointmentsDeltaPct != null) {
       const v = compareMetrics.appointmentsDeltaPct;
@@ -1886,7 +1984,7 @@ async function loadRevenueAnalytics() {
 
       const rows = revenueData.map(d => [
         d.month,
-        formatCurrency(d.revenue),
+        formatPdfCurrency(d.revenue),
       ]);
 
       addTable(
@@ -1921,7 +2019,7 @@ async function loadRevenueAnalytics() {
     const { start, end } = getCurrentRangeBounds();
     let apptQuery = supabaseClient
       .from('Appointment')
-      .select('ServiceType, TotalAmount, Status, DentistID, AppointmentSchedule');
+      .select('Service, TotalAmount, Status, DentistID, AppointmentSchedule');
 
     if (start && end) {
       apptQuery = apptQuery.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
@@ -1934,38 +2032,35 @@ async function loadRevenueAnalytics() {
 
     const { data: revAppts, error: revErr } = await apptQuery;
     if (!revErr && revAppts && revAppts.length > 0) {
-      const revenueById = {};
-      revAppts.forEach(appt => {
-        if (!appt.ServiceType) return;
-        const total = Number(appt.TotalAmount || 0);
-        if (!total) return;
-        const ids = appt.ServiceType.toString().split(',')
-          .map(s => s.trim())
-          .filter(Boolean)
-          .map(Number);
-        const share = ids.length || 1;
-        const perService = total / share;
-        ids.forEach(id => {
-          if (!revenueById[id]) revenueById[id] = 0;
-          revenueById[id] += perService;
-        });
-      });
+    const revenueByName = {};
+revAppts.forEach(appt => {
+  const total = Number(appt.TotalAmount || 0);
+  if (!total) return;
 
-      const rowsArr = Object.keys(revenueById).map(idStr => {
-        const id = Number(idStr);
-        return {
-          id,
-          name: getServiceNameById(id),
-          amount: revenueById[id],
-        };
-      }).sort((a, b) => b.amount - a.amount);
+  const raw = (appt.Service || "").toString().trim();
+  if (!raw) return;
+
+  const names = raw.split(",").map(s => s.trim()).filter(Boolean);
+  const share = names.length || 1;
+  const perService = total / share;
+
+  names.forEach(name => {
+    revenueByName[name] = (revenueByName[name] || 0) + perService;
+  });
+});
+
+const rowsArr = Object.keys(revenueByName).map(name => ({
+  name,
+  amount: revenueByName[name],
+})).sort((a, b) => b.amount - a.amount);
+
 
       if (rowsArr.length > 0) {
         resetPage();
         addSectionTitle('Service Revenue Breakdown');
         const rows = rowsArr.map(r => [
           r.name,
-          formatCurrency(r.amount),
+          formatPdfCurrency(r.amount),
         ]);
         addTable(
           ['Service', 'Revenue'],
@@ -2012,29 +2107,6 @@ async function loadRevenueAnalytics() {
         );
       }
     }
-
-    if (reviewStats.totalReviews > 0) {
-  resetPage();
-  addSectionTitle('Reviews');
-
-  const rows = reviewStats.reviews.map(r => {
-    const date = new Date(r.CreatedAt).toLocaleString("en-PH");
-    let comment = r.Comment || "";
-    if (comment.length > 70) comment = comment.slice(0, 67) + "...";
-
-    return [
-      date,
-      `${Number(r.Rating).toFixed(1)} / 5`,
-      comment,
-    ];
-  });
-
-  addTable(
-    ['Date', 'Rating', 'Comment'],
-    rows,
-    { maxRows: 15 }
-  );
-}
 
     // --- FOOTER: page numbers -------------------------------------------
 
@@ -2092,6 +2164,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   const user = await checkAuth();
+
+  // init notifications bell
+  try { await loadNotifications(); } catch(e) { console.warn(e); }
   if (!user) return;
 
   loggedDentistId = user.UserAccountID;
