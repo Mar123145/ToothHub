@@ -6,6 +6,20 @@
     <title>Analytics & Reports</title>
     <!-- Load Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Match the Patient/Secretary shell theme tokens
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'custom-primary': '#03555E',
+              'custom-hover': '#024449',
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <!-- Load Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -55,42 +69,97 @@
 </head>
 <body class="min-h-screen bg-gray-50 font-sans">
 
-    <!-- Header -->
-  <header class="bg-primary text-white shadow-xl">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <a href="Dashboard.html">
-          <button
-            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-[#024449]">
-            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-            Back
-          </button>
-        </a>
-        <div>
-          <h1 class="text-xl font-bold">Analytics & Reports</h1>
-          <p class="text-sm opacity-90">View clinic performance metrics</p>
+  <!-- Top Header (same shell as patient/secretary dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
-      </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
 
-      <!-- Buttons grouped on the right -->
-      <div class="flex items-center gap-3">
-        <button onclick="generatePdfReport()"
-          id="generateReportBtn"
-          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-white text-primary hover:bg-gray-100 shadow-lg">
-          <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-          Generate Analytics Report
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
         </button>
-        <button onclick="generateSystemRawReport()"
-          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-white text-primary hover:bg-gray-100 shadow-lg">
-          <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
-          Generate Report
-        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
       </div>
     </div>
   </header>
 
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same sizing as patient) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8" id="analyticsReportRoot">
+    <main class="flex-1 p-6" id="analyticsReportRoot">
+      <div class="max-w-6xl mx-auto">
+
+        <!-- Page header (replaces old Back header) -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
+            <p class="text-sm text-gray-600">View clinic performance metrics</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="generatePdfReport()"
+              id="generateReportBtn"
+              class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-primary text-white hover:bg-primary-dark shadow-sm">
+              <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+              Generate Analytics Report
+            </button>
+            <button onclick="generateSystemRawReport()"
+              class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-4 py-2 text-sm bg-white text-primary hover:bg-gray-100 shadow-sm border">
+              <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
+              Generate Report
+            </button>
+          </div>
+        </div>
 
         <!-- Filters Bar -->
 <div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
@@ -105,9 +174,7 @@
                 <option value="weekly">This week</option>
                 <option value="this_month">This month</option>
                 <option value="last_30">Last 30 days</option>
-                <option value="this_year">This year</option>
-                <option value="yearly">This year (full)</option>
-                <option value="all">All time</option>
+                <option value="this_year">This year</option><option value="all">All time</option>
                 <option value="custom">Custom range</option>
       </select>
     </div>
@@ -188,12 +255,6 @@
               <p class="text-xs text-gray-500 mt-2">Patients with completed appointments</p>
           </div>
 
-            <div class="rounded-xl border bg-white shadow-lg p-6 mb-8">
-              <h3 class="text-sm font-medium text-gray-600 pb-2">Reviews Overview</h3>
-              <p id="reviewsSummaryText" class="text-sm text-gray-600">
-                Loading reviews...
-              </p>
-            </div>
         </div>
 
         <!-- Charts -->
@@ -245,13 +306,11 @@
         <tr>
           <th class="text-left py-2 px-3 font-semibold">Dentist</th>
           <th class="text-left py-2 px-3 font-semibold">Appointments</th>
-          <th class="text-left py-2 px-3 font-semibold">Completion Rate</th>
-          <th class="text-left py-2 px-3 font-semibold">Avg Rating</th>
           <th class="text-left py-2 px-3 font-semibold">Revenue</th>
         </tr>
       </thead>
       <tbody id="dentistLeaderboardBody" class="divide-y divide-gray-100">
-        <tr><td colspan="4" class="py-4 text-center text-gray-400 text-xs">Loading...</td></tr>
+        <tr><td colspan="3" class="py-4 text-center text-gray-400 text-xs">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -274,7 +333,10 @@
   </div>
   <div id="serviceRevenue-chart"></div>
 </div>
+      </div>
     </main>
+
+  </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -303,23 +365,16 @@ function getServiceNameById(id) {
 }
 
 // filters
-let currentDateRange = 'today'; // this_month | last_30 | this_year | all | custom
+let currentDateRange = 'daily'; // this_month | last_30 | this_year | all | custom
 let customStartDate = null;          // JS Date or null
 let customEndDate = null;
 let currentDentistId = 'all';        // 'all' or specific dentistId
+let serviceNameById = {};
 
 let dentists = [];                   // loaded dentist list
 let rawAppointments = [];            // cached current-range appointments
 let rawBilling = [];                 // cached current-range billing
-let rawReviews = [];                 // cached current-range reviews
-
-// reviews analytics
-let reviewStats = {
-  totalReviews: 0,
-  averageRating: 0,
-  dentistRatings: {}, // dentistId -> { count, average }
-};
-
+         
 // compare metrics
 let compareMetrics = {
   appointmentsDeltaPct: null,
@@ -362,9 +417,91 @@ let compareMetrics = {
     localStorage.setItem('userFirstName', userData.FirstName);
     localStorage.setItem('userRole', userData.Role);
     localStorage.setItem('userEmail', userData.Email);
-    localStorage.setItem('userId', session.user.id);
+    // Use UserAccountID (matches Notifications.UserAccountID)
+    localStorage.setItem('userId', userData.UserAccountID);
 
     return userData;
+  }
+
+  // --- SHELL HELPERS ---
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href = "/Login.html";
+  }
+
+  async function loadNotifications() {
+    const bellBtn = document.getElementById("notifBellBtn");
+    if (!bellBtn) return;
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    const { data: notifications, error } = await supabaseClient
+      .from("Notifications")
+      .select("NotificationID, Message, Status, DateSent")
+      .eq("UserAccountID", userId)
+      .eq("Status", "Unread")
+      .order("DateSent", { ascending: false });
+
+    if (error) return console.error(error);
+
+    // badge
+    document.getElementById("notif-badge")?.remove();
+    if (notifications && notifications.length > 0) {
+      const badge = document.createElement("span");
+      badge.id = "notif-badge";
+      badge.textContent = notifications.length;
+      badge.className =
+        "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+      bellBtn.appendChild(badge);
+    }
+
+    // dropdown
+    document.getElementById("notif-dropdown")?.remove();
+    bellBtn.onclick = async () => {
+      const existing = document.getElementById("notif-dropdown");
+      if (existing) return existing.remove();
+
+      const dropdown = document.createElement("div");
+      dropdown.id = "notif-dropdown";
+      dropdown.className =
+        "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+      dropdown.style.maxHeight = "320px";
+
+      if (!notifications || notifications.length === 0) {
+        dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+      } else {
+        notifications.slice(0, 10).forEach((n) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className =
+            "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900 text-sm";
+          item.textContent = n.Message;
+
+          item.addEventListener("click", async () => {
+            await supabaseClient
+              .from("Notifications")
+              .update({ Status: "Read" })
+              .eq("NotificationID", n.NotificationID);
+            dropdown.remove();
+            loadNotifications();
+          });
+
+          dropdown.appendChild(item);
+        });
+      }
+
+      document.body.appendChild(dropdown);
+
+      const onDocClick = (e) => {
+        if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+          dropdown.remove();
+          document.removeEventListener("click", onDocClick);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", onDocClick), 0);
+    };
   }
 
   // --- GLOBAL STATE ---
@@ -372,6 +509,7 @@ let compareMetrics = {
   let appointmentData = []; // [{ month, appointments, completed }]
   let revenueData = [];     // [{ month, revenue }]
   let serviceData = [];     // [{ name, value, color, count }]
+  let userNameById = {};
 
   const metrics = {
     totalAppointments: 0,
@@ -427,13 +565,38 @@ function updateMetricCards() {
     totalRevEl.textContent = formatCurrency(metrics.totalRevenue);
   }
 
+  // ✅ DEFINE avg HERE
   const avg = metrics.paidTransactionsCount
     ? metrics.totalRevenue / metrics.paidTransactionsCount
     : 0;
-
   if (avgTxnEl) {
     avgTxnEl.textContent = formatCurrency(avg);
   }
+}
+
+async function hydrateUserNames(userIds) {
+  const ids = Array.from(new Set((userIds || []).filter(Boolean)));
+  const missing = ids.filter(id => !userNameById[id]);
+  if (missing.length === 0) return;
+
+  const { data, error } = await supabaseClient
+    .from('UserAccount')
+    .select('UserAccountID, FirstName, LastName')
+    .in('UserAccountID', missing);
+
+  if (error) {
+    console.error('Failed loading user names:', error);
+    return;
+  }
+
+  (data || []).forEach(u => {
+    const name = `${u.FirstName || ''} ${u.LastName || ''}`.trim() || 'Unnamed';
+    userNameById[u.UserAccountID] = name;
+  });
+}
+
+function getUserName(id) {
+  return userNameById[id] || id || '';
 }
 
   
@@ -463,9 +626,11 @@ function getCurrentRangeBounds() {
     case 'weekly': {
       const temp = new Date(now);
       temp.setHours(0, 0, 0, 0);
-      const day = temp.getDay(); // 0 (Sun) - 6 (Sat)
+      // Monday-based week (PH-friendly): Monday=0 ... Sunday=6
+      // This prevents Sunday from starting a brand-new empty week in the UI.
+      const day = (temp.getDay() + 6) % 7;
       start = new Date(temp);
-      start.setDate(start.getDate() - day); // week starting Sunday
+      start.setDate(start.getDate() - day);
       end = new Date(start);
       end.setDate(end.getDate() + 7);
       break;
@@ -585,7 +750,7 @@ async function reloadAllAnalytics() {
   showChartLoading('revenue-chart', 'Loading revenue analytics...');
   showChartLoading('service-chart', 'Loading service analytics...');
   document.getElementById('dentistLeaderboardBody').innerHTML =
-    '<tr><td colspan="4" class="py-4 text-center text-gray-400 text-xs">Loading...</td></tr>';
+    '<tr><td colspan="5" class="py-4 text-center text-gray-400 text-xs">Loading...</td></tr>';
   document.getElementById('heatmap-chart').innerHTML =
     '<div class="h-[200px] flex items-center justify-center text-gray-400 text-xs">Loading heatmap...</div>';
   document.getElementById('serviceRevenue-chart').innerHTML =
@@ -598,7 +763,6 @@ async function reloadAllAnalytics() {
     loadServiceAnalytics(),       // Service Distribution (filtered)
     loadHeatmapAnalytics(),       // Heatmap (filtered)
     loadServiceRevenueAnalytics(),// Service Revenue Breakdown (filtered)
-    loadReviewAnalytics(),        // Reviews (filtered)
   ]);
 
   // 2) After revenue & reviews are loaded, then compute leaderboard
@@ -624,50 +788,43 @@ async function loadServiceRevenueAnalytics() {
     }
 
     // Aggregate TotalAmount per service ID, split when multiple services
-    const revenueById = {}; // { [serviceId]: amount }
+ // Aggregate TotalAmount per SERVICE NAME (Appointment.Service)
+const revenueByName = {}; // { [serviceName]: amount }
 
-    appts.forEach(appt => {
-      if (!appt.ServiceType) return;
+appts.forEach(appt => {
+  const total = Number(appt.TotalAmount || 0);
+  if (!total) return;
 
-      const total = Number(appt.TotalAmount || 0);
-      if (!total) return;
+  const raw = (appt.Service || "").toString().trim();
+  if (!raw) return;
 
-      const ids = appt.ServiceType.toString().split(',')
-        .map(s => s.trim())
-        .filter(Boolean)
-        .map(Number);
+  const names = raw.split(",").map(s => s.trim()).filter(Boolean);
+  const share = names.length || 1;
+  const perService = total / share;
 
-      const share = ids.length || 1;
-      const perService = total / share;
+  names.forEach(name => {
+    revenueByName[name] = (revenueByName[name] || 0) + perService;
+  });
+});
 
-      ids.forEach(id => {
-        if (!id) return;
-        if (!revenueById[id]) revenueById[id] = 0;
-        revenueById[id] += perService;
-      });
-    });
+const rows = Object.keys(revenueByName).map(name => ({
+  name,
+  amount: revenueByName[name],
+})).sort((a, b) => b.amount - a.amount);
 
-    const rows = Object.keys(revenueById).map(idStr => {
-      const id = Number(idStr);
-      return {
-        id,
-        name: getServiceNameById(id),
-        amount: revenueById[id],
-      };
-    }).sort((a, b) => b.amount - a.amount);
+if (!rows.length) {
+  if (container) {
+    container.innerHTML = `
+      <div class="h-[200px] flex items-center justify-center text-gray-400 text-xs">
+        No service revenue data in this range.
+      </div>
+    `;
+  }
+  return;
+}
 
-    if (!rows.length) {
-      if (container) {
-        container.innerHTML = `
-          <div class="h-[200px] flex items-center justify-center text-gray-400 text-xs">
-            No service revenue data in this range.
-          </div>
-        `;
-      }
-      return;
-    }
+renderServiceRevenueChart(rows);
 
-    renderServiceRevenueChart(rows);
   } catch (err) {
     console.error('Error in loadServiceRevenueAnalytics:', err);
     if (container) {
@@ -686,15 +843,15 @@ async function loadDentists() {
 
   const { data, error } = await supabaseClient
     .from('UserAccount')
-    .select('UserAccountID, FirstName, LastName, Role')
-    .eq('Role', 'dentist');
+    .select('UserAccountID, FirstName, LastName, Role');
 
   if (error) {
     console.error('Error loading dentists for filter:', error);
     return;
   }
 
-  dentists = data || [];
+  dentists = (data || []).filter(u => (u.Role || '').toLowerCase() === 'dentist');
+
   const options = ['<option value="all">All dentists</option>']
     .concat(
       dentists.map(d => {
@@ -703,89 +860,6 @@ async function loadDentists() {
       })
     );
   selectEl.innerHTML = options.join('');
-}
-
-async function loadReviewAnalytics() {
-  const { start, end } = getCurrentRangeBounds();
-
-  let query = supabaseClient
-    .from('Review')
-    .select('ReviewID, DentistID, Rating, Comment, CreatedAt');
-
-  if (start && end) {
-    query = query.gte('CreatedAt', start).lt('CreatedAt', end);
-  }
-
-  if (currentDentistId !== 'all') {
-    query = query.eq('DentistID', currentDentistId);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error loading reviews for analytics:', error);
-    rawReviews = [];
-    reviewStats = {
-      totalReviews: 0,
-      averageRating: 0,
-      dentistRatings: {},
-    };
-    updateReviewSummary();
-    return;
-  }
-
-  rawReviews = data || [];
-
-  // compute global stats
-  reviewStats.totalReviews = rawReviews.length;
-  let sum = 0;
-  const dentistAgg = {}; // dentistId -> { count, sum }
-
-  rawReviews.forEach(r => {
-    const rating = Number(r.Rating || 0);
-    sum += rating;
-
-    if (r.DentistID) {
-      if (!dentistAgg[r.DentistID]) {
-        dentistAgg[r.DentistID] = { count: 0, sum: 0 };
-      }
-      dentistAgg[r.DentistID].count++;
-      dentistAgg[r.DentistID].sum += rating;
-    }
-  });
-
-  reviewStats.averageRating =
-    reviewStats.totalReviews > 0 ? sum / reviewStats.totalReviews : 0;
-
-  reviewStats.dentistRatings = {};
-  Object.keys(dentistAgg).forEach(id => {
-    const { count, sum } = dentistAgg[id];
-    reviewStats.dentistRatings[id] = {
-      count,
-      average: count ? sum / count : 0,
-    };
-  });
-
-  updateReviewSummary();
-}
-
-function updateReviewSummary() {
-  const el = document.getElementById('reviewsSummaryText');
-  if (!el) return;
-
-  const total = reviewStats.totalReviews || 0;
-  const avg = reviewStats.averageRating || 0;
-
-  if (!total) {
-    el.textContent = 'No reviews in this range.';
-    return;
-  }
-
-  el.innerHTML = `
-    <span class="font-semibold">${total}</span> review${total !== 1 ? 's' : ''} 
-    • Average rating: 
-    <span class="font-semibold">${avg.toFixed(1)}</span> / 5
-  `;
 }
 
   // --- DATA LOADERS ---
@@ -798,7 +872,25 @@ function updateReviewSummary() {
   // main range
   let query = supabaseClient
     .from('Appointment')
-    .select('AppointmentID, AppointmentSchedule, Status, UserAccountID, DentistID');
+    .select(`
+  AppointmentID,
+  AppointmentSchedule,
+  endschedule,
+  Service,
+  ServiceType,
+  Status,
+  AppointmentNotes,
+  ReceiptImage,
+  PaymentState,
+  DownpaymentAmount,
+  TotalAmount,
+  RequestType,
+  RequestReason,
+  RequestRequestedAt,
+  UserAccountID,
+  DentistID
+`);
+
 
   if (start && end) {
     query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
@@ -896,13 +988,12 @@ async function loadServiceRevenueAnalyticsSource() {
 
   let query = supabaseClient
     .from('Appointment')
-    .select('ServiceType, TotalAmount, Status, DentistID');
+    .select('Service, TotalAmount, Status, DentistID, AppointmentSchedule');
 
   if (start && end) {
     query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
   }
 
-  // Count only finished / completed for revenue
   query = query.in('Status', ['Finished', 'Completed']);
 
   if (currentDentistId !== 'all') {
@@ -917,13 +1008,14 @@ async function loadServiceRevenueAnalyticsSource() {
   return data || [];
 }
 
+
 async function loadServiceAnalytics() {
   const { start, end } = getCurrentRangeBounds();
 
   let query = supabaseClient
     .from('Appointment')
-    .select('ServiceType, Status, AppointmentSchedule, DentistID')
-    .not('ServiceType', 'is', null);
+    .select('Service, Status, AppointmentSchedule, DentistID')
+    .not('Service', 'is', null);
 
   if (start && end) {
     query = query.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
@@ -933,32 +1025,33 @@ async function loadServiceAnalytics() {
     query = query.eq('DentistID', currentDentistId);
   }
 
-  const { data: appts, error: apptErr } = await query;
-
-  if (apptErr) {
-    console.error('Error loading appointments for services analytics:', apptErr);
+  const { data: appts, error } = await query;
+  if (error) {
+    console.error('Error loading appointments for services analytics:', error);
     return;
   }
 
-  const countsById = {};
+  // Count by SERVICE NAME (Appointment.Service)
+  const countsByName = {};
 
   (appts || []).forEach(row => {
-    if (!row.ServiceType) return;
+    const raw = (row.Service || "").toString().trim();
+    if (!raw) return;
 
-    const ids = row.ServiceType.toString().split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
+    // If you ever store multiple services as "A, B, C"
+    const names = raw.split(",").map(s => s.trim()).filter(Boolean);
 
-    ids.forEach(idStr => {
-      const id = Number(idStr);
-      if (!id) return;
-      if (!countsById[id]) countsById[id] = 0;
-      countsById[id] += 1;
+    names.forEach(name => {
+      countsByName[name] = (countsByName[name] || 0) + 1;
     });
   });
 
-  const serviceIds = Object.keys(countsById).map(Number);
-  if (serviceIds.length === 0) {
+  const entries = Object.keys(countsByName).map(name => ({
+    name,
+    count: countsByName[name],
+  }));
+
+  if (entries.length === 0) {
     serviceData = [];
     renderServiceChart();
     return;
@@ -966,25 +1059,19 @@ async function loadServiceAnalytics() {
 
   const colors = ["#03555E", "#0FA3B1", "#2BB8D6", "#5ECEE8", "#A8E1F7", "#FBBF24", "#F97316"];
 
-  const rawServices = serviceIds.map((id, idx) => ({
-    id,
-    name: getServiceNameById(id),
-    count: countsById[id],
-    color: colors[idx % colors.length],
-  }));
-
-  const top = rawServices.sort((a, b) => b.count - a.count).slice(0, 6);
+  const top = entries.sort((a, b) => b.count - a.count).slice(0, 6);
   const totalTop = top.reduce((sum, s) => sum + s.count, 0) || 1;
 
-  serviceData = top.map(s => ({
+  serviceData = top.map((s, idx) => ({
     name: s.name,
     value: (s.count / totalTop) * 100,
-    color: s.color,
+    color: colors[idx % colors.length],
     count: s.count,
   }));
 
   renderServiceChart();
 }
+
 
 
 function renderServiceRevenueChart(rows) {
@@ -1144,42 +1231,29 @@ async function loadDentistLeaderboard() {
       ? Math.round((stats.completed / stats.appts) * 100)
       : 0;
 
-    const ratingInfo = (reviewStats.dentistRatings || {})[id];
-    const avgRating = ratingInfo ? ratingInfo.average : null;
-    const reviewsCount = ratingInfo ? ratingInfo.count : 0;
-
     return {
       id,
       name,
       appts: stats.appts,
       completionRate,
       revenue: stats.revenue,
-      avgRating,
-      reviewsCount,
     };
   }).sort((a, b) => b.revenue - a.revenue);
 
   if (rows.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="4" class="py-4 text-center text-gray-400 text-xs">No data in this range.</td></tr>';
+      '<tr><td colspan="5" class="py-4 text-center text-gray-400 text-xs">No data in this range.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `
-    <tr class="border-b last:border-b-0">
-      <td class="py-2 px-3 text-xs text-gray-800">${r.name}</td>
-      <td class="py-2 px-3 text-xs text-gray-700">${r.appts}</td>
-      <td class="py-2 px-3 text-xs text-gray-700">${r.completionRate}%</td>
-      <td class="py-2 px-3 text-xs text-gray-700">
-        ${
-          r.avgRating != null
-            ? `${r.avgRating.toFixed(1)} / 5 · ${r.reviewsCount} review${r.reviewsCount !== 1 ? 's' : ''}`
-            : 'No reviews'
-        }
-      </td>
-      <td class="py-2 px-3 text-xs font-semibold text-gray-900">${formatCurrency(r.revenue)}</td>
-    </tr>
-  `).join('');
+tbody.innerHTML = rows.map(r => `
+  <tr class="border-b last:border-b-0">
+    <td class="py-2 px-3 text-xs text-gray-800">${r.name}</td>
+    <td class="py-2 px-3 text-xs text-gray-700">${r.appts}</td>
+    <td class="py-2 px-3 text-xs font-semibold text-gray-900">${formatCurrency(r.revenue)}</td>
+  </tr>
+`).join('');
+
 }
 
 function downloadCSV(filename, csvContent) {
@@ -1235,6 +1309,48 @@ function exportAppointmentsCSV() {
   downloadCSV(`appointments_${currentDateRange}.csv`, csv);
 }
 
+async function loadServiceCatalog() {
+  // Some deployments don't have a public.Service table.
+  // We try to load it, but if it doesn't exist we fall back to the in-file SERVICES list.
+  serviceNameById = {};
+
+  // 1) Fallback first (stable, no network)
+  if (Array.isArray(SERVICES)) {
+    SERVICES.forEach(s => {
+      if (!s) return;
+      const id = Number(s.id);
+      if (!id) return;
+      serviceNameById[id] = s.name || `Service ${id}`;
+    });
+  }
+
+  // 2) Try DB catalog (optional)
+  try {
+    const { data, error } = await supabaseClient
+      .from('Service')
+      .select('ServiceType, ServiceName');
+
+    if (error) {
+      // Keep fallback mapping; just log once.
+      console.warn('Service catalog table not available, using fallback SERVICES list.', error);
+      return;
+    }
+
+    (data || []).forEach(s => {
+      const id = Number(s.ServiceType);
+      if (!id) return;
+      serviceNameById[id] = s.ServiceName || `Service ${id}`;
+    });
+  } catch (e) {
+    console.warn('Service catalog load failed, using fallback SERVICES list.', e);
+  }
+}
+
+function getServiceNameById(id) {
+  const n = Number(id);
+  if (!n) return '-';
+  return serviceNameById[n] || `Service ${n}`;
+}
 
   // 2) Revenue: from Billing table for all paid transactions
   async function loadRevenueAnalytics() {
@@ -1243,7 +1359,7 @@ function exportAppointmentsCSV() {
 
   let query = supabaseClient
     .from('Billing')
-    .select('BillingID, AppointmentID, Amount, PaymentStatus, DateIssued')
+    .select('BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued')
     .eq('PaymentStatus', 'PAID');
 
   if (start && end) {
@@ -1591,6 +1707,14 @@ function exportAppointmentsCSV() {
     `;
   }
 
+  function formatPdfCurrency(amount) {
+  return `PHP ${Number(amount || 0).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+}
+
+
   async function generatePdfReport() {
   const btn = document.getElementById('generateReportBtn');
   if (btn) {
@@ -1617,7 +1741,7 @@ function exportAppointmentsCSV() {
 
     function addPageIfNeeded(extraHeight) {
       if (cursorY + extraHeight > pageHeight - 15) {
-        resetPage();
+       resetPage();
       }
     }
 
@@ -1653,6 +1777,7 @@ function exportAppointmentsCSV() {
 
       const visibleRows = rows.slice(0, maxRows);
       const availableWidth = pageWidth - marginX * 2;
+
       const colWidths = options.colWidths || [];
       if (colWidths.length === 0) {
         const base = availableWidth / headers.length;
@@ -1764,16 +1889,12 @@ function exportAppointmentsCSV() {
     const patientsServedSet = new Set(finishedAppointments.map(a => a.UserAccountID));
     const patientsServed = patientsServedSet.size;
 
-    const completionRate = metrics.totalAppointments
-      ? Math.round((metrics.completedAppointments / metrics.totalAppointments) * 100)
-      : 0;
-
     const avg = metrics.paidTransactionsCount
-      ? metrics.totalRevenue / metrics.paidTransactionsCount
+      ? (metrics.totalRevenue / metrics.paidTransactionsCount)
       : 0;
 
     // 3-column layout inside the summary box
-    const col = boxWidth / 3;
+    const col = boxWidth / 2;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(107, 114, 128);
@@ -1785,25 +1906,22 @@ function exportAppointmentsCSV() {
     doc.setTextColor(17, 24, 39);
     doc.text(String(metrics.totalAppointments || 0), marginX + 4, cursorY + 6);
 
-    // middle column
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 114, 128);
-    doc.text('Completion Rate', marginX + col + 4, cursorY);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74);
-    doc.text(`${completionRate}%`, marginX + col + 4, cursorY + 6);
-
     // right column
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(107, 114, 128);
-    doc.text('Total Revenue', marginX + col * 2 + 4, cursorY);
+    doc.text('Total Revenue', marginX + col + 4, cursorY);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(37, 99, 235);
-    doc.text(formatCurrency(metrics.totalRevenue || 0), marginX + col * 2 + 4, cursorY + 6);
+    doc.text(
+  `PHP ${Number(metrics.totalRevenue || 0).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`,
+  marginX + col + 4,
+  cursorY + 6
+);
 
     cursorY = boxTop + boxHeight + 10;
 
@@ -1814,25 +1932,6 @@ function exportAppointmentsCSV() {
     doc.text(`Patients served: ${patientsServed}`, marginX, cursorY);
     cursorY += 5;
 
-    const totalReviews = reviewStats.totalReviews || 0;
-    const avgRating = reviewStats.averageRating || 0;
-    doc.text(
-      `Reviews in range: ${totalReviews} (avg rating ${totalReviews ? avgRating.toFixed(1) : '0.0'}/5)`,
-      marginX,
-      cursorY
-    );
-    cursorY += 5;
-
-    if (compareMetrics && compareMetrics.appointmentsDeltaPct != null) {
-      const v = compareMetrics.appointmentsDeltaPct;
-      const sign = v > 0 ? '+' : '';
-      doc.text(
-        `Appointments vs previous period: ${sign}${v.toFixed(1)}%`,
-        marginX,
-        cursorY
-      );
-      cursorY += 5;
-    }
     if (compareMetrics && compareMetrics.revenueDeltaPct != null) {
       const v = compareMetrics.revenueDeltaPct;
       const sign = v > 0 ? '+' : '';
@@ -1845,8 +1944,8 @@ function exportAppointmentsCSV() {
     }
 
     // End of page 1, start fresh for sections
+    
     resetPage();
-
     // --- SECTION: Appointments by Month ----------------------------------
 
     if (appointmentData && appointmentData.length > 0) {
@@ -1868,12 +1967,12 @@ function exportAppointmentsCSV() {
     // --- SECTION: Revenue by Month ---------------------------------------
 
     if (revenueData && revenueData.length > 0) {
-      resetPage();
+      
       addSectionTitle('Revenue by Month');
 
       const rows = revenueData.map(d => [
         d.month,
-        formatCurrency(d.revenue),
+        formatPdfCurrency(d.revenue),
       ]);
 
       addTable(
@@ -1886,7 +1985,7 @@ function exportAppointmentsCSV() {
     // --- SECTION: Top Services by Bookings -------------------------------
 
     if (serviceData && serviceData.length > 0) {
-      resetPage();
+      
       addSectionTitle('Top Services by Bookings');
 
       const rows = serviceData.map(s => [
@@ -1904,11 +2003,11 @@ function exportAppointmentsCSV() {
 
     // --- SECTION: Service Revenue Breakdown ------------------------------
 
-    // reuse the same logic but keep only top ones to avoid clutter
+    // Aggregate TotalAmount per SERVICE NAME (Appointment.Service) for finished/completed appts
     const { start, end } = getCurrentRangeBounds();
     let apptQuery = supabaseClient
       .from('Appointment')
-      .select('ServiceType, TotalAmount, Status, DentistID, AppointmentSchedule');
+      .select('Service, TotalAmount, Status, DentistID, AppointmentSchedule');
 
     if (start && end) {
       apptQuery = apptQuery.gte('AppointmentSchedule', start).lt('AppointmentSchedule', end);
@@ -1921,88 +2020,37 @@ function exportAppointmentsCSV() {
 
     const { data: revAppts, error: revErr } = await apptQuery;
     if (!revErr && revAppts && revAppts.length > 0) {
-      const revenueById = {};
+      const revenueByName = {};
+
       revAppts.forEach(appt => {
-        if (!appt.ServiceType) return;
         const total = Number(appt.TotalAmount || 0);
         if (!total) return;
-        const ids = appt.ServiceType.toString().split(',')
-          .map(s => s.trim())
-          .filter(Boolean)
-          .map(Number);
-        const share = ids.length || 1;
-        const perService = total / share;
-        ids.forEach(id => {
-          if (!revenueById[id]) revenueById[id] = 0;
-          revenueById[id] += perService;
+        const raw = (appt.Service || '').toString().trim();
+        if (!raw) return;
+
+        // If stored as "A, B, C", split and share the total evenly
+        const names = raw.split(',').map(s => s.trim()).filter(Boolean);
+        const share = names.length || 1;
+        const per = total / share;
+
+        names.forEach(name => {
+          revenueByName[name] = (revenueByName[name] || 0) + per;
         });
       });
 
-      const rowsArr = Object.keys(revenueById).map(idStr => {
-        const id = Number(idStr);
-        return {
-          id,
-          name: getServiceNameById(id),
-          amount: revenueById[id],
-        };
-      }).sort((a, b) => b.amount - a.amount);
+      const rowsArr = Object.keys(revenueByName).map(name => ({
+        name,
+        amount: revenueByName[name],
+      })).sort((a, b) => b.amount - a.amount);
 
       if (rowsArr.length > 0) {
-        resetPage();
         addSectionTitle('Service Revenue Breakdown');
-        const rows = rowsArr.map(r => [
-          r.name,
-          formatCurrency(r.amount),
-        ]);
-        addTable(
-          ['Service', 'Revenue'],
-          rows,
-          { maxRows: 10 }
-        );
+        const rows = rowsArr.map(r => [r.name, formatPdfCurrency(r.amount)]);
+        addTable(['Service', 'Revenue'], rows, { maxRows: 10 });
       }
     }
 
-    if (reviewStats.totalReviews > 0) {
-  resetPage();
-  addSectionTitle('Reviews Overview');
-
-  const total = reviewStats.totalReviews;
-  const avg = reviewStats.averageRating || 0;
-
-  addKeyValueLine('Total reviews', total);
-  addKeyValueLine('Average rating', `${avg.toFixed(1)} / 5`);
-
-  // top dentists by rating (from reviewStats.dentistRatings)
-  const ratingRows = Object.entries(reviewStats.dentistRatings)
-    .map(([id, info]) => {
-      const d = dentists.find(x => x.UserAccountID === id);
-      const name = d
-        ? `${d.FirstName || ''} ${d.LastName || ''}`.trim() || 'Unnamed'
-        : 'Unknown dentist';
-      return {
-        name,
-        avgRating: info.average,
-        count: info.count,
-      };
-    })
-    .sort((a, b) => b.avgRating - a.avgRating)
-    .slice(0, 10);
-
-  if (ratingRows.length > 0) {
-    const tableRows = ratingRows.map(r => [
-      r.name,
-      `${r.avgRating.toFixed(1)} / 5`,
-      r.count,
-    ]);
-    addTable(
-      ['Dentist', 'Avg Rating', 'Review Count'],
-      tableRows,
-      { maxRows: 10 }
-    );
-  }
-}
-
-    // --- SECTION: Dentist Leaderboard ------------------------------------
+    // --- SECTION: Dentist Leaderboard ------------------------------------ ------------------------------------
 
     if (dentists && dentists.length > 0) {
       // build stats from rawAppointments + rawBilling
@@ -2042,38 +2090,27 @@ function exportAppointmentsCSV() {
       const name = d
         ? `${d.FirstName || ''} ${d.LastName || ''}`.trim() || 'Unnamed'
         : 'Unknown dentist';
-      const completionRate = stats.appts
-        ? Math.round((stats.completed / stats.appts) * 100)
-        : 0;
-
-      const ratingInfo = (reviewStats.dentistRatings || {})[id];
-      const avgRating = ratingInfo ? ratingInfo.average : null;
-      const reviewsCount = ratingInfo ? ratingInfo.count : 0;
 
       return {
         name,
         appts: stats.appts,
-        completionRate,
         revenue: stats.revenue,
-        avgRating,
-        reviewsCount,
       };
+
     }).sort((a, b) => b.revenue - a.revenue);
 
       if (rowsArr.length > 0) {
-        resetPage();
+       
         addSectionTitle('Dentist Leaderboard');
-        const rows = rowsArr.map(r => [
-          r.name,
-          r.appts,
-          `${r.completionRate}%`,
-          r.avgRating != null
-            ? `${r.avgRating.toFixed(1)}/5 (${r.reviewsCount})`
-            : 'No reviews',
-          formatCurrency(r.revenue),
-        ]);
+
+      const rows = rowsArr.map(r => [
+        r.name,
+        r.appts,
+        formatPdfCurrency(r.revenue),
+      ]);
+
         addTable(
-          ['Dentist', 'Appointments', 'Completion', 'Avg Rating', 'Revenue'],
+          ['Dentist', 'Appointments', 'Revenue'],
           rows,
           { maxRows: 12 }
         );
@@ -2100,7 +2137,7 @@ function exportAppointmentsCSV() {
       rowsArr.sort((a, b) => b.count - a.count);
 
       if (rowsArr.length > 0) {
-        resetPage();
+       
         addSectionTitle('Busiest Hours (Heatmap Summary)');
         const top = rowsArr.slice(0, 8);
         const rows = top.map(r => {
@@ -2139,7 +2176,7 @@ function exportAppointmentsCSV() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = 'Generate Report';
+      btn.textContent = 'Generate Analytics Report';
     }
   }
 }
@@ -2211,56 +2248,140 @@ async function generateSystemRawReport() {
     cursorY += 5;
   }
 
-  function addSimpleTable(headers, rows) {
-    const availableWidth = pageWidth - marginX * 2;
-    const colWidth = availableWidth / headers.length;
-    const headerHeight = 6;
-    const rowHeight = 5;
+  function getDentistName(id) {
+  const d = (dentists || []).find(x => x.UserAccountID === id);
+  return d ? `${d.FirstName || ''} ${d.LastName || ''}`.trim() || 'Unnamed' : (id || '');
+}
 
-    // header background
-    addPageIfNeeded(headerHeight + 3);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setFillColor(243, 244, 246);
-    doc.setDrawColor(220);
-    doc.rect(marginX, cursorY - (headerHeight - 3), availableWidth, headerHeight, 'FD');
+function addSimpleTable(headers, rows, colWidths = null, opts = {}) {
+  const availableWidth = pageWidth - marginX * 2;
+  const rightAlignCols = opts.rightAlignCols || [];
+  const widths =
+  colWidths && colWidths.length === headers.length
+    ? colWidths.slice() // clone so we can safely modify
+    : Array(headers.length).fill(availableWidth / headers.length);
 
-    let x = marginX;
-    headers.forEach(h => {
-      doc.setTextColor(55, 65, 81);
-      doc.text(String(h), x + 2, cursorY + 1);
-      x += colWidth;
-    });
-    cursorY += headerHeight + 1;
-
-    // body
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(31, 41, 55);
-
-    rows.forEach((row, idx) => {
-      addPageIfNeeded(rowHeight + 1);
-
-      // light zebra effect
-      if (idx % 2 === 0) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(marginX, cursorY - 2, availableWidth, rowHeight + 2, 'F');
-      }
-
-      let colX = marginX;
-      row.forEach(cell => {
-        const text = cell == null ? '' : String(cell);
-        doc.text(text, colX + 2, cursorY + 2);
-        colX += colWidth;
-      });
-
-      cursorY += rowHeight;
-      doc.setDrawColor(235);
-      doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
-    });
-
-    cursorY += 4;
+// ✅ normalize widths so they exactly fit availableWidth
+const sumW = widths.reduce((a, b) => a + b, 0);
+if (sumW > 0 && Math.abs(sumW - availableWidth) > 0.5) {
+  const scale = availableWidth / sumW;
+  for (let i = 0; i < widths.length; i++) {
+    widths[i] = widths[i] * scale;
   }
+}
+
+  const headerHeight = 7;
+  const baseRowHeight = 6; // minimum row height
+  const paddingX = 2;
+  const paddingTop = 3;
+  const lineGap = 3.6;
+
+  const wrapCols = opts.wrapCols || [];         // e.g. [3] for Service column
+  const maxWrapLines = opts.maxWrapLines ?? 3;  // limit wrapping
+
+  const truncate = (str, max) => {
+    const s = str == null ? "" : String(str);
+    return s.length > max ? s.slice(0, max - 1) + "…" : s;
+  };
+
+  // --- HEADER ---
+  addPageIfNeeded(headerHeight + 4);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(243, 244, 246);
+  doc.setDrawColor(225);
+  doc.rect(marginX, cursorY - (headerHeight - 3), availableWidth, headerHeight, "FD");
+
+  let x = marginX;
+  headers.forEach((h, i) => {
+    doc.setTextColor(55, 65, 81);
+    const maxChars = Math.max(6, Math.floor(widths[i] / 2.0));
+    doc.text(truncate(h, maxChars), x + paddingX, cursorY + 1.5);
+    x += widths[i];
+  });
+
+  // header separators only
+  let hx = marginX;
+  doc.setDrawColor(225);
+  for (let i = 0; i < widths.length - 1; i++) {
+    hx += widths[i];
+    doc.line(hx, cursorY - (headerHeight - 3), hx, cursorY + 3.5);
+  }
+
+  cursorY += headerHeight + 1;
+
+  // --- BODY ---
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(31, 41, 55);
+
+  rows.forEach((row, idx) => {
+    // ensure row length matches headers
+    const safeRow = Array(headers.length).fill("");
+    for (let i = 0; i < headers.length; i++) safeRow[i] = row[i] ?? "";
+
+    // compute needed row height based on wrapped columns
+    let neededLines = 1;
+    safeRow.forEach((cell, i) => {
+      if (!wrapCols.includes(i)) return;
+      const maxWidth = widths[i] - paddingX * 2;
+      const lines = doc.splitTextToSize(String(cell ?? ""), maxWidth);
+      neededLines = Math.max(neededLines, Math.min(lines.length, maxWrapLines));
+    });
+
+    const rowHeight = Math.max(baseRowHeight, paddingTop + (neededLines - 1) * lineGap + 3);
+
+    addPageIfNeeded(rowHeight + 3);
+
+    // zebra
+    if (idx % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(marginX, cursorY - 2.5, availableWidth, rowHeight + 3, "F");
+    }
+
+    // draw cells
+    let colX = marginX;
+    safeRow.forEach((cell, i) => {
+      const cellText = String(cell ?? "");
+const maxWidth = widths[i] - (paddingX * 2);
+
+// draw cell border (light)
+doc.setDrawColor(230);
+doc.rect(colX, cursorY - 2.5, widths[i], rowHeight + 3, "S");
+
+if (wrapCols.includes(i)) {
+  const lines = doc.splitTextToSize(cellText, maxWidth).slice(0, maxWrapLines);
+  lines.forEach((line, li) => {
+    doc.text(String(line), colX + paddingX, cursorY + paddingTop + li * lineGap);
+  });
+} else {
+  // trim by actual rendered width
+  let text = cellText;
+  while (text && doc.getTextWidth(text) > maxWidth) {
+    text = text.slice(0, -1);
+  }
+  if (text !== cellText) text = text.slice(0, Math.max(0, text.length - 1)) + "…";
+
+  if (rightAlignCols.includes(i)) {
+    doc.text(text, colX + widths[i] - 4, cursorY + paddingTop, { align: "right" });
+  } else {
+    doc.text(text, colX + paddingX, cursorY + paddingTop);
+  }
+
+}
+
+      colX += widths[i];
+    });
+
+    cursorY += rowHeight;
+
+    // subtle horizontal separator
+    doc.setDrawColor(235);
+    doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
+  });
+
+  cursorY += 5;
+}
 
   // ---------- HEADER (title + meta) ----------
 
@@ -2293,22 +2414,41 @@ async function generateSystemRawReport() {
     await reloadAllAnalytics();
   }
 
+  const patientIds = [
+  ...(rawAppointments || []).map(a => a.UserAccountID),
+  ...(rawBilling || []).map(b => b.UserAccountID),
+];
+await hydrateUserNames(patientIds);
+
   // ---------- SECTION 1: APPOINTMENTS (no IDs) ----------
 
   addSectionTitle(
     'Appointments (filtered)'
   );
 
-  const apptRows = (rawAppointments || []).map(a => {
-    const dateStr = a.AppointmentSchedule
-      ? new Date(a.AppointmentSchedule).toLocaleString('en-PH')
-      : '';
+    const apptRows = (rawAppointments || []).map(a => {
+      const startStr = a.AppointmentSchedule
+        ? new Date(a.AppointmentSchedule).toLocaleString('en-PH')
+        : '';
 
-    return [
-      dateStr,                 // Date & time
-      (a.Status || ''),        // Status
-    ];
-  });
+      const endStr = a.endschedule
+        ? new Date(a.endschedule).toLocaleString('en-PH')
+        : '';
+
+      const receipt = a.ReceiptImage ? String(a.ReceiptImage) : '';
+
+      const request = a.RequestType
+        ? `${a.RequestType}${a.RequestReason ? ' - ' + a.RequestReason : ''}`
+        : '';
+
+        return [
+          startStr,
+          getUserName(a.UserAccountID),   // Patient NAME
+          getDentistName(a.DentistID),    // Dentist NAME (make helper below)
+          a.Service || '',
+          a.Status || '',
+      ];
+    });
 
   if (apptRows.length === 0) {
     addPageIfNeeded(8);
@@ -2317,14 +2457,16 @@ async function generateSystemRawReport() {
     doc.text('No appointments for this filter.', marginX, cursorY + 3);
     cursorY += 10;
   } else {
-    addSimpleTable(
-      ['Date / Time', 'Status'],
-      apptRows
+ addSimpleTable(
+  ['Date/Time', 'Patient', 'Dentist', 'Service', 'Status'],
+  apptRows,
+  [32, 26, 24, 46, 14],
+  { rightAlignCols: [5] }
     );
   }
 
   // ---------- SECTION 2: BILLING (no IDs) ----------
-
+  addPageIfNeeded(18);
   addSectionTitle(
     'Billing (filtered, PAID)'
   );
@@ -2335,65 +2477,31 @@ async function generateSystemRawReport() {
       : '';
 
     return [
-      dateStr,                            // Date issued
-      (b.PaymentStatus || ''),            // Payment status
-      formatCurrency(b.Amount || 0),      // Amount
+      dateStr,
+      getUserName(b.UserAccountID),
+      b.PaymentType || '',
+      b.PaymentMethod || '',
+      b.PaymentStatus || '',
+      `PHP ${Number(b.Amount || 0).toLocaleString("en-PH", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})}`,
     ];
   });
 
-  // ---------- SECTION 3: REVIEWS (no IDs) ----------
 
-addSectionTitle(
-  'Reviews (filtered)'
-);
 
-const reviewRows = (rawReviews || []).map(r => {
-  const dateStr = r.CreatedAt
-    ? new Date(r.CreatedAt).toLocaleString('en-PH')
-    : '';
-
-  const d = (dentists || []).find(x => x.UserAccountID === r.DentistID);
-  const dentistName = d
-    ? `${d.FirstName || ''} ${d.LastName || ''}`.trim() || 'Unnamed'
-    : 'Unknown dentist';
-
-  // short comment (avoid huge cells)
-  let comment = r.Comment || '';
-  if (comment.length > 80) {
-    comment = comment.slice(0, 77) + '...';
-  }
-
-  return [
-    dateStr,
-    dentistName,
-    r.Rating != null ? Number(r.Rating).toFixed(1) : '',
-    comment,
-  ];
-});
-
-if (reviewRows.length === 0) {
+if (billRows.length === 0) {
   addPageIfNeeded(8);
   doc.setFontSize(9);
   doc.setTextColor(107, 114, 128);
-  doc.text('No reviews for this filter.', marginX, cursorY + 3);
+  doc.text('No billing data for this filter.', marginX, cursorY + 3);
   cursorY += 10;
 } else {
-  addSimpleTable(
-    ['Date', 'Dentist', 'Rating', 'Comment'],
-    reviewRows
-  );
-}
-
-  if (billRows.length === 0) {
-    addPageIfNeeded(8);
-    doc.setFontSize(9);
-    doc.setTextColor(107, 114, 128);
-    doc.text('No billing data for this filter.', marginX, cursorY + 3);
-    cursorY += 10;
-  } else {
     addSimpleTable(
-      ['Date Issued', 'Payment Status', 'Amount'],
-      billRows
+      ['Date', 'Patient', 'Type', 'Method', 'Status', 'Amount'],
+      billRows,
+      [32, 42, 28, 22, 18, 26]
     );
   }
 
@@ -2420,6 +2528,14 @@ if (reviewRows.length === 0) {
     lucide.createIcons();
   }
 
+  // Prevent selecting future dates in custom range
+  const maxDate = new Date().toISOString().slice(0, 10);
+  const sInput = document.getElementById('customStart');
+  const eInput = document.getElementById('customEnd');
+  if (sInput) sInput.max = maxDate;
+  if (eInput) eInput.max = maxDate;
+
+
   const user = await checkAuth();
   if (!user) return;
 
@@ -2427,6 +2543,8 @@ if (reviewRows.length === 0) {
     window.location.href = "/Dashboard.html";
     return;
   }
+
+  await loadNotifications();
 
   // Report generated date
   const reportDateEl = document.getElementById('reportGeneratedAt');
@@ -2439,6 +2557,7 @@ if (reviewRows.length === 0) {
   }
 
   await loadDentists();
+  // Services are stored as names in Appointment.Service, so we don't need a Service catalog table.
   await reloadAllAnalytics();
 });
 

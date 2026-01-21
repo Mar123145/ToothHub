@@ -1,139 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ToothHub Secretary Dashboard</title>
-    <!-- Load Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Define custom theme color for consistency */
-        .bg-primary { background-color: #03555E; }
-        .text-primary { color: #03555E; }
-        .hover\:bg-primary-dark:hover { background-color: #024449; }
-        .font-sans { font-family: 'Inter', sans-serif; }
-
-        /* Custom scrollbar styling for the mobile menu drawer */
-        #mobile-menu-drawer {
-            scrollbar-width: thin;
-            scrollbar-color: #024449 #03555E;
-        }
-        #mobile-menu-drawer::-webkit-scrollbar {
-            width: 8px;
-        }
-        #mobile-menu-drawer::-webkit-scrollbar-thumb {
-            background-color: #024449;
-            border-radius: 10px;
-        }
-        #mobile-menu-drawer::-webkit-scrollbar-track {
-            background-color: #03555E;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToothHub Secretary Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
 
-    <!-- Header & Mobile Menu -->
-   <header class="bg-primary text-white relative shadow-lg z-50">
-  <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-    
-    <!-- Left: Hamburger, Notifications, Profile -->
-    <div class="flex items-center gap-4">
-      <!-- Hamburger Menu -->
-      <button
-        id="menu-toggle-btn"
-        onclick="toggleMobileMenu()"
-        class="p-2 hover:bg-primary-dark rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-        aria-label="Toggle Menu"
-      >
-        <i id="menu-toggle-icon" data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-
-      <!-- Notifications -->
-      <div class="relative">
-        <i data-lucide="bell" class="w-6 h-6 cursor-pointer hover:text-yellow-300 transition-colors sm:block"></i>
-      </div>
-
-
-      <!-- Profile -->
-      <a href="Profile.html">
-        <i data-lucide="users" class="w-6 h-6 cursor-pointer hover:text-yellow-300 transition-colors hidden sm:block"></i>
-    </a>
-    </div>
-
-    <!-- Right: Logo / Title -->
-    <a href="#" class="flex items-center gap-3 transition-opacity hover:opacity-90">
-     <div class="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1">
-          <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same shell as patient) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
-      <div>
-        <h1 class="text-xl font-bold">ToothHub</h1>
-        <p class="text-sm opacity-80">Secretary Portal</p>
-      </div>
-    </a>
-  </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
 
-  <!-- Mobile Menu Overlay -->
-  <div
-    id="mobile-menu-overlay"
-    class="fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity duration-300 opacity-0 pointer-events-none"
-    onclick="closeMobileMenu()"
-    aria-hidden="true"
-  ></div>
-
-  <!-- Mobile Menu Drawer -->
-  <div
-    id="mobile-menu-drawer"
-    class="fixed top-0 left-0 h-full w-64 md:w-80 bg-primary text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl -translate-x-full overflow-y-auto"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="mobile-menu-title"
-  >
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-8 border-b border-[#024449] pb-4">
-        <h2 id="mobile-menu-title" class="text-2xl font-bold">Menu</h2>
-        <button
-          onclick="closeMobileMenu()"
-          class="p-2 hover:bg-primary-dark rounded-lg transition-colors"
-          aria-label="Close Menu"
-        >
-          <i data-lucide="x" class="w-6 h-6"></i>
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
         </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
       </div>
+    </div>
+  </header>
 
-      <nav class="space-y-2 text-lg">
-        <a href="Dashboard.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Dashboard
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same sizing as patient) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
         </a>
-        <a href="Appointment.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="calendar" class="w-5 h-5"></i> Appointments
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
         </a>
-        <a href="Billing.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="credit-card" class="w-5 h-5"></i> Billing & Transactions
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
         </a>
-        <a href="Analytics.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Analytics & Reports
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
         </a>
-        <a href="Notifications.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="bell" class="w-5 h-5"></i> Notifications
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
         </a>
-        <a href="Profile.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="users" class="w-5 h-5"></i> Profile
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
         </a>
-        <a href="Settings.html" onclick="closeMobileMenu()" class="block px-4 py-3 hover:bg-primary-dark rounded-lg flex items-center gap-3">
-          <i data-lucide="settings" class="w-5 h-5"></i> Settings
+        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
         </a>
-        <button onclick="logout()" class="ml-auto px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-          Logout
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
         </button>
       </nav>
-    </div>
-  </div>
-</header>
+    </aside>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
         <div class="mb-8">
             <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Dashboard</h1>
             <p class="text-gray-600">A centralized overview to manage clinic operations and patient appointments.</p>
@@ -240,10 +196,11 @@
 </div>
 
         </div>
+      </div>
     </main>
+  </div>
 
-    <!-- JavaScript for Mobile Menu Logic and Icon Rendering -->
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
    <script>
 const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
@@ -277,80 +234,14 @@ async function checkAuth(redirect = true) {
     return userData;
 }
 
-    function toggleMobileMenu() {
-        const menu = document.getElementById('mobile-menu-drawer');
-        const overlay = document.getElementById('mobile-menu-overlay');
-        const menuButtonIcon = document.getElementById('menu-toggle-icon');
-
-        const isOpen = menu.classList.contains('translate-x-0');
-        if (isOpen) {
-            closeMobileMenu();
-        } else {
-            menu.classList.add('translate-x-0');
-            menu.classList.remove('-translate-x-full'); // changed
-            overlay.classList.add('opacity-100', 'pointer-events-auto');
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            menuButtonIcon.setAttribute('data-lucide', 'x');
-        }
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-  function closeMobileMenu() {
-    const menu = document.getElementById('mobile-menu-drawer');
-    const overlay = document.getElementById('mobile-menu-overlay');
-    const menuButtonIcon = document.getElementById('menu-toggle-icon');
-
-    menu.classList.remove('translate-x-0');
-    menu.classList.add('-translate-x-full'); // changed
-    overlay.classList.remove('opacity-100', 'pointer-events-auto');
-    overlay.classList.add('opacity-0', 'pointer-events-none');
-    menuButtonIcon.setAttribute('data-lucide', 'menu');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
- async function logout() {
+       async function logout() {
   await supabaseClient.auth.signOut();
   localStorage.clear();
   window.location.href = "/Login.html";
         }
     // --- Auth check function (kept for context, but separate) ---
-    async function checkAuth(redirect = true) {
-        // ... (Your existing checkAuth logic) ...
-        const storedFirstName = localStorage.getItem('userFirstName');
-        const storedRole = localStorage.getItem('userRole');
-        const storedEmail = localStorage.getItem('userEmail');
+    
 
-        if (storedFirstName && storedRole) {
-            return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
-        }
-
-        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-        if (sessionError) console.error(sessionError);
-
-        if (!session?.user) {
-            if (redirect) window.location.href = "/Login.html";
-            return null;
-        }
-
-        const { data: userData, error } = await supabaseClient
-            .from('UserAccount')
-            .select('*')
-            .eq('Email', session.user.email)
-            .maybeSingle();
-
-        if (error || !userData) {
-            console.error(error || "No user data found");
-            if (redirect) window.location.href = "/Login.html";
-            return null;
-        }
-
-        localStorage.setItem('userFirstName', userData.FirstName);
-        localStorage.setItem('userRole', userData.Role);
-        localStorage.setItem('userEmail', userData.Email);
-        localStorage.setItem('userId', session.user.id);
-
-        return userData;
-    }
 
 function getTypeBadgeSmall(typeLabel) {
     const isDown = typeLabel.toLowerCase().includes('down');
@@ -494,92 +385,84 @@ function getStatusBadgeSmall(status) {
     return `<span class="${base} bg-gray-100 text-gray-700">${status || "Unknown"}</span>`;
 }
 
-   async function loadNotifications() {
-    // Wait for Lucide to render icons
-    await new Promise(r => setTimeout(r, 100));
+async function loadNotifications() {
+  const bellBtn = document.getElementById("notifBellBtn");
+  if (!bellBtn) return;
 
-    // Lucide replaces <i> with <svg>, so select via data-lucide attribute or parent container
-    const bellContainer = document.querySelector('div > svg[data-lucide="bell"]')?.parentElement
-                          || document.querySelector('i[data-lucide="bell"]')?.parentElement;
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
 
-    if (!bellContainer) {
-        console.warn("Bell icon container not found yet");
-        return;
+  const { data: notifications, error } = await supabaseClient
+    .from("Notifications")
+    .select("*")
+    .eq("UserAccountID", userId)
+    .eq("Status", "Unread")
+    .order("DateSent", { ascending: false });
+
+  if (error) return console.error(error);
+
+  // badge
+  const existingBadge = document.getElementById("notif-badge");
+  if (existingBadge) existingBadge.remove();
+
+  if (notifications && notifications.length > 0) {
+    const badge = document.createElement("span");
+    badge.id = "notif-badge";
+    badge.textContent = notifications.length;
+    badge.className =
+      "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+    bellBtn.appendChild(badge);
+  }
+
+  // dropdown
+  const prevDropdown = document.getElementById("notif-dropdown");
+  if (prevDropdown) prevDropdown.remove();
+
+  bellBtn.onclick = async () => {
+    let dropdown = document.getElementById("notif-dropdown");
+    if (dropdown) return dropdown.remove();
+
+    dropdown = document.createElement("div");
+    dropdown.id = "notif-dropdown";
+    dropdown.className =
+      "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+    dropdown.style.maxHeight = "320px";
+
+    if (!notifications || notifications.length === 0) {
+      dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+    } else {
+      notifications.forEach((n) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className =
+          "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+        item.textContent = n.Message;
+
+        item.addEventListener("click", async () => {
+          await supabaseClient
+            .from("Notifications")
+            .update({ Status: "Read" })
+            .eq("NotificationID", n.NotificationID);
+          dropdown.remove();
+          loadNotifications();
+        });
+
+        dropdown.appendChild(item);
+      });
     }
 
-    // The bell itself (SVG)
-    const bellIcon = bellContainer.querySelector('svg[data-lucide="bell"]')
-                     || bellContainer.querySelector('i[data-lucide="bell"]');
+    document.body.appendChild(dropdown);
 
-    if (!bellIcon) {
-        console.warn("Bell icon SVG not found");
-        return;
-    }
-
-    // Now your previous notification logic works
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
-
-    const { data: notifications, error } = await supabaseClient
-        .from('Notifications')
-        .select('*')
-        .eq('UserAccountID', userId)
-        .eq('Status', 'Unread')
-        .order('DateSent', { ascending: false });
-
-    if (error) return console.error(error);
-
-    // Remove previous badge if exists
-    const existingBadge = document.getElementById('notif-badge');
-    if (existingBadge) existingBadge.remove();
-
-    if (notifications.length > 0) {
-        const badge = document.createElement('span');
-        badge.id = 'notif-badge';
-        badge.textContent = notifications.length;
-        badge.className = 'absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full';
-        badge.style.transform = 'translate(50%, -50%)';
-        bellContainer.style.position = 'relative';
-        bellContainer.appendChild(badge);
-    }
-
-    // Remove previous dropdown
-    const prevDropdown = document.getElementById('notif-dropdown');
-    if (prevDropdown) prevDropdown.remove();
-
-    // Toggle dropdown
-    bellIcon.onclick = async () => {
-        let dropdown = document.getElementById('notif-dropdown');
-        if (dropdown) return dropdown.remove();
-
-        dropdown = document.createElement('div');
-        dropdown.id = 'notif-dropdown';
-        dropdown.className ='absolute left-full ml-2 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg overflow-auto z-50';
-        dropdown.style.maxHeight = '300px';
-
-        if (notifications.length === 0) {
-            const emptyMsg = document.createElement('div');
-            emptyMsg.className = 'p-3 text-gray-500 text-sm';
-            emptyMsg.textContent = 'No new notifications';
-            dropdown.appendChild(emptyMsg);
-        } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'p-3 border-b last:border-b-0 hover:bg-gray-100 cursor-pointer text-gray-900';
-                item.textContent = n.Message;
-
-                item.addEventListener('click', async () => {
-                    await supabaseClient.from('Notifications').update({ Status: 'Read' }).eq('NotificationID', n.NotificationID);
-                    loadNotifications(); // refresh badge
-                });
-
-                dropdown.appendChild(item);
-            });
-        }
-        bellContainer.style.position = 'relative';
-        bellContainer.appendChild(dropdown);
+    const onDocClick = (e) => {
+      if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+        dropdown.remove();
+        document.removeEventListener("click", onDocClick);
+      }
     };
+    setTimeout(() => document.addEventListener("click", onDocClick), 0);
+  };
 }
+
 
 function formatCurrency(amount) {
     const num = Number(amount) || 0;
@@ -851,9 +734,6 @@ async function loadPendingConfirmations() {
         return;
     }
 
-    // Initial icon rendering
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-
     // Load dashboard data
         await loadTodayAppointmentsDetailed();   // 🔹 today stats + detailed list (one query)
         await loadPendingConfirmations();        // 🔹 pending confirmations list
@@ -868,5 +748,7 @@ async function loadPendingConfirmations() {
 
 
 </script>
+</body>
+</html>
 </body>
 </html>

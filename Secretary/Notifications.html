@@ -1,257 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Custom Theme Colors */
-        .bg-primary { background-color: #03555E; }
-        .text-primary { color: #03555E; }
-        .hover\:bg-primary-dark:hover { background-color: #024449; }
-        .font-sans { font-family: 'Inter', sans-serif; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications</title>
 
-        /* --- Filter button styles (NEW) --- */
-        .filter-group {
-            display: flex;
-            border-radius: 0.375rem; /* rounded-md */
-            background-color: #f3f4f6; /* bg-gray-100 */
-            padding: 0.25rem; /* p-1 */
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449'
+          }
         }
-        .filter-button {
-            padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
-            border-radius: 0.25rem; /* rounded-sm */
-            font-size: 0.75rem; /* text-xs */
-            font-weight: 500;
-            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
-            white-space: nowrap; /* Prevent text wrapping */
-            text-align: center;
-        }
-        .filter-active {
-            background-color: #03555E; /* Primary color for active state */
-            color: white;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* subtle shadow */
-        }
-        .filter-inactive {
-            background-color: transparent;
-            color: #4b5563; /* text-gray-700 */
-        }
-        .filter-inactive:hover {
-            background-color: #e5e7eb; /* hover:bg-gray-200 */
-        }
-    </style>
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Filter button group (kept) */
+    .filter-group{display:flex;border-radius:.375rem;background-color:#f3f4f6;padding:.25rem}
+    .filter-button{padding:.375rem .75rem;border-radius:.25rem;font-size:.75rem;font-weight:500;transition:background-color .2s,color .2s,box-shadow .2s;white-space:nowrap;text-align:center}
+    .filter-active{background-color:#03555E;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .filter-inactive{background-color:transparent;color:#4b5563}
+    .filter-inactive:hover{background-color:#e5e7eb}
+  </style>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
 
-    <header class="bg-primary text-white shadow-xl">
-        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-            <a href="Dashboard.html">
-                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
-                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-                    Back
-                </button>
-            </a>
-            <div>
-                <h1 class="text-xl font-bold">Notifications</h1>
-                <p class="text-sm opacity-90">Stay updated with clinic operations</p>
-            </div>
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same shell as secretary dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
-        <div class="grid gap-6 max-w-4xl mx-auto">
-            
-            <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b flex justify-between items-center">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-                        Recent Notifications
-                    </h2>
-                    
-                    <div class="filter-group" id="filter-buttons">
-                        <button id="filter-all" class="filter-button" data-status="">All</button>
-                        <button id="filter-unread" class="filter-button" data-status="Unread">Unread</button>
-                        <button id="filter-read" class="filter-button" data-status="Read">Read</button>
-                    </div>
-                </div>
-                <div class="p-6" id="recent-notifications-content">
-                    <div id="empty-state" class="text-center py-12 text-gray-500">
-                        <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
-                        <h3 class="text-lg font-medium mb-2">No recent notifications</h3>
-                        <p class="text-sm">You're all caught up! New notifications will appear here.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50">
-                </div>
-
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
         </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 p-6">
+      <div class="max-w-4xl mx-auto grid gap-6">
+        <div class="rounded-xl border bg-white shadow-lg">
+          <div class="p-6 border-b flex justify-between items-center gap-3">
+            <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+              <i data-lucide="bell" class="w-5 h-5 text-gray-500"></i>
+              Recent Notifications
+            </h2>
+
+            <div class="flex items-center gap-2">
+              <button id="markAllReadBtn" class="text-xs px-3 py-1.5 rounded-md border hover:bg-gray-50">Mark all as read</button>
+              <div class="filter-group" id="filter-buttons">
+                <button id="filter-all" class="filter-button" data-status="">All</button>
+                <button id="filter-unread" class="filter-button" data-status="Unread">Unread</button>
+                <button id="filter-read" class="filter-button" data-status="Read">Read</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6" id="recent-notifications-content">
+            <div id="empty-state" class="text-center py-12 text-gray-500">
+              <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+              <h3 class="text-lg font-medium mb-2">No notifications</h3>
+              <p class="text-sm">You're all caught up! New notifications will appear here.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50"></div>
+      </div>
     </main>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   <script>
-const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentFilter = ''; // '' for All, 'Unread', or 'Read'
+    let currentFilter = ''; // '' for All, 'Unread', or 'Read'
 
-async function checkAuth(redirect = true) {
-    const storedFirstName = localStorage.getItem('userFirstName');
-    const storedRole = localStorage.getItem('userRole');
-    const storedEmail = localStorage.getItem('userEmail');
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
 
-    if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+      if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
 
-    const { data: userData } = await supabaseClient
+      const { data: userData } = await supabaseClient
         .from('UserAccount')
         .select('*')
         .eq('Email', session.user.email)
         .maybeSingle();
 
-    if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+      if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
 
-    localStorage.setItem('userFirstName', userData.FirstName);
-    localStorage.setItem('userRole', userData.Role);
-    localStorage.setItem('userEmail', userData.Email);
-    localStorage.setItem('userId', userData.UserAccountID);
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
 
-    return userData;
-}
+      return userData;
+    }
 
-// Function to update the appearance of filter buttons (NEW)
-function updateFilterButtons(newFilter) {
-    document.querySelectorAll('.filter-button').forEach(btn => {
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    // Shell bell badge + dropdown (unread only)
+    async function loadNotifications() {
+      const bellBtn = document.getElementById("notifBellBtn");
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from("Notifications")
+        .select("NotificationID, Message, Status, DateSent")
+        .eq("UserAccountID", userId)
+        .eq("Status", "Unread")
+        .order("DateSent", { ascending: false })
+        .limit(10);
+
+      if (error) return console.error(error);
+
+      document.getElementById("notif-badge")?.remove();
+      if (notifications?.length) {
+        const badge = document.createElement("span");
+        badge.id = "notif-badge";
+        badge.textContent = notifications.length;
+        badge.className =
+          "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+        bellBtn.appendChild(badge);
+      }
+
+      document.getElementById("notif-dropdown")?.remove();
+      bellBtn.onclick = () => {
+        const existing = document.getElementById("notif-dropdown");
+        if (existing) return existing.remove();
+
+        const dropdown = document.createElement("div");
+        dropdown.id = "notif-dropdown";
+        dropdown.className =
+          "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+        dropdown.style.maxHeight = "320px";
+
+        if (!notifications?.length) {
+          dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900 text-sm";
+            item.textContent = n.Message;
+            item.onclick = async () => {
+              await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
+              dropdown.remove();
+              await loadNotifications();
+              await renderNotifications();
+            };
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener("click", onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener("click", onDocClick), 0);
+      };
+    }
+
+    function updateFilterButtons(newFilter) {
+      document.querySelectorAll('.filter-button').forEach(btn => {
         const btnStatus = btn.getAttribute('data-status');
         if (btnStatus === newFilter) {
-            btn.classList.add('filter-active');
-            btn.classList.remove('filter-inactive');
+          btn.classList.add('filter-active');
+          btn.classList.remove('filter-inactive');
         } else {
-            btn.classList.remove('filter-active');
-            btn.classList.add('filter-inactive');
+          btn.classList.remove('filter-active');
+          btn.classList.add('filter-inactive');
         }
-    });
-}
+      });
+    }
 
-// Function to set up filter button event listeners (NEW)
-function setupFilterListeners() {
-    document.querySelectorAll('.filter-button').forEach(button => {
+    function setupFilterListeners() {
+      document.querySelectorAll('.filter-button').forEach(button => {
         button.addEventListener('click', (e) => {
-            const newFilter = e.currentTarget.getAttribute('data-status');
-            if (newFilter !== currentFilter) {
-                currentFilter = newFilter;
-                updateFilterButtons(currentFilter);
-                renderNotifications(); // Re-render notifications with the new filter
-            }
+          const newFilter = e.currentTarget.getAttribute('data-status');
+          if (newFilter !== currentFilter) {
+            currentFilter = newFilter;
+            updateFilterButtons(currentFilter);
+            renderNotifications();
+          }
         });
-    });
-}
+      });
+    }
 
-async function fetchNotifications() {
-    const userId = localStorage.getItem('userId');
-    if (!userId) return [];
+    async function fetchNotifications() {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return [];
 
-    let query = supabaseClient
+      let query = supabaseClient
         .from('Notifications')
         .select('*')
         .eq('UserAccountID', userId)
         .order('DateSent', { ascending: false });
 
-    // Apply the current filter (UPDATED LOGIC)
-    if (currentFilter) {
-        // Supabase query expects the exact value, e.g., 'Unread' or 'Read'
-        query = query.eq('Status', currentFilter);
-    }
+      if (currentFilter) query = query.eq('Status', currentFilter);
 
-    const { data, error } = await query;
-
-    if (error) {
+      const { data, error } = await query;
+      if (error) {
         console.error("Error fetching notifications:", error);
         return [];
+      }
+      return data;
     }
 
-    return data;
-}
+    function fmtManila(iso) {
+      if (!iso) return '';
+      try {
+        return new Date(iso).toLocaleString('en-PH', {
+          timeZone: 'Asia/Manila',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return iso;
+      }
+    }
 
-async function renderNotifications() {
-    const container = document.getElementById('recent-notifications-content');
-    
-    // Clear the container before re-rendering
-    container.innerHTML = '';
-    
-    const notifications = await fetchNotifications();
+    async function renderNotifications() {
+      const container = document.getElementById('recent-notifications-content');
+      container.innerHTML = '';
 
-    if (!notifications || notifications.length === 0) {
+      const notifications = await fetchNotifications();
+
+      if (!notifications || notifications.length === 0) {
+        const label = currentFilter === 'Unread' ? 'No unread notifications' : currentFilter === 'Read' ? 'No read notifications' : 'No notifications';
         container.innerHTML = `
-            <div class="text-center py-12 text-gray-500">
-                <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
-                <h3 class="text-lg font-medium mb-2">No notifications</h3>
-                <p class="text-sm">You're all caught up! New notifications will appear here.</p>
-            </div>
+          <div class="text-center py-12 text-gray-500">
+            <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+            <h3 class="text-lg font-medium mb-2">${label}</h3>
+            <p class="text-sm">You're all caught up! New notifications will appear here.</p>
+          </div>
         `;
         if (typeof lucide !== 'undefined') lucide.createIcons();
         return;
-    }
+      }
 
-    notifications.forEach(n => {
+      notifications.forEach(n => {
+        const isUnread = String(n.Status || '').toLowerCase() === 'unread';
+
         const item = document.createElement('div');
         item.className = `
-            flex items-start gap-4 p-3 rounded-lg cursor-pointer border
-            ${n.Status.toLowerCase() === 'unread' ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}
-            hover:bg-gray-100
+          group flex items-start gap-4 p-4 rounded-lg cursor-pointer border bg-white hover:bg-gray-50
+          ${isUnread ? 'border-gray-200' : 'border-gray-200'}
         `;
 
         item.innerHTML = `
-            <div class="flex-shrink-0 pt-1">
-                <i data-lucide="bell" class="w-5 h-5 ${n.Status.toLowerCase() === 'unread' ? 'text-blue-600' : 'text-gray-400'}"></i>
-            </div>
-            <div class="flex-grow">
-                <p class="font-medium text-gray-800">${n.Message}</p>
-                <p class="text-xs text-gray-500 mt-0.5">
-                    <span class="font-semibold">${n.Status}</span>
-                </p>
-            </div>
+          <div class="flex-shrink-0 pt-1 flex items-center gap-2">
+            ${isUnread ? '<span class="w-2 h-2 rounded-full bg-custom-primary"></span>' : '<span class="w-2 h-2 rounded-full bg-transparent"></span>'}
+            <div class="w-1 h-10 rounded-full ${isUnread ? 'bg-custom-primary' : 'bg-transparent'}"></div>
+          </div>
+          <div class="flex-grow">
+            <p class="font-medium text-gray-800">${n.Message}</p>
+            <p class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${isUnread ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'}">${n.Status}</span>
+              <span>•</span>
+              <span>${fmtManila(n.DateSent)}</span>
+            </p>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 text-xs text-gray-400 pt-1">Click to mark read</div>
         `;
 
-        // Click to mark as Read
         item.addEventListener('click', async () => {
-            if (n.Status.toLowerCase() !== 'read') {
-                const { error } = await supabaseClient
-                    .from('Notifications')
-                    .update({ Status: 'Read' })
-                    .eq('NotificationID', n.NotificationID);
+          if (String(n.Status || '').toLowerCase() !== 'read') {
+            const { error } = await supabaseClient
+              .from('Notifications')
+              .update({ Status: 'Read' })
+              .eq('NotificationID', n.NotificationID);
 
-                if (error) {
-                    console.error("Error updating notification:", error);
-                    return;
-                }
-
-                // Update DOM and re-render if needed
-                n.Status = 'Read';
-                renderNotifications(); // refresh entire list
+            if (error) {
+              console.error("Error updating notification:", error);
+              return;
             }
+
+            n.Status = 'Read';
+            await loadNotifications();
+            renderNotifications();
+          }
         });
 
         container.appendChild(item);
+      });
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    async function markAllAsRead() {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      let query = supabaseClient
+        .from('Notifications')
+        .update({ Status: 'Read' })
+        .eq('UserAccountID', userId)
+        .eq('Status', 'Unread');
+
+      // if user is filtering to a specific status, marking all unread is still fine
+      const { error } = await query;
+      if (error) {
+        console.error('Error marking all as read:', error);
+        return;
+      }
+
+      await loadNotifications();
+      await renderNotifications();
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      if (user.Role !== 'secretary') { window.location.href = '/Login.html'; return; }
+
+      setupFilterListeners();
+      updateFilterButtons(currentFilter);
+
+      document.getElementById('markAllReadBtn')?.addEventListener('click', markAllAsRead);
+
+      await loadNotifications();
+      await renderNotifications();
+
+      // Refresh badge periodically
+      setInterval(loadNotifications, 15000);
     });
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// Run on page load
-window.addEventListener('DOMContentLoaded', async () => {
-    await checkAuth();
-    setupFilterListeners(); // Initialize filter button event listeners
-    updateFilterButtons(currentFilter); // Set 'All' as active initially
-    renderNotifications();
-});
-
-    </script>
+  </script>
 </body>
 </html>

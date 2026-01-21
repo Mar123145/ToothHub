@@ -1,290 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings</title>
-    <!-- Load Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Custom Theme Colors */
-        .bg-primary { background-color: #03555E; }
-        .text-primary { color: #03555E; }
-        .hover\:bg-primary-dark:hover { background-color: #024449; }
-        .font-sans { font-family: 'Inter', sans-serif; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToothHub Secretary Settings</title>
 
-        /* Custom Switch Styling (Mimics Shadcn/ui) */
-        .custom-switch {
-            position: relative;
-            display: inline-block;
-            width: 44px; /* Standard switch width */
-            height: 24px; /* Standard switch height */
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449'
+          }
         }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-        .custom-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc; /* bg-gray-300 */
-            transition: .4s;
-            border-radius: 9999px; /* rounded-full */
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px; /* Switch circle height */
-            width: 20px; /* Switch circle width */
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Shadow */
-        }
-
-        input:checked + .slider {
-            background-color: #03555E; /* bg-primary */
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-    </style>
+  <style>
+    /* Custom Switch Styling (Shadcn-like) */
+    .custom-switch{position:relative;display:inline-block;width:44px;height:24px}
+    .custom-switch input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:.2s;border-radius:9999px}
+    .slider:before{position:absolute;content:"";height:20px;width:20px;left:2px;bottom:2px;background-color:white;transition:.2s;border-radius:50%;box-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px 0 rgba(0,0,0,.06)}
+    input:checked + .slider{background-color:#03555E}
+    input:checked + .slider:before{transform:translateX(20px)}
+  </style>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans">
-
-    <!-- Header -->
-    <header class="bg-primary text-white shadow-xl">
-        <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-            <!-- Link replacement -->
-            <a href="Dashboard.html">
-                <button class="inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 px-3 py-1.5 text-xs bg-transparent text-white hover:bg-primary-dark">
-                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-                    Back
-                </button>
-            </a>
-            <div>
-                <h1 class="text-xl font-bold">Settings</h1>
-                <p class="text-sm opacity-90">Manage your preferences</p>
-            </div>
+<body class="min-h-screen bg-gray-50">
+<!-- Top Header (same shell as patient) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
         </div>
-    </header>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+<div class="flex min-h-[calc(100vh-72px)]">
+<!-- Sidebar (same sizing as patient) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto space-y-6">
+    <main class="flex-1 p-6">
+      <div class="w-full flex justify-center">
+        <div class="w-full max-w-3xl">
+          <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Settings</h1>
+            <p class="text-gray-600">Manage your preferences.</p>
+          </div>
 
-            <!-- Notification Settings Card -->
+          <div class="space-y-6">
+            <!-- Notifications -->
             <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-                        Notifications
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        
-                        <!-- Email Notifications -->
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Email Notifications</h3>
-                                <p class="text-sm text-gray-600">Receive appointment confirmations via email</p>
-                            </div>
-                            <label class="custom-switch">
-                                <input type="checkbox" id="email-switch" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <!-- Payment Alerts -->
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Payment Alerts</h3>
-                                <p class="text-sm text-gray-600">Get notified of new payments</p>
-                            </div>
-                            <label class="custom-switch">
-                                <input type="checkbox" id="payment-switch">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <!-- Appointment Reminders -->
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Appointment Reminders</h3>
-                                <p class="text-sm text-gray-600">Daily appointment schedule reminders</p>
-                            </div>
-                            <label class="custom-switch">
-                                <input type="checkbox" id="reminder-switch" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                  <i data-lucide="bell" class="w-5 h-5 text-custom-primary"></i>
+                  Notifications
+                </h2>
+              </div>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-medium text-gray-800">Email Notifications</h3>
+                      <p class="text-sm text-gray-600">Receive appointment confirmations via email</p>
                     </div>
+                    <label class="custom-switch">
+                      <input type="checkbox" id="email-switch" checked>
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-medium text-gray-800">Payment Alerts</h3>
+                      <p class="text-sm text-gray-600">Get notified of new payments</p>
+                    </div>
+                    <label class="custom-switch">
+                      <input type="checkbox" id="payment-switch">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-medium text-gray-800">Appointment Reminders</h3>
+                      <p class="text-sm text-gray-600">Daily appointment schedule reminders</p>
+                    </div>
+                    <label class="custom-switch">
+                      <input type="checkbox" id="reminder-switch" checked>
+                      <span class="slider"></span>
+                    </label>
+                  </div>
                 </div>
+              </div>
             </div>
 
-            <!-- Security Settings Card -->
+            <!-- Security -->
             <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                        <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
-                        Security
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Two-Factor Authentication</h3>
-                                <p class="text-sm text-gray-600">Add extra security to your account</p>
-                            </div>
-                            <button onclick="handleSecurityAction('2fa')" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">
-                                Enable
-                            </button>
-                        </div>
-                        <div>
-                            <button onclick="handleSecurityAction('password')" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 bg-white">
-                                Change Password
-                            </button>
-                        </div>
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                  <i data-lucide="shield" class="w-5 h-5 text-custom-primary"></i>
+                  Security
+                </h2>
+              </div>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-medium text-gray-800">Two-Factor Authentication</h3>
+                      <p class="text-sm text-gray-600">Add extra security to your account</p>
                     </div>
+                    <button onclick="handleSecurityAction('2fa')" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">Enable</button>
+                  </div>
+                  <button onclick="handleSecurityAction('password')" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 bg-white">Change Password</button>
                 </div>
+              </div>
             </div>
 
-            <!-- Appearance Card -->
+            <!-- Appearance -->
             <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                        <i data-lucide="moon" class="w-5 h-5 text-primary"></i>
-                        Appearance
-                    </h2>
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+                  <i data-lucide="moon" class="w-5 h-5 text-custom-primary"></i>
+                  Appearance
+                </h2>
+              </div>
+              <div class="p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-800">Dark Mode</h3>
+                    <p class="text-sm text-gray-600">Switch to dark theme</p>
+                  </div>
+                  <label class="custom-switch">
+                    <input type="checkbox" id="dark-mode-switch" onclick="toggleDarkMode(this.checked)">
+                    <span class="slider"></span>
+                  </label>
                 </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Dark Mode</h3>
-                                <p class="text-sm text-gray-600">Switch to dark theme</p>
-                            </div>
-                            <label class="custom-switch">
-                                <input type="checkbox" id="dark-mode-switch" onclick="toggleDarkMode(this.checked)">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
 
-            <!-- Hidden Message Box (for feedback) -->
-            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
-                <!-- Message content injected here -->
-            </div>
-
+            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0"></div>
+          </div>
         </div>
+      </div>
     </main>
 
-    <!-- JavaScript Logic -->
-    <script>
-        // --- DATA STATE (for persistence simulation) ---
-        const settings = {
-            emailNotifications: true,
-            paymentAlerts: false,
-            appointmentReminders: true,
-            darkMode: false
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAuth(redirect = true) {
+    const storedFirstName = localStorage.getItem('userFirstName');
+    const storedRole = localStorage.getItem('userRole');
+    const storedEmail = localStorage.getItem('userEmail');
+
+    if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+    if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+    localStorage.setItem('userFirstName', userData.FirstName);
+    localStorage.setItem('userRole', userData.Role);
+    localStorage.setItem('userEmail', userData.Email);
+    localStorage.setItem('userId', userData.UserAccountID);
+
+    return userData;
+}
+
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    async function loadNotifications() {
+      const bellBtn = document.getElementById("notifBellBtn");
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from("Notifications")
+        .select("*")
+        .eq("UserAccountID", userId)
+        .eq("Status", "Unread")
+        .order("DateSent", { ascending: false });
+
+      if (error) return console.error(error);
+
+      const existingBadge = document.getElementById("notif-badge");
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement("span");
+        badge.id = "notif-badge";
+        badge.textContent = notifications.length;
+        badge.className =
+          "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+        bellBtn.appendChild(badge);
+      }
+
+      const prevDropdown = document.getElementById("notif-dropdown");
+      if (prevDropdown) prevDropdown.remove();
+
+      bellBtn.onclick = async () => {
+        let dropdown = document.getElementById("notif-dropdown");
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement("div");
+        dropdown.id = "notif-dropdown";
+        dropdown.className =
+          "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+        dropdown.style.maxHeight = "320px";
+
+        if (!notifications || notifications.length === 0) {
+          dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className =
+              "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+            item.textContent = n.Message;
+
+            item.addEventListener("click", async () => {
+              await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+              dropdown.remove();
+              loadNotifications();
+            });
+
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener("click", onDocClick);
+          }
         };
+        setTimeout(() => document.addEventListener("click", onDocClick), 0);
+      };
+    }
 
-        // --- UTILITY FUNCTIONS ---
-        function showFeedback(message, isError = false) {
-            const feedbackBox = document.getElementById('feedback-message');
-            feedbackBox.textContent = message;
-            
-            feedbackBox.classList.remove('hidden', 'bg-green-600', 'bg-red-600');
-            feedbackBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
-            
-            // Show message
-            feedbackBox.classList.add('opacity-100');
-            
-            // Hide message after 2 seconds
-            setTimeout(() => {
-                feedbackBox.classList.remove('opacity-100');
-                setTimeout(() => {
-                    feedbackBox.classList.add('hidden');
-                }, 300); // Wait for transition
-            }, 2000);
-        }
+    // Settings behavior
+    const settings = {
+      emailNotifications: true,
+      paymentAlerts: false,
+      appointmentReminders: true,
+      darkMode: false
+    };
 
-        function updateSetting(settingName, value) {
-            settings[settingName] = value;
-            showFeedback(`${settingName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} ${value ? 'enabled' : 'disabled'}.`);
-            console.log(`Setting updated: ${settingName} = ${value}`);
-        }
-        
-        function handleSecurityAction(action) {
-            if (action === '2fa') {
-                showFeedback("Two-Factor Authentication setup process started (simulated).", false);
-            } else if (action === 'password') {
-                showFeedback("Redirecting to Change Password form (simulated).", false);
-            }
-        }
-        
-        function toggleDarkMode(isDark) {
-            if (isDark) {
-                document.body.classList.add('dark');
-                document.body.classList.remove('bg-gray-50');
-                document.body.classList.add('bg-gray-900');
-                showFeedback("Dark Mode activated.");
-            } else {
-                document.body.classList.remove('dark');
-                document.body.classList.remove('bg-gray-900');
-                document.body.classList.add('bg-gray-50');
-                showFeedback("Light Mode activated.");
-            }
-            settings.darkMode = isDark;
-        }
+    function showFeedback(message, isError = false) {
+      const feedbackBox = document.getElementById('feedback-message');
+      feedbackBox.textContent = message;
+      feedbackBox.classList.remove('hidden', 'bg-green-600', 'bg-red-600');
+      feedbackBox.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+      feedbackBox.classList.add('opacity-100');
+      setTimeout(() => {
+        feedbackBox.classList.remove('opacity-100');
+        setTimeout(() => feedbackBox.classList.add('hidden'), 300);
+      }, 2000);
+    }
 
+    function updateSetting(settingName, value) {
+      settings[settingName] = value;
+      const label = settingName.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+      showFeedback(`${label} ${value ? 'enabled' : 'disabled'}.`);
+    }
 
-        // --- INITIALIZATION ---
-        window.onload = function() {
-            // Set initial switch states and attach listeners
-            
-            const emailSwitch = document.getElementById('email-switch');
-            emailSwitch.checked = settings.emailNotifications;
-            emailSwitch.addEventListener('change', (e) => updateSetting('emailNotifications', e.target.checked));
+    function handleSecurityAction(action) {
+      if (action === '2fa') showFeedback('Two-Factor Authentication setup process started (simulated).');
+      if (action === 'password') showFeedback('Redirecting to Change Password form (simulated).');
+    }
 
-            const paymentSwitch = document.getElementById('payment-switch');
-            paymentSwitch.checked = settings.paymentAlerts;
-            paymentSwitch.addEventListener('change', (e) => updateSetting('paymentAlerts', e.target.checked));
+    function toggleDarkMode(isDark) {
+      if (isDark) {
+        document.body.classList.add('bg-gray-900');
+        document.body.classList.remove('bg-gray-50');
+        showFeedback('Dark Mode activated.');
+      } else {
+        document.body.classList.add('bg-gray-50');
+        document.body.classList.remove('bg-gray-900');
+        showFeedback('Light Mode activated.');
+      }
+      settings.darkMode = isDark;
+    }
 
-            const reminderSwitch = document.getElementById('reminder-switch');
-            reminderSwitch.checked = settings.appointmentReminders;
-            reminderSwitch.addEventListener('change', (e) => updateSetting('appointmentReminders', e.target.checked));
-            
-            const darkModeSwitch = document.getElementById('dark-mode-switch');
-            darkModeSwitch.checked = settings.darkMode;
-            
-            // Initial dark mode check (for persistence)
-            if (settings.darkMode) {
-                 toggleDarkMode(true);
-            }
+    window.addEventListener('DOMContentLoaded', async () => {
+      const emailSwitch = document.getElementById('email-switch');
+      emailSwitch.checked = settings.emailNotifications;
+      emailSwitch.addEventListener('change', (e) => updateSetting('emailNotifications', e.target.checked));
 
-            // Render Lucide icons
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        };
-    </script>
+      const paymentSwitch = document.getElementById('payment-switch');
+      paymentSwitch.checked = settings.paymentAlerts;
+      paymentSwitch.addEventListener('change', (e) => updateSetting('paymentAlerts', e.target.checked));
+
+      const reminderSwitch = document.getElementById('reminder-switch');
+      reminderSwitch.checked = settings.appointmentReminders;
+      reminderSwitch.addEventListener('change', (e) => updateSetting('appointmentReminders', e.target.checked));
+
+      const darkModeSwitch = document.getElementById('dark-mode-switch');
+      darkModeSwitch.checked = settings.darkMode;
+      if (settings.darkMode) toggleDarkMode(true);
+
+      await loadNotifications();
+      setInterval(loadNotifications, 15000);
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
 </body>
 </html>

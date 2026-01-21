@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToothHub - Dentist Schedules</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449'
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    .modal-active { display: flex !important; }
+    .calendar-cell { min-height: 110px; }
+    .selected-multi{
+  outline: 2px solid #03555E;
+  outline-offset: 2px;
+  background: #f0fdfa;
+}
+
+  </style>
+</head>
+
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Toast container used by showMessage() -->
+  <div id="toastContainer" class="fixed top-[84px] right-6 z-[200] space-y-2"></div>
+
+  <!-- Top Header (same shell as dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <a href="Dashboard.html" class="flex items-center gap-2 text-[#03555E] mb-6 hover:opacity-80 font-medium">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+          Back to Dashboard
+        </a>
+
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold mb-1">Dentist Schedules</h1>
+          <p class="text-gray-600">Block a dentist’s unavailable date/time. The booking page will use this to disable time slots.</p>
+        </div>
+
+        <!-- Top controls -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h2 class="text-lg font-semibold">Schedule Controls</h2>
+              <p class="text-sm text-gray-500">Select a dentist, then click a day to add a block.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-2 text-xs text-gray-600">
+                <span class="w-3 h-3 rounded bg-[#03555E]"></span> Blocked
+              </span>
+              <span class="inline-flex items-center gap-2 text-xs text-gray-600">
+                <span class="w-3 h-3 rounded bg-gray-200"></span> No blocks
+              </span>
+            </div>
+          </div>
+
+          <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-4">
+            <!-- Dentist picker -->
+            <div class="md:col-span-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Dentist</label>
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <i class="fa-regular fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <select id="dentistSelect" class="w-full pl-10 pr-9 py-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#03555E]">
+                    <option value="">Loading dentists...</option>
+                  </select>
+                </div>
+                <button id="addBlockBtn" type="button" class="px-4 py-2.5 rounded-lg bg-[#03555E] text-white font-medium hover:bg-[#024449] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span class="inline-flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Add Block
+                  </span>
+                </button>
+              </div>
+              <p id="dentistHint" class="mt-2 text-xs text-gray-500">Pick a dentist to view and manage their schedule.</p>
+            </div>
+
+            <!-- Month controls -->
+          </div>
+        </div>
+
+        <!-- Calendar + Day details -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Calendar -->
+          <section class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+  <div>
+    <div class="text-xs text-gray-500">Calendar</div>
+    <div id="calendarTitleTop" class="text-lg font-semibold">—</div>
+    <div class="text-xs text-gray-500">Blocked days are highlighted</div>
+  </div>
+
+<div class="flex items-center gap-2 flex-wrap">
+  <label class="inline-flex items-center gap-2 text-sm text-gray-700 mr-2">
+    <input id="multiSelectToggle" type="checkbox" class="rounded border-gray-300" />
+    Multi-select
+  </label>
+
+  <button id="blockSelectedBtn"
+    class="px-3 py-2 text-sm rounded-lg font-medium bg-slate-500 text-white hover:bg-slate-600
+           disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled>
+    Block Selected
+  </button>
+
+  <button id="prevMonthBtn" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-200" aria-label="Previous month">
+    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+  </button>
+
+  <button id="todayBtn" class="px-3 py-2 text-sm font-medium hover:bg-gray-100 rounded-lg border border-gray-200">
+    Today
+  </button>
+
+  <button id="nextMonthBtn" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-200" aria-label="Next month">
+    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+  </button>
+</div>
+</div>
+
+
+            <div class="p-6">
+              <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-gray-500 mb-2">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              </div>
+              <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+          </section>
+
+          <!-- Right panel -->
+          <aside class="lg:col-span-4 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+              <h3 class="font-semibold">Selected Day</h3>
+              <p id="selectedDayLabel" class="text-xs text-gray-500 mt-1">Choose a day from the calendar.</p>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-sm">
+                  <div class="font-semibold" id="selectedDentistLabel">Dentist: —</div>
+                  <div class="text-gray-500" id="selectedDaySub">Day: —</div>
+                </div>
+                <button id="quickAddBtn" type="button" class="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm">Add</button>
+              </div>
+
+              <div class="mt-5">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-semibold">Blocks</h4>
+                  <span id="blocksCount" class="text-xs text-gray-500">0</span>
+                </div>
+                <div id="blocksList" class="mt-3 space-y-2">
+                  <div class="text-sm text-gray-500">No blocks yet.</div>
+                </div>
+              </div>
+
+              <div class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <div class="text-sm font-semibold text-gray-700">Tip</div>
+                <p class="text-xs text-gray-600 mt-1">Use <span class="font-medium">Full day</span> for leaves, or set a time range for partial unavailability.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Add Block -->
+  <div id="scheduleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold">Add Unavailable Block</h3>
+        <button type="button" onclick="closeModal()" class="p-1 hover:bg-gray-100 rounded" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="rounded-lg border border-gray-200 p-3 bg-gray-50 text-sm">
+          <div class="font-semibold" id="modalDentistLabel">Dentist: —</div>
+          <div class="text-gray-600" id="modalDayLabel">Date: —</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-700">Date</label>
+          <input id="modalDate" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E] outline-none" />
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+            <input id="modalFullDay" type="checkbox" class="rounded border-gray-300" />
+            Full day
+          </label>
+          <span class="text-xs text-gray-500">If enabled, time inputs are disabled</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4" id="timeRow">
+          <div>
+            <label class="block text-sm font-medium mb-2 text-gray-700">Start Time</label>
+            <input id="modalStart" type="time" class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-gray-700">End Time</label>
+            <input id="modalEnd" type="time" class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-700">Reason <span class="text-rose-600">*</span></label>
+          <textarea id="modalReason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#03555E]" placeholder="e.g., Leave, Training, Emergency"></textarea>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+          <button id="saveBlockBtn" type="button" class="flex-1 px-4 py-2 bg-[#03555E] text-white rounded-lg hover:bg-[#024449] transition-colors">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Modal: Confirm Delete Block -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[110] p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold">Delete Block</h3>
+        <button type="button" onclick="closeDeleteModal()" class="p-1 hover:bg-gray-100 rounded" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="rounded-lg border border-rose-200 bg-rose-50 p-4">
+          <div class="text-sm font-semibold text-rose-900">This action can’t be undone.</div>
+          <div class="text-xs text-rose-800 mt-1">The selected unavailable block will be permanently removed.</div>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 p-3 bg-gray-50 text-sm">
+          <div class="font-semibold" id="deleteModalDentist">Dentist: —</div>
+          <div class="text-gray-600" id="deleteModalDate">Date: —</div>
+          <div class="text-gray-700 mt-2">
+            <span class="font-semibold">Time:</span> <span id="deleteModalTime">—</span>
+          </div>
+          <div class="text-gray-700 mt-1">
+            <span class="font-semibold">Reason:</span> <span id="deleteModalReason">—</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+          <button id="confirmDeleteBtn" type="button" class="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- showMessage (toast) ---
+    function showMessage(message, type = 'info', ms = 2800) {
+      const host = document.getElementById('toastContainer');
+      if (!host) {
+        alert(message);
+        return;
+      }
+
+      const el = document.createElement('div');
+      const base = "pointer-events-auto w-[340px] max-w-[90vw] rounded-xl border px-4 py-3 shadow-lg";
+      const styles = {
+        success: "bg-emerald-50 border-emerald-200 text-emerald-900",
+        error: "bg-rose-50 border-rose-200 text-rose-900",
+        warning: "bg-amber-50 border-amber-200 text-amber-900",
+        info: "bg-white border-gray-200 text-gray-900",
+      };
+      el.className = `${base} ${styles[type] || styles.info}`;
+      el.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5">
+            ${type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : ''}
+            ${type === 'error' ? '<i class="fa-solid fa-circle-xmark"></i>' : ''}
+            ${type === 'warning' ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ''}
+            ${type === 'info' ? '<i class="fa-solid fa-circle-info"></i>' : ''}
+          </div>
+          <div class="flex-1">
+            <div class="text-sm font-semibold">${message}</div>
+          </div>
+          <button class="p-1 rounded-lg hover:bg-black/5" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `;
+
+      const closeBtn = el.querySelector('button');
+      closeBtn.addEventListener('click', () => el.remove());
+
+      host.appendChild(el);
+      setTimeout(() => {
+        if (el.isConnected) el.remove();
+      }, ms);
+    }
+
+    // --- Auth check function ---
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
+
+      if (storedFirstName && storedRole) {
+        return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+      }
+
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) console.error(sessionError);
+
+      if (!session?.user) {
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      const { data: userData, error } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+      if (error || !userData) {
+        console.error(error || "No user data found");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
+
+      return userData;
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    // --- Notifications ---
+    async function loadNotifications() {
+      const bellBtn = document.getElementById("notifBellBtn");
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from("Notifications")
+        .select("*")
+        .eq("UserAccountID", userId)
+        .eq("Status", "Unread")
+        .order("DateSent", { ascending: false });
+
+      if (error) return console.error(error);
+
+      const existingBadge = document.getElementById("notif-badge");
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement("span");
+        badge.id = "notif-badge";
+        badge.textContent = notifications.length;
+        badge.className =
+          "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+        bellBtn.appendChild(badge);
+      }
+
+      const prevDropdown = document.getElementById("notif-dropdown");
+      if (prevDropdown) prevDropdown.remove();
+
+      bellBtn.onclick = async () => {
+        let dropdown = document.getElementById("notif-dropdown");
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement("div");
+        dropdown.id = "notif-dropdown";
+        dropdown.className =
+          "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+        dropdown.style.maxHeight = "320px";
+
+        if (!notifications || notifications.length === 0) {
+          dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className =
+              "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+            item.textContent = n.Message;
+
+            item.addEventListener("click", async () => {
+              await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+              dropdown.remove();
+              loadNotifications();
+            });
+
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener("click", onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener("click", onDocClick), 0);
+      };
+    }
+
+    // --- UI state ---
+    const ui = {
+      monthCursor: new Date(),
+      selectedDate: null,
+      dentistId: null,
+      dentistName: null,
+      // key: YYYY-MM-DD, value: array of blocks {AvailabilityID, label, reason, raw}
+      blocksByDay: new Map(),      isLoadingBlocks: false,
+      pendingDelete: null,
+
+      multiSelect: false,
+      selectedDays: new Set(),
+      _multiSave: false,
+    };
+
+    const els = {
+      dentistSelect: () => document.getElementById('dentistSelect'),
+      addBlockBtn: () => document.getElementById('addBlockBtn'),
+      prevMonthBtn: () => document.getElementById('prevMonthBtn'),
+      nextMonthBtn: () => document.getElementById('nextMonthBtn'),
+      todayBtn: () => document.getElementById('todayBtn'),
+      calendarTitle: () => document.getElementById('calendarTitle'),
+      calendarTitleTop: () => document.getElementById('calendarTitleTop'),
+      calendarGrid: () => document.getElementById('calendarGrid'),
+      selectedDayLabel: () => document.getElementById('selectedDayLabel'),
+      selectedDentistLabel: () => document.getElementById('selectedDentistLabel'),
+      selectedDaySub: () => document.getElementById('selectedDaySub'),
+      blocksList: () => document.getElementById('blocksList'),
+      blocksCount: () => document.getElementById('blocksCount'),
+      quickAddBtn: () => document.getElementById('quickAddBtn'),
+      modal: () => document.getElementById('scheduleModal'),
+      modalDate: () => document.getElementById('modalDate'),
+      modalStart: () => document.getElementById('modalStart'),
+      modalEnd: () => document.getElementById('modalEnd'),
+      modalFullDay: () => document.getElementById('modalFullDay'),
+      modalReason: () => document.getElementById('modalReason'),
+      modalDentistLabel: () => document.getElementById('modalDentistLabel'),
+      modalDayLabel: () => document.getElementById('modalDayLabel'),      saveBlockBtn: () => document.getElementById('saveBlockBtn'),
+      deleteModal: () => document.getElementById('deleteConfirmModal'),
+      deleteModalDentist: () => document.getElementById('deleteModalDentist'),
+      deleteModalDate: () => document.getElementById('deleteModalDate'),
+      deleteModalTime: () => document.getElementById('deleteModalTime'),
+      deleteModalReason: () => document.getElementById('deleteModalReason'),
+      confirmDeleteBtn: () => document.getElementById('confirmDeleteBtn'),
+    };
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function toYmd(d) {
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+
+    function formatMonthYear(d) {
+      const month = d.toLocaleString('en-US', { month: 'long' });
+      return `${month} ${d.getFullYear()}`;
+    }
+
+    function formatHumanDate(ymd) {
+      const [y, m, dd] = ymd.split('-').map(Number);
+      const d = new Date(y, m - 1, dd);
+      return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function toLocalTimeLabel(iso) {
+      const d = new Date(iso);
+      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function getMonthRangeIso(cursorDate) {
+      const y = cursorDate.getFullYear();
+      const m = cursorDate.getMonth();
+      const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+      const monthEnd = new Date(y, m + 1, 1, 0, 0, 0, 0);
+      return { monthStartIso: monthStart.toISOString(), monthEndIso: monthEnd.toISOString() };
+    }
+
+    // --- Modal ---
+    function openModal(dateYmd = null) {
+      if (!ui.dentistId) {
+        showMessage('Please select a dentist first.', 'warning');
+        return;
+      }
+
+      const ymd = dateYmd || (ui.selectedDate ? toYmd(ui.selectedDate) : toYmd(new Date()));
+
+      els.modalDate().value = ymd;
+      els.modalFullDay().checked = false;
+      els.modalStart().value = '09:00';
+      els.modalEnd().value = '17:00';
+      els.modalReason().value = '';
+
+      els.modalDentistLabel().textContent = `Dentist: ${ui.dentistName || '—'}`;
+      els.modalDayLabel().textContent = `Date: ${formatHumanDate(ymd)}`;
+
+      toggleTimeInputs();
+      els.modal().classList.add('modal-active');
+    }
+
+    function closeModal() {
+      const tr = document.getElementById('timeRow');
+      if (tr) tr.classList.remove('hidden');
+
+      ui._multiSave = false;
+      els.modal().classList.remove('modal-active');
+    }
+
+
+    // --- Delete Confirm Modal ---
+    function openDeleteModal(block, dayYmd) {
+      if (!block || !block.AvailabilityID) {
+        showMessage('Missing block ID. Please refresh the page.', 'error');
+        return;
+      }
+      ui.pendingDelete = { id: block.AvailabilityID, label: block.label, reason: block.reason || '', dayYmd: dayYmd || null };
+
+      els.deleteModalDentist().textContent = `Dentist: ${ui.dentistName || '—'}`;
+      els.deleteModalDate().textContent = `Date: ${dayYmd ? formatHumanDate(dayYmd) : '—'}`;
+      els.deleteModalTime().textContent = block.label || '—';
+      els.deleteModalReason().textContent = (block.reason || '').trim() ? block.reason : '—';
+
+      els.deleteModal().classList.add('modal-active');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeDeleteModal() {
+      ui.pendingDelete = null;
+      els.deleteModal().classList.remove('modal-active');
+    }
+
+
+    function toggleTimeInputs() {
+      const fullDay = els.modalFullDay().checked;
+      els.modalStart().disabled = fullDay;
+      els.modalEnd().disabled = fullDay;
+      els.modalStart().classList.toggle('bg-gray-100', fullDay);
+      els.modalEnd().classList.toggle('bg-gray-100', fullDay);
+    }
+
+    // --- DB: DentistAvailability ---
+    async function fetchAvailabilityBlocksForView() {
+      ui.blocksByDay.clear();
+
+      if (!ui.dentistId) {
+        renderCalendar();
+        renderSelectedDay();
+        return;
+      }
+
+      const { monthStartIso, monthEndIso } = getMonthRangeIso(ui.monthCursor);
+
+      ui.isLoadingBlocks = true;
+      renderCalendar();
+
+      const { data, error } = await supabaseClient
+        .from('dentistavailability')
+        .select('availabilityid, dentistid, createdby, startdatetime, enddatetime, isfullday, reason, createdat')
+        .eq('dentistid', ui.dentistId)
+        // overlap filter: start < monthEnd AND end > monthStart
+        .lt('startdatetime', monthEndIso)
+        .gt('enddatetime', monthStartIso)
+        .order('startdatetime', { ascending: true });
+
+      ui.isLoadingBlocks = false;
+
+      if (error) {
+        console.error(error);
+        showMessage('Failed to load dentist availability.', 'error');
+        renderCalendar();
+        renderSelectedDay();
+        return;
+      }
+
+      (data || []).forEach((row) => {
+        const dayKey = toYmd(new Date(row.startdatetime));
+        const label = row.isfullday
+          ? 'Full day'
+          : `${toLocalTimeLabel(row.startdatetime)} - ${toLocalTimeLabel(row.enddatetime)}`;
+
+        const block = {
+          AvailabilityID: row.availabilityid,
+          label,
+          reason: row.reason || '',
+          raw: row,
+        };
+
+        const arr = ui.blocksByDay.get(dayKey) || [];
+        arr.push(block);
+        ui.blocksByDay.set(dayKey, arr);
+      });
+
+      renderCalendar();
+      renderSelectedDay();
+    }
+
+    async function insertAvailabilityBlock({ ymd, fullDay, start, end, reason }) {
+      const createdBy = localStorage.getItem('userId');
+      if (!createdBy) {
+        showMessage('Missing secretary ID. Please log in again.', 'error');
+        return false;
+      }
+
+      let startIso;
+      let endIso;
+
+      if (fullDay) {
+        // local day 00:00 -> 23:59
+        startIso = new Date(`${ymd}T00:00:00`).toISOString();
+        endIso = new Date(`${ymd}T23:59:59`).toISOString();
+      } else {
+        startIso = new Date(`${ymd}T${start}:00`).toISOString();
+        endIso = new Date(`${ymd}T${end}:00`).toISOString();
+      }
+
+      const payload = {
+        dentistid: ui.dentistId,
+        createdby: createdBy,
+        startdatetime: startIso,
+        enddatetime: endIso,
+        isfullday: !!fullDay,
+        reason: reason || null,
+      };
+
+      const { error } = await supabaseClient
+        .from('dentistavailability')
+        .insert(payload);
+
+      if (error) {
+        console.error(error);
+        showMessage(error.message || 'Failed to save block.', 'error');
+        return false;
+      }
+
+      showMessage('Dentist schedule blocked successfully.', 'success');
+      return true;
+    }
+
+    async function deleteAvailabilityBlock(availabilityId) {
+      const { error } = await supabaseClient
+        .from('dentistavailability')
+        .delete()
+        .eq('availabilityid', availabilityId);
+
+      if (error) {
+        console.error(error);
+        showMessage(error.message || 'Failed to delete block.', 'error');
+        return false;
+      }
+
+      showMessage('Block deleted successfully.', 'success');
+      return true;
+    }
+
+    // --- Calendar rendering ---
+    function renderCalendar() {
+      if (els.calendarTitleTop()) {
+        els.calendarTitleTop().textContent = formatMonthYear(ui.monthCursor);
+      }
+      if (els.calendarTitle()) {
+        els.calendarTitle().textContent = formatMonthYear(ui.monthCursor);
+      }
+
+      const grid = els.calendarGrid();
+      grid.innerHTML = '';
+
+      const year = ui.monthCursor.getFullYear();
+      const month = ui.monthCursor.getMonth();
+
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+
+      const startDay = first.getDay();
+      const totalCells = startDay + last.getDate();
+      const rows = Math.ceil(totalCells / 7);
+      const cells = rows * 7;
+
+      const todayYmd = toYmd(new Date());
+
+      for (let i = 0; i < cells; i++) {
+        const dayNum = i - startDay + 1;
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'calendar-cell border rounded-lg p-2 text-left bg-white hover:bg-blue-50 transition-colors';
+
+        if (dayNum <= 0 || dayNum > last.getDate()) {
+          cell.className = 'calendar-cell border rounded-lg p-2 bg-gray-50 cursor-default';
+          cell.disabled = true;
+          grid.appendChild(cell);
+          continue;
+        }
+
+        const ymd = `${year}-${pad2(month + 1)}-${pad2(dayNum)}`;
+        const hasBlocks = ui.blocksByDay.has(ymd) && ui.blocksByDay.get(ymd).length > 0;
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'flex items-center justify-between mb-1';
+
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'font-semibold text-sm';
+        dayLabel.textContent = dayNum;
+
+        const todayPill = document.createElement('span');
+        todayPill.className = 'text-[10px] px-2 py-0.5 rounded-full border border-gray-200 text-gray-600';
+        todayPill.textContent = 'Today';
+        todayPill.style.display = (ymd === todayYmd) ? 'inline-flex' : 'none';
+
+        headerRow.appendChild(dayLabel);
+        headerRow.appendChild(todayPill);
+        cell.appendChild(headerRow);
+
+        if (ui.isLoadingBlocks && ui.dentistId) {
+          const skel = document.createElement('div');
+          skel.className = 'mt-2 h-6 rounded bg-gray-100 animate-pulse';
+          cell.appendChild(skel);
+        } else if (hasBlocks) {
+          const firstBlock = ui.blocksByDay.get(ymd)[0];
+          const pill = document.createElement('div');
+          pill.className = 'bg-[#03555E] text-white text-[10px] px-2 py-1 rounded mb-1 flex items-center justify-between gap-2';
+          pill.innerHTML = `<span class="truncate">${firstBlock.label}</span><i data-lucide="lock" class="w-3 h-3"></i>`;
+          cell.appendChild(pill);
+        } else {
+          const empty = document.createElement('div');
+          empty.className = 'mt-2 text-[11px] text-gray-400';
+          empty.textContent = ui.dentistId ? 'No blocks' : 'Select dentist';
+          cell.appendChild(empty);
+        }
+
+        if (!ui.multiSelect && ui.selectedDate && toYmd(ui.selectedDate) === ymd) {
+          cell.classList.add('ring-2', 'ring-[#03555E]');
+        }
+
+
+        cell.addEventListener('click', () => {
+          if (ui.multiSelect) {
+            // toggle this day in the multi set
+            if (ui.selectedDays.has(ymd)) ui.selectedDays.delete(ymd);
+            else ui.selectedDays.add(ymd);
+
+            // enable/disable blockSelected button
+            const btn = document.getElementById('blockSelectedBtn');
+            if (btn) btn.disabled = !ui.dentistId || ui.selectedDays.size === 0;
+
+            renderCalendar(); // just refresh highlights
+            return;
+          }
+
+          // normal single select behavior
+          ui.selectedDate = new Date(year, month, dayNum);
+          renderCalendar();
+          renderSelectedDay();
+        });
+        if (ui.multiSelect && ui.selectedDays.has(ymd)) {
+            cell.classList.add('selected-multi');
+          }
+
+        grid.appendChild(cell);
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderSelectedDay() {
+      const dentistLabel = ui.dentistName ? `Dentist: ${ui.dentistName}` : 'Dentist: —';
+      els.selectedDentistLabel().textContent = dentistLabel;
+
+      if (!ui.selectedDate) {
+        els.selectedDayLabel().textContent = 'Choose a day from the calendar.';
+        els.selectedDaySub().textContent = 'Day: —';
+        els.blocksCount().textContent = '0';
+        els.blocksList().innerHTML = '<div class="text-sm text-gray-500">No blocks yet.</div>';
+        return;
+      }
+
+      const ymd = toYmd(ui.selectedDate);
+      els.selectedDayLabel().textContent = formatHumanDate(ymd);
+      els.selectedDaySub().textContent = `Day: ${ymd}`;
+
+      const blocks = ui.blocksByDay.get(ymd) || [];
+      els.blocksCount().textContent = String(blocks.length);
+
+      if (!ui.dentistId) {
+        els.blocksList().innerHTML = '<div class="text-sm text-gray-500">Select a dentist to view blocks.</div>';
+        return;
+      }
+
+      if (ui.isLoadingBlocks) {
+        els.blocksList().innerHTML = '<div class="text-sm text-gray-500">Loading...</div>';
+        return;
+      }
+
+      if (blocks.length === 0) {
+        els.blocksList().innerHTML = '<div class="text-sm text-gray-500">No blocks yet.</div>';
+        return;
+      }
+
+      els.blocksList().innerHTML = '';
+      blocks.forEach((b) => {
+        const row = document.createElement('div');
+        row.className = 'border border-gray-200 rounded-lg p-3 flex items-start justify-between gap-3';
+
+        const left = document.createElement('div');
+        left.innerHTML = `
+          <div class="text-sm font-semibold text-gray-900">${b.label}</div>
+          ${b.reason ? `<div class="text-xs text-gray-500 mt-0.5">${escapeHtml(b.reason)}</div>` : `<div class="text-xs text-gray-400 mt-0.5">No reason</div>`}
+        `;
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'p-2 rounded-lg hover:bg-gray-50 border border-gray-200';
+        del.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+        del.addEventListener('click', async () => {
+          if (!b.AvailabilityID) {
+            showMessage('Missing block ID. Please refresh the page.', 'error');
+            return;
+          }
+
+          openDeleteModal(b, ymd);
+        });
+
+        row.appendChild(left);
+        row.appendChild(del);
+        els.blocksList().appendChild(row);
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    async function loadDentistsDropdown() {
+      const sel = els.dentistSelect();
+      sel.innerHTML = '<option value="">Select dentist...</option>';
+
+      const { data, error } = await supabaseClient
+        .from('UserAccount')
+        .select('UserAccountID, FirstName, LastName, Role')
+        .ilike('Role', 'dentist')
+        .order('FirstName', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        sel.innerHTML = '<option value="">Failed to load dentists</option>';
+        showMessage('Failed to load dentists.', 'error');
+        return;
+      }
+
+      const dentists = (data || []).filter(u => (u.Role || '').toLowerCase() === 'dentist');
+      if (dentists.length === 0) {
+        sel.innerHTML = '<option value="">No dentists found</option>';
+        showMessage('No dentists found.', 'warning');
+        return;
+      }
+
+      dentists.forEach((d) => {
+        const opt = document.createElement('option');
+        opt.value = d.UserAccountID;
+        opt.textContent = `${d.FirstName || ''} ${d.LastName || ''}`.trim() || d.UserAccountID;
+        sel.appendChild(opt);
+      });
+    }
+
+    function bindUiHandlers() {
+      els.modalFullDay().addEventListener('change', toggleTimeInputs);
+        // Multi-select toggle
+      document.getElementById('multiSelectToggle')?.addEventListener('change', (e) => {
+        ui.multiSelect = e.target.checked;
+
+        // clear multi selections when toggling on/off
+        ui.selectedDays.clear();
+
+        // disable block button until something is selected
+        const btn = document.getElementById('blockSelectedBtn');
+        if (btn) btn.disabled = true;
+
+        renderCalendar();
+      });
+
+      // Open modal for multi-save (full day forced)
+      document.getElementById('blockSelectedBtn')?.addEventListener('click', () => {
+        if (!ui.dentistId) return showMessage('Please select a dentist first.', 'warning');
+        if (ui.selectedDays.size === 0) return showMessage('Select at least one day.', 'warning');
+
+        // pick first selected day to show in modal
+        const firstDay = Array.from(ui.selectedDays)[0];
+
+        ui._multiSave = true;
+        openModal(firstDay);
+
+        // force full day
+        els.modalFullDay().checked = true;
+        toggleTimeInputs();
+
+        // hide time row (optional but makes it clearer)
+        const tr = document.getElementById('timeRow');
+        if (tr) tr.classList.add('hidden');
+      });
+
+      els.prevMonthBtn().addEventListener('click', async () => {
+        ui.monthCursor = new Date(ui.monthCursor.getFullYear(), ui.monthCursor.getMonth() - 1, 1);
+        await fetchAvailabilityBlocksForView();
+      });
+
+      els.nextMonthBtn().addEventListener('click', async () => {
+        ui.monthCursor = new Date(ui.monthCursor.getFullYear(), ui.monthCursor.getMonth() + 1, 1);
+        await fetchAvailabilityBlocksForView();
+      });
+
+      els.todayBtn().addEventListener('click', async () => {
+        const now = new Date();
+        ui.monthCursor = new Date(now.getFullYear(), now.getMonth(), 1);
+        ui.selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        await fetchAvailabilityBlocksForView();
+      });
+
+      els.addBlockBtn().addEventListener('click', () => {
+        openModal(ui.selectedDate ? toYmd(ui.selectedDate) : null);
+      });
+
+      els.quickAddBtn().addEventListener('click', () => {
+        openModal(ui.selectedDate ? toYmd(ui.selectedDate) : null);
+      });
+
+      els.dentistSelect().addEventListener('change', async () => {
+        const btn = document.getElementById('blockSelectedBtn');
+          if (btn) btn.disabled = true;
+          ui.selectedDays.clear();
+          renderCalendar();
+        ui.dentistId = els.dentistSelect().value || null;
+        ui.dentistName = ui.dentistId ? els.dentistSelect().selectedOptions[0]?.textContent : null;
+
+        els.addBlockBtn().disabled = !ui.dentistId;
+        els.quickAddBtn().disabled = !ui.dentistId;
+
+        await fetchAvailabilityBlocksForView();
+      });
+
+      els.saveBlockBtn().addEventListener('click', async () => {
+        if (!ui.dentistId) {
+          showMessage('Please select a dentist first.', 'warning');
+          return;
+        }
+
+        const ymd = els.modalDate().value;
+        if (!ymd) {
+          showMessage('Please select a date.', 'warning');
+          return;
+        }
+
+        const fullDay = els.modalFullDay().checked;
+        const start = els.modalStart().value;
+        const end = els.modalEnd().value;
+
+        if (!fullDay && (!start || !end)) {
+          showMessage('Please set start and end time.', 'warning');
+          return;
+        }
+
+        if (!fullDay && end <= start) {
+          showMessage('End time must be after start time.', 'warning');
+          return;
+        }
+
+        const reason = els.modalReason().value.trim();
+
+        if (!reason) {
+          showMessage('Please enter a reason.', 'warning');
+          els.modalReason().focus();
+          return;
+        }
+
+        els.saveBlockBtn().disabled = true;
+
+        let successCount = 0;
+        let targetYmd = ymd;
+
+             if (ui._multiSave) {
+              const days = Array.from(ui.selectedDays);
+              const lastDay = days[days.length - 1];
+
+              // ✅ remember where to land after saving
+              targetYmd = lastDay || ymd;
+
+              for (const day of days) {
+                const ok = await insertAvailabilityBlock({
+                  ymd: day,
+                  fullDay: true,
+                  start: '00:00',
+                  end: '23:59',
+                  reason
+                });
+                if (ok) successCount++;
+              }
+
+              // cleanup multi state AFTER
+              ui.selectedDays.clear();
+              ui._multiSave = false;
+
+              const tr = document.getElementById('timeRow');
+              if (tr) tr.classList.remove('hidden');
+
+              const btn = document.getElementById('blockSelectedBtn');
+              if (btn) btn.disabled = true;
+
+            } else {
+              const ok = await insertAvailabilityBlock({ ymd, fullDay, start, end, reason });
+              if (ok) successCount = 1;
+            }
+
+        // set selectedDate to the last saved day for nice UX
+          const [yy, mm, dd] = targetYmd.split('-').map(Number);
+          ui.selectedDate = new Date(yy, mm - 1, dd);
+
+        closeModal();
+        await fetchAvailabilityBlocksForView();
+      });
+
+
+
+      // Confirm delete modal
+      els.confirmDeleteBtn().addEventListener('click', async () => {
+        if (!ui.pendingDelete?.id) {
+          showMessage('No block selected for deletion.', 'warning');
+          closeDeleteModal();
+          return;
+        }
+
+        const btn = els.confirmDeleteBtn();
+        btn.disabled = true;
+
+        const ok = await deleteAvailabilityBlock(ui.pendingDelete.id);
+        btn.disabled = false;
+
+        if (!ok) return; // keep modal open if delete failed
+
+        closeDeleteModal();
+        await fetchAvailabilityBlocksForView();
+      });
+
+      // Close modal when clicking outside
+      els.modal().addEventListener('click', (e) => {
+        if (e.target === els.modal()) closeModal();
+      });
+
+      // Close delete modal when clicking outside
+      els.deleteModal().addEventListener('click', (e) => {
+        if (e.target === els.deleteModal()) closeDeleteModal();
+      });
+
+    }
+
+    // --- Run on page load ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.lucide) lucide.createIcons();
+
+      const user = await checkAuth();
+      if (!user) return;
+
+      if ((user.Role || '').toLowerCase() !== 'secretary') {
+        window.location.href = "/Login.html";
+        return;
+      }
+
+      await loadNotifications();
+      setInterval(loadNotifications, 15000);
+
+      bindUiHandlers();
+      await loadDentistsDropdown();
+
+      // default state
+      const now = new Date();
+      ui.monthCursor = new Date(now.getFullYear(), now.getMonth(), 1);
+      ui.selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      els.addBlockBtn().disabled = true;
+      els.quickAddBtn().disabled = true;
+
+      renderCalendar();
+      renderSelectedDay();
+    });
+  </script>
+</body>
+</html>
