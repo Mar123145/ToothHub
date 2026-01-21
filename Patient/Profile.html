@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "custom-primary": "#03555E",
+            "custom-hover": "#024449",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <style>
         .bg-\[\#03555E\] { background-color: #03555E; }
         .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
         .card {
@@ -65,26 +78,89 @@
         }
     </style>
 </head>
-<body>
-    <div class="min-h-screen bg-gray-50">
-        <header class="bg-[#03555E] text-white">
-            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-                <a href="Dashboard.html">
-                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
-                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
-                        </svg>
-                        Back
-                    </button>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold">Profile</h1>
-                    <p class="text-sm opacity-90">Manage your personal information</p>
-                </div>
-            </div>
-        </header>
 
-        <div class="container mx-auto px-4 py-8">
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (Dashboard shell) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img
+            src="/Image/logo.png"
+            alt="Logo"
+            class="absolute inset-0 w-full h-full object-contain"
+            onload="this.nextElementSibling.style.display='none'"
+            onerror="this.remove();"
+          />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fas fa-bell w-6 h-6"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fas fa-user w-6 h-6"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-house w-5"></i>
+          <span>Home</span>
+        </a>
+        <a href="Booking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-plus w-5"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="MyBooking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-check w-5"></i>
+          <span>My Appointment</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-file-lines w-5"></i>
+          <span>Treatment Records</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i>
+          <span>Billing</span>
+        </a>
+        <a href="notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i>
+          <span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i>
+          <span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i>
+          <span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
+      <p class="text-gray-600 mb-6">Manage your personal information</p>
+
+      <div class="container mx-auto px-4 py-8">
             <div class="max-w-2xl mx-auto space-y-6">
                 <div class="card">
                     <div class="card-header">
@@ -226,8 +302,12 @@
         </div>
     </div>
 
-      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+      
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
 const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -277,7 +357,7 @@ async function checkAuth(redirect = true) {
     localStorage.setItem('userFirstName', userData.FirstName);
     localStorage.setItem('userRole', userData.Role);
     localStorage.setItem('userEmail', userData.Email);
-    localStorage.setItem('userId', session.user.id);
+    localStorage.setItem('userId', userData.UserAccountID);
 
     console.log("✅ Fetched user info from Supabase:", userData);
     return userData;
@@ -415,6 +495,94 @@ editToggle.addEventListener('click', async () => {
 
 // Run on page load
 loadUserProfile();
-</script>
+
+
+// ---- Shell helpers (Dashboard-consistent) ----
+async function logout() {
+  try { await supabaseClient.auth.signOut(); } catch(e) {}
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+async function loadNotifications() {
+    if (localStorage.getItem("prefBellNotif") === "false") return;
+  const bellBtn = document.getElementById("notifBellBtn");
+  if (!bellBtn) return;
+
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  const { data: notifications, error } = await supabaseClient
+    .from("Notifications")
+    .select("*")
+    .eq("UserAccountID", userId)
+    .eq("Status", "Unread")
+    .order("DateSent", { ascending: false });
+
+  if (error) { console.error(error); return; }
+
+  const existingBadge = document.getElementById("notif-badge");
+  if (existingBadge) existingBadge.remove();
+
+  if (notifications && notifications.length > 0) {
+    const badge = document.createElement("span");
+    badge.id = "notif-badge";
+    badge.textContent = notifications.length;
+    badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+    bellBtn.appendChild(badge);
+  }
+
+  const prevDropdown = document.getElementById("notif-dropdown");
+  if (prevDropdown) prevDropdown.remove();
+
+  bellBtn.onclick = async () => {
+    let dropdown = document.getElementById("notif-dropdown");
+    if (dropdown) return dropdown.remove();
+
+    dropdown = document.createElement("div");
+    dropdown.id = "notif-dropdown";
+    dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+    dropdown.style.maxHeight = "320px";
+
+    if (!notifications || notifications.length === 0) {
+      const emptyMsg = document.createElement("div");
+      emptyMsg.className = "p-4 text-gray-500 text-sm";
+      emptyMsg.textContent = "No new notifications";
+      dropdown.appendChild(emptyMsg);
+    } else {
+      notifications.forEach((n) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+        item.textContent = n.Message;
+        item.addEventListener("click", async () => {
+          await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
+          dropdown.remove();
+          loadNotifications();
+        });
+        dropdown.appendChild(item);
+      });
+    }
+
+    document.body.appendChild(dropdown);
+
+    const onDocClick = (e) => {
+      if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+        dropdown.remove();
+        document.removeEventListener("click", onDocClick);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", onDocClick), 0);
+  };
+}
+
+
+
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadUserProfile();
+  await loadNotifications();
+});
+
+  </script>
 </body>
 </html>

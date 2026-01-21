@@ -4,6 +4,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Appointments</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          "custom-primary": "#03555E",
+          "custom-hover": "#024449",
+        },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
     <style>
         /* Custom colors from the original component */
         .bg-\[\#03555E\] { background-color: #03555E; }
@@ -227,25 +241,86 @@
         /* --------------------------------------------------- */
     </style>
 </head>
-<body>
-    <div class="min-h-screen bg-gray-50">
-        <header class="bg-[#03555E] text-white">
-            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-                <a href="Dashboard.html">
-                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
-                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
-                        </svg>
-                        Back
-                    </button>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold">My Appointments</h1>
-                    <p class="text-sm opacity-90">View and manage your appointments</p>
-                </div>
-            </div>
-        </header>
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img
+            src="/Image/logo.png"
+            alt="Logo"
+            class="absolute inset-0 w-full h-full object-contain"
+            onload="this.nextElementSibling.style.display='none'"
+            onerror="this.remove();"
+          />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </a>
 
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fas fa-bell w-6 h-6"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fas fa-user w-6 h-6"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Shell -->
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-house w-5"></i>
+          <span>Home</span>
+        </a>
+        <a href="Booking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-plus w-5"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="MyBooking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-check w-5"></i>
+          <span>My Appointment</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-file-lines w-5"></i>
+          <span>Treatment Records</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i>
+          <span>Billing</span>
+        </a>
+        <a href="notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i>
+          <span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i>
+          <span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i>
+          <span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
         <div class="container mx-auto px-4 py-8">
             <div class="grid gap-6">
                 
@@ -265,6 +340,9 @@
                         <button onclick="loadDentistAppointments('finished')" class="filter-btn-new">Finished</button>
                         <button onclick="loadDentistAppointments('rescheduled')" class="filter-btn-new">Rescheduled</button>
                         <button onclick="loadDentistAppointments('cancelled')" class="filter-btn-new">Cancelled</button>
+                        <button onclick="loadDentistAppointments('requests')" class="filter-btn-new">Requests</button>
+                        <button onclick="loadDentistAppointments('needs action')" class="filter-btn-new">Needs action</button>
+
                     </div>
                                             
                     </div>
@@ -337,31 +415,109 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+      </div>
+    </main>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. GLOBAL VARIABLE TO STORE ALL FETCHED APPOINTMENTS
-    let allAppointments = [];
-    let reviewedAppointmentIds = new Set(); // <- NEW
+    
 
-    async function loadUserReviews(userId) {
-    const { data: reviews, error } = await supabaseClient
-        .from('Review')
-        .select('AppointmentID')
-        .eq('UserAccountID', userId);
-
-    if (error) {
-        console.error("Error fetching reviews:", error);
-        return;
+    // Logout (shared shell)
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
     }
 
-    reviewedAppointmentIds = new Set((reviews || []).map(r => r.AppointmentID));
-}
+    // Notifications (shared shell)
+    async function loadNotifications() {
+      if (localStorage.getItem("prefBellNotif") === "false") return;
+      const bellBtn = document.getElementById("notifBellBtn");
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from("Notifications")
+        .select("*")
+        .eq("UserAccountID", userId)
+        .eq("Status", "Unread")
+        .order("DateSent", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // badge
+      const existingBadge = document.getElementById("notif-badge");
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement("span");
+        badge.id = "notif-badge";
+        badge.textContent = notifications.length;
+        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+        bellBtn.appendChild(badge);
+      }
+
+      // remove old dropdown
+      const prevDropdown = document.getElementById("notif-dropdown");
+      if (prevDropdown) prevDropdown.remove();
+
+      bellBtn.onclick = async () => {
+        let dropdown = document.getElementById("notif-dropdown");
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement("div");
+        dropdown.id = "notif-dropdown";
+        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+        dropdown.style.maxHeight = "320px";
+
+        if (!notifications || notifications.length === 0) {
+          const emptyMsg = document.createElement("div");
+          emptyMsg.className = "p-4 text-gray-500 text-sm";
+          emptyMsg.textContent = "No new notifications";
+          dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+            item.textContent = n.Message;
+            item.addEventListener("click", async () => {
+              await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+              dropdown.remove();
+              loadNotifications();
+            });
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        // close on outside click
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener("click", onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener("click", onDocClick), 0);
+      };
+    }
+
+// 1. GLOBAL VARIABLE TO STORE ALL FETCHED APPOINTMENTS
+    let allAppointments = [];
 
     async function checkAuth(redirect = true) {
         // ... (Your existing checkAuth logic) ...
@@ -421,8 +577,6 @@
         allAppointments = appointments || [];
 
         // Load existing reviews for this user
-        await loadUserReviews(userId);
-
         // Render both the main list (Upcoming) and the static Past list on load
         renderAppointments(allAppointments);
 
@@ -454,16 +608,8 @@
         } else {
             pastContainer.innerHTML = past.map(a => {
                 const badgeClass = getStatusBadgeClass(a.Status);
-                const hasReview = reviewedAppointmentIds.has(a.AppointmentID);
-
-                // Safely pass minimal data to review modal
-                const reviewPayload = JSON.stringify({
-                    AppointmentID: a.AppointmentID,
-                    DentistID: a.DentistID,
-                    Service: a.Service
-                });
-
-                return `
+// Safely pass minimal data to review modal
+return `
                 <div class="border rounded-lg p-4 flex justify-between items-center">
                     <div>
                         <h3 class="font-semibold">${a.Service}</h3>
@@ -480,14 +626,6 @@
                             class="button-style button-outline text-sm">
                             View Details
                         </button>
-                        ${
-                            hasReview
-                                ? `<span class="text-xs text-gray-400">Review submitted</span>`
-                                : `<button onclick='openReviewModal(${reviewPayload})'
-                                        class="button-style bg-[#03555E] hover:bg-[#024449] text-white text-sm">
-                                        Leave Review
-                                </button>`
-                        }
                     </div>
                 </div>
                 `;
@@ -531,12 +669,17 @@
     filteredAppointments = allAppointments.filter(a => {
         const apptDate = new Date(a.AppointmentSchedule);
         const status = (a.Status || '').toLowerCase();
+        const rt = (a.RequestType || '').toLowerCase();
+
+        // keep clinic-unavailable notices visible so patient can act
+        if (rt === 'clinicunavailable') return true;
+
         return apptDate > now
         && !['finished','cancelled','rejected','cancelrequested','reschedulerequested'].includes(status);
     });
     break;
 
-   case 'finished':
+case 'finished':
     filteredAppointments = allAppointments.filter(
         a => (a.Status || '').toLowerCase() === 'finished'
     );
@@ -548,6 +691,15 @@
 
     case 'cancelled':
         filteredAppointments = allAppointments.filter(a => a.Status?.toLowerCase() === "cancelled");
+        break;
+    case 'requests':
+        filteredAppointments = allAppointments.filter(a => {
+          const status = (a.Status || '').toLowerCase();
+          return ['cancelrequested', 'reschedulerequested'].includes(status);
+        });
+    break;
+  case 'needs action':
+        filteredAppointments = allAppointments.filter(a => !!a.ReceiptReuploadRequestedAt);
         break;
 
     default:
@@ -571,8 +723,7 @@
             upcomingContainer.innerHTML = filteredAppointments.map(a => {
                 const badgeClass = getStatusBadgeClass(a.Status);
                 const isFinished = (a.Status || '').toLowerCase() === 'finished';
-                const hasReview = reviewedAppointmentIds.has(a.AppointmentID);
-                const st = (a.Status || "").toLowerCase();
+const st = (a.Status || "").toLowerCase();
                 const rt = (a.RequestType || "").toLowerCase(); // ✅ ADD
                 const isClinicUnavailable = (rt === "clinicunavailable"); // ✅ ADD
 
@@ -643,19 +794,21 @@
                             class="button-style button-outline text-sm">
                             View Details
                             </button>
-                              ${(['pending','approved','rescheduled'].includes(st) && st !== 'cancelrequested' && st !== 'reschedulerequested') ? `
-                                <button
-                                  onclick="openRequestModal('${a.AppointmentID}', 'CANCEL')"
-                                  class="button-style button-outline text-sm text-red-600">
-                                  Request Cancel
-                                </button>
+                            ${canRequestCancel(a) ? `
+                              <button
+                                onclick="openRequestModal('${a.AppointmentID}', 'CANCEL')"
+                                class="button-style button-outline text-sm text-red-600">
+                                Request Cancel
+                              </button>
+                            ` : ``}
 
-                                <button
-                                  onclick='openReschedPicker(${JSON.stringify(a)})'
-                                  class="button-style button-outline text-sm">
-                                  Request Reschedule
-                                </button>
-                              ` : ``}
+                            ${canRequestReschedule(a) ? `
+                              <button
+                                onclick='openReschedPicker(${JSON.stringify(a)})'
+                                class="button-style button-outline text-sm">
+                                Request Reschedule
+                              </button>
+                            ` : ``}
                             </div>
                         </div>
 
@@ -709,9 +862,84 @@
         }
     }
 
+function normalizeReceiptPath(p) {
+  if (!p) return "";
+
+  let s = String(p).trim();
+
+  // strip leading slash
+  if (s.startsWith("/")) s = s.slice(1);
+
+  // if it's a full URL, return as-is (handled in getReceiptPublicUrl)
+  // but we keep normalization focused on paths
+
+  // ONLY strip if it's duplicated
+  if (s.startsWith("receipts/receipts/")) {
+    s = s.replace(/^receipts\/+/, ""); // removes one "receipts/"
+    s = "receipts/" + s;              // keep exactly one
+  }
+
+  return s;
+}
+
+// Build a usable URL for receipts whether ReceiptImage is a storage path or already a URL
+function getReceiptPublicUrl(receiptImageValue) {
+  if (!receiptImageValue) return "";
+
+  const raw = String(receiptImageValue).trim();
+
+  // already a URL
+  if (/^https?:\/\//i.test(raw)) return encodeURI(raw);
+
+  const cleanPath = normalizeReceiptPath(raw);
+  if (!cleanPath) return "";
+
+  const { data } = supabaseClient.storage.from("receipts").getPublicUrl(cleanPath);
+  return data?.publicUrl ? encodeURI(data.publicUrl) : "";
+}
+
+function canRequestReschedule(appt) {
+  const st = (appt.Status || "").toLowerCase();
+  const count = Number(appt.RescheduleCount || 0);
+
+  // hard blocks
+  if (["finished", "cancelled", "rejected"].includes(st)) return false;
+
+  // ✅ Clinic unavailable: always allow reschedule choice
+  if (isClinicUnavailable(appt)) return true;
+
+  // don't allow if patient already has a pending request
+  if (["reschedulerequested", "cancelrequested"].includes(st)) return false;
+
+  // patient limit
+  if (count >= 2) return false;
+
+  return ["pending", "approved", "rescheduled"].includes(st);
+}
+
+function canRequestCancel(appt) {
+  const st = (appt.Status || "").toLowerCase();
+
+  if (["finished", "cancelled", "rejected"].includes(st)) return false;
+
+  // Clinic unavailable overrides the "pending request" lock.
+  if (isClinicUnavailable(appt)) return true;
+
+  if (["reschedulerequested", "cancelrequested"].includes(st)) return false;
+
+  const normalEligible = ["pending", "approved", "rescheduled"].includes(st);
+  return normalEligible || isClinicUnavailable(appt);
+}
+
+
+function isClinicUnavailable(appt) {
+  return (appt.RequestType || "").toLowerCase() === "clinicunavailable";
+}
+
   async function openAppointmentModal(appointment) {
   const modal = document.getElementById('appointmentModal');
   const modalContent = document.getElementById('modalContent');
+  const addOnsHtml = formatAddOnsForDisplay(appointment.AddOns);
 
   const appointmentDate = new Date(appointment.AppointmentSchedule);
   const formattedDate = appointmentDate.toLocaleDateString();
@@ -747,16 +975,23 @@
   const reqAt = appointment.RequestRequestedAt
     ? new Date(appointment.RequestRequestedAt).toLocaleString()
     : "";
+    // ✅ Receipt URL (for thumbnail + zoom)
+const receiptUrl = getReceiptPublicUrl(appointment.ReceiptImage);
+console.log("ReceiptImage stored:", appointment.ReceiptImage);
+console.log("Normalized path:", normalizeReceiptPath(appointment.ReceiptImage));
+console.log("Receipt URL:", receiptUrl);
 
-  modalContent.innerHTML = `
+
+modalContent.innerHTML = `
     <div class="space-y-2">
       <div><strong>Transaction Reference:</strong> ${appointment.TransactionID || appointment.id}</div>
       <div><strong>Services:</strong> ${appointment.Service}</div>
+      <div><strong>Add-ons:</strong><br/> ${addOnsHtml}</div>
       <div><strong>Date:</strong> ${formattedDate}</div>
       <div><strong>Time:</strong> ${formattedTime}</div>
       <div><strong>Dentist:</strong> ${dentistName}</div>
       <div><strong>Status:</strong> ${appointment.Status}</div>
-      <div><strong>Downpayment:</strong> ₱${appointment.DownpaymentAmount ?? 0}</div>
+      <div><strong>Appointment Fee:</strong> ₱${Number(appointment.DownpaymentAmount ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
 
       ${appointment.AppointmentNotes ? `<div><strong>Notes:</strong> ${appointment.AppointmentNotes}</div>` : ''}
       ${reschedReasonText ? `<div><strong>Reschedule / Cancel Reason:</strong> ${reschedReasonText}</div>` : ''}
@@ -802,17 +1037,22 @@ ${reqType ? `
   </div>
 ` : ``}
 
-
-
-      ${appointment.ReceiptImage ? `
-        <div class="mt-3">
-          <strong>Receipt:</strong><br/>
-          <img
-            src="${supabaseClient.storage.from('receipts').getPublicUrl(appointment.ReceiptImage).data.publicUrl}"
-            class="w-32 h-32 object-cover rounded border"
-          />
-        </div>
-      ` : ''}
+${receiptUrl ? `
+  <div class="mt-3">
+    <strong>Receipt:</strong>
+    <div class="mt-2 rounded-lg border bg-gray-50 p-2">
+      <img
+        src="${receiptUrl}"
+        class="w-full max-h-[420px] object-contain rounded cursor-zoom-in bg-white"
+        onclick="openReceiptLightbox('${receiptUrl}')"
+        referrerpolicy="no-referrer"
+        crossorigin="anonymous"
+        onerror="this.onerror=null; this.replaceWith(document.createTextNode('Receipt image failed to load.'))"
+      />
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Tap the image to zoom.</p>
+  </div>
+` : ""}
     </div>
   `;
 
@@ -824,13 +1064,27 @@ function closeModal() {
     modal.classList.add('hidden');
 }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-        const user = await checkAuth();
-        if (!user) return;
-        // This will now fetch data and call loadDentistAppointments('upcoming')
-        await loadAppointments(); 
-    });
+function formatAddOnsForDisplay(addOns) {
+  if (!addOns) return "—";
 
+  if (typeof addOns === "string") {
+    const s = addOns.trim();
+    if (!s) return "—";
+    try { addOns = JSON.parse(s); } catch { return s; }
+  }
+
+  if (!Array.isArray(addOns) || addOns.length === 0) return "—";
+
+  return addOns.map(a => {
+    const name = a?.name || "Add-on";
+    const price = Number(a?.price);
+    const priceText = Number.isFinite(price)
+      ? "₱" + price.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : null;
+
+    return priceText ? `${name} (${priceText})` : name;
+  }).join("<br/>");
+}
     function getStatusBadgeClass(status) {
         const s = (status || '').toLowerCase();
         switch (s) {
@@ -848,38 +1102,6 @@ function closeModal() {
                 return 'bg-gray-100 text-gray-800';
         }
     }
-let currentReviewAppointment = null;
-let currentReviewAppointmentId = null;
-let currentReviewDentistId = null;
-
-function setReviewRating(value) {
-    const ratingInput = document.getElementById('reviewRating');
-    if (ratingInput) ratingInput.value = value;
-
-    const label = document.getElementById('reviewRatingValue');
-    if (label) label.textContent = value.toFixed(1).replace('.0', '');
-
-    updateStarRatingDisplay(value);
-}
-
-function updateStarRatingDisplay(rating) {
-    const container = document.getElementById('starRatingDisplay');
-    if (!container) return;
-
-    const buttons = container.querySelectorAll('button.star');
-    buttons.forEach(btn => {
-        const index = Number(btn.dataset.index);
-        let stateClass = 'empty';
-
-        if (rating >= index) {
-            stateClass = 'full';
-        } else if (rating >= index - 0.5) {
-            stateClass = 'half';
-        }
-
-        btn.className = `star ${stateClass}`;
-    });
-}
 
 window.toggleReqText = (id) => {
   const el = document.getElementById(`req-text-${id}`);
@@ -923,114 +1145,21 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-function initStarRating() {
-    const container = document.getElementById('starRatingDisplay');
-    if (!container) return;
-
-    container.innerHTML = '';
-    for (let i = 1; i <= 5; i++) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.dataset.index = i;
-        btn.className = 'star empty';
-        btn.textContent = '★';
-        container.appendChild(btn);
-    }
-
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('button.star');
-        if (!btn) return;
-
-        const rect = btn.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const half = clickX < rect.width / 2;
-        const index = Number(btn.dataset.index);
-
-        const rating = half ? index - 0.5 : index; // 0.5, 1, 1.5, ..., 5
-        setReviewRating(rating);
-    });
-
-    // default rating
-    setReviewRating(5);
-}
-
-function openReviewModal(appt) {
-    const modal = document.getElementById('reviewModal');
-
-    currentReviewAppointmentId = appt.AppointmentID;
-    currentReviewDentistId = appt.DentistID;
-
-    document.getElementById('reviewAppointmentId').value = appt.AppointmentID || '';
-    document.getElementById('reviewDentistId').value = appt.DentistID || '';
-    document.getElementById('reviewService').textContent = appt.Service || 'N/A';
-
-    // reset rating to 5 stars by default
-    setReviewRating(5);
-    document.getElementById('reviewComment').value = '';
-
-    modal.classList.remove('hidden');
-}
-
-function closeReviewModal() {
-    const modal = document.getElementById('reviewModal');
-    modal.classList.add('hidden');
-}
-
-async function submitReview(e) {
-    e.preventDefault();
-
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-        alert('You must be logged in to submit a review.');
-        return;
-    }
-
-    const appointmentId = currentReviewAppointmentId || document.getElementById('reviewAppointmentId').value;
-    const dentistId = currentReviewDentistId || document.getElementById('reviewDentistId').value;
-    const rating = Number(document.getElementById('reviewRating').value);
-    const comment = document.getElementById('reviewComment').value.trim();
-
-    if (!appointmentId || !dentistId || !rating) {
-        alert('Please select a rating.');
-        return;
-    }
-
-    const { error } = await supabaseClient
-        .from('Review')
-        .insert({
-            AppointmentID: appointmentId,
-            DentistID: dentistId,
-            UserAccountID: userId,
-            Rating: rating,
-            Comment: comment || null
-        });
-
-    if (error) {
-        console.error('Error submitting review:', error);
-        alert('There was an error submitting your review.');
-        return;
-    }
-
-    // Mark this appointment as reviewed so the button hides
-    reviewedAppointmentIds.add(appointmentId);
-
-    // Re-render past appointments to hide the button
-    renderAppointments(allAppointments);
-
-    closeReviewModal();
-    showToast('Thank you for your review!');
-}
 
 let receiptReuploadAppointmentId = null;
 
 function openReceiptReuploadModal(appointmentId) {
+  clearReceiptInlineMessage();
   receiptReuploadAppointmentId = appointmentId;
+  clearReceiptInlineMessage();
+  clearReceiptInlineMessage();
   const file = document.getElementById("receiptReuploadFile");
   if (file) file.value = "";
   document.getElementById("receiptReuploadModal").classList.remove("hidden");
 }
 
 function closeReceiptReuploadModal() {
+  clearReceiptInlineMessage();
   document.getElementById("receiptReuploadModal").classList.add("hidden");
   receiptReuploadAppointmentId = null;
 }
@@ -1040,14 +1169,14 @@ async function submitReceiptReupload() {
 
   const userId = localStorage.getItem("userId");
   if (!userId) {
-    showToast("You must be logged in.", "error");
+    showReceiptInlineMessage("You must be logged in.");
     return;
   }
 
   const fileInput = document.getElementById("receiptReuploadFile");
   const file = fileInput?.files?.[0];
   if (!file) {
-    showToast("Please choose a receipt image.", "error");
+    showReceiptInlineMessage("Please choose a receipt image.");
     return;
   }
 
@@ -1067,19 +1196,19 @@ async function submitReceiptReupload() {
 
     const currentCount = appt?.ReceiptReuploadCount ?? 0;
     if (currentCount >= 3) {
-      showToast("Re-upload limit reached (3). Please contact the clinic.", "error");
+      showReceiptInlineMessage("Re-upload limit reached (3). Please contact the clinic.");
       return;
     }
 
     if (!appt?.ReceiptReuploadRequestedAt) {
-      showToast("No re-upload request found for this appointment.", "error");
+      showReceiptInlineMessage("No re-upload request found for this appointment.");
       return;
     }
 
     // 2) Upload file to Storage (overwrite by using a new timestamp path)
     const timestamp = Date.now();
     const cleanName = file.name.replace(/\s+/g, "_");
-    const path = `receipts/${userId}/reupload_${receiptReuploadAppointmentId}_${timestamp}_${cleanName}`;
+    const path = `${userId}/reupload_${receiptReuploadAppointmentId}_${timestamp}_${cleanName}`
 
     const { data: uploadData, error: uploadErr } = await supabaseClient.storage
       .from("receipts")
@@ -1104,7 +1233,7 @@ async function submitReceiptReupload() {
 
     if (updErr) throw updErr;
 
-    showToast("Receipt re-uploaded successfully. Please wait for verification.", "success");
+    showReceiptInlineMessage("Receipt re-uploaded successfully. Please wait for verification.", "success");
     closeReceiptReuploadModal();
 
     // refresh
@@ -1113,7 +1242,7 @@ async function submitReceiptReupload() {
 
   } catch (err) {
     console.error(err);
-    showToast("Upload failed. Please try again.", "error");
+    showReceiptInlineMessage("Upload failed. Please try again.");
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = oldText || "Upload"; }
   }
@@ -1124,47 +1253,84 @@ let requestType = null;
 function openRequestModal(id, type) {
   requestAppointmentId = id;
   requestType = type;
-  document.getElementById("requestTitle").textContent =
-    type === 'CANCEL' ? 'Request Cancellation' : 'Request Reschedule';
+  clearRequestInlineMessage();
+
+  const title = document.getElementById("requestTitle");
+  if (title) title.textContent = type === 'CANCEL' ? 'Request Cancellation' : 'Request Reschedule';
+
+  // reset inputs
+  const presetEl = document.getElementById("requestReasonPreset");
+  const textEl = document.getElementById("requestReasonText");
+  if (presetEl) presetEl.value = "";
+  if (textEl) textEl.value = "";
+
   document.getElementById("requestModal").classList.remove("hidden");
 }
 
 function closeRequestModal() {
-  document.getElementById("requestModal").classList.add("hidden");
+  clearRequestInlineMessage();
+  const modal = document.getElementById("requestModal");
+  if (modal) modal.classList.add("hidden");
+
+  // reset inputs
+  const presetEl = document.getElementById("requestReasonPreset");
+  const textEl = document.getElementById("requestReasonText");
+  if (presetEl) presetEl.value = "";
+  if (textEl) textEl.value = "";
+
   requestAppointmentId = null;
   requestType = null;
 }
 
 async function submitRequest() {
-  const preset = document.getElementById("requestReasonPreset").value;
-  const text = document.getElementById("requestReasonText").value;
-  const reason = preset + (text ? ` – ${text}` : '');
+  const preset = document.getElementById("requestReasonPreset")?.value || "";
+  const text = document.getElementById("requestReasonText")?.value?.trim() || "";
 
   if (!preset) {
-    showToast("Please select a reason.", "error");
+    showRequestInlineMessage("Please select a reason.");
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("Appointment")
-    .update({
-      Status: requestType === 'CANCEL'
-        ? 'CancelRequested'
-        : 'RescheduleRequested',
-      RequestType: requestType,
-      RequestReason: reason,
-      RequestRequestedAt: new Date().toISOString()
-    })
-    .eq("AppointmentID", requestAppointmentId);
+  const reason = preset + (text ? ` – ${text}` : '');
 
-  if (error) {
-    showToast("Failed to submit request.", "error");
-    return;
+  try {
+    const { error } = await supabaseClient
+      .from("Appointment")
+      .update({
+        Status: requestType === 'CANCEL'
+          ? 'CancelRequested'
+          : 'RescheduleRequested',
+        RequestType: requestType,
+        RequestReason: reason,
+        RequestRequestedAt: new Date().toISOString()
+      })
+      .eq("AppointmentID", requestAppointmentId);
+
+    if (error) {
+      console.error(error);
+      showRequestInlineMessage("Failed to submit request.");
+      return;
+    }
+
+    // Email/Events table (optional)
+    const eventType = requestType === "CANCEL" ? "CANCEL_REQUESTED" : "RESCHEDULE_REQUESTED";
+    const { error: evErr } = await supabaseClient
+      .from("appointmentevents")
+      .insert({
+        appointment_id: requestAppointmentId,
+        event_type: eventType,
+        payload: { reason }
+      });
+    if (evErr) console.error("appointmentevents insert error (REQUEST):", evErr);
+
+    showRequestInlineMessage("Request submitted successfully.", "success");
+    setTimeout(() => closeRequestModal(), 600);
+
+    await loadAppointments();
+  } catch (err) {
+    console.error(err);
+    showRequestInlineMessage("Failed to submit request.");
   }
-
-  showToast("Request submitted successfully.", "success");
-  closeRequestModal();
-  await loadAppointments();
 }
 
 function makeManilaDateTime(dateYmd, timeLabel) {
@@ -1186,35 +1352,118 @@ function intervalsOverlap(aStart, aEnd, bStart, bEnd) {
 }
 
 async function fetchBookedForDentistOnDate(dentistId, dateYmd, excludeAppointmentId) {
-  const start = new Date(`${dateYmd}T00:00:00+08:00`).toISOString();
-  const end = new Date(`${dateYmd}T23:59:59+08:00`).toISOString();
+  // Build a Manila-local day range, then convert to UTC ISO so comparisons are consistent
+  const dayStartUtcIso = new Date(`${dateYmd}T00:00:00+08:00`).toISOString();
+  const dayEndUtcIso = new Date(`${dateYmd}T23:59:59+08:00`).toISOString();
+
+  const dayStart = new Date(dayStartUtcIso);
+  const dayEnd = new Date(dayEndUtcIso);
 
   // statuses that should block time
-  const blockingStatuses = ["pending","approved","rescheduled","reschedulerequested"];
+  const blockingStatuses = ["pending", "approved", "rescheduled", "reschedulerequested", "cancelrequested"];
 
   const { data, error } = await supabaseClient
     .from("Appointment")
-    .select("AppointmentID, AppointmentSchedule, endschedule, Status")
-    .eq("DentistID", dentistId)
-    .gte("AppointmentSchedule", start)
-    .lte("AppointmentSchedule", end);
+    .select("AppointmentID, AppointmentSchedule, endschedule, Status, RequestReason")
+    .eq("DentistID", dentistId);
 
   if (error) {
     console.error(error);
     return [];
   }
 
-  return (data || [])
-    .filter(a => (a.Status || "").toLowerCase() && blockingStatuses.includes((a.Status || "").toLowerCase()))
-    .filter(a => a.AppointmentID !== excludeAppointmentId)
-    .map(a => {
-      const s = new Date(a.AppointmentSchedule);
-      // if endschedule is missing or same as start, assume 60 mins
-      let e = a.endschedule ? new Date(a.endschedule) : new Date(s.getTime() + 60 * 60000);
-      if (+e === +s) e = new Date(s.getTime() + 60 * 60000);
-      return { startDt: s, endDt: e };
-    });
+  const tryParseJSON = (v) => {
+    if (!v) return null;
+    if (typeof v === "object") return v;
+    try { return JSON.parse(v); } catch { return null; }
+  };
+
+  const intervals = [];
+
+for (const a of (data || [])) {
+  const st = (a.Status || "").toLowerCase();
+  if (!blockingStatuses.includes(st)) continue;
+
+  // ✅ Exclude the appointment being rescheduled (do NOT let it block itself)
+  // ✅ Keep the appointment being rescheduled, but mark it as self-current so it still blocks its current time
+const isSelf = excludeAppointmentId && String(a.AppointmentID) === String(excludeAppointmentId);
+
+
+  // Block CURRENT schedule only (real bookings)
+  if (a.AppointmentSchedule) {
+    const s = new Date(a.AppointmentSchedule);
+    let e = a.endschedule ? new Date(a.endschedule) : new Date(s.getTime() + 60 * 60000);
+    if (+e === +s) e = new Date(s.getTime() + 60 * 60000);
+
+    if (intervalsOverlap(s, e, dayStart, dayEnd)) {
+      intervals.push({
+  startDt: s,
+  endDt: e,
+  source: isSelf ? "self-current" : "current",
+  appointmentId: a.AppointmentID
+});
+    }
+
+    // ❌ REMOVE: blocking requested slot for reschedulerequested
+    // (pending requests should not reserve time)
+  }
 }
+
+
+  return intervals;
+}
+
+// ✅ Fetch dentist unavailability blocks for a given dentist + day
+// Table/columns are lowercase: dentistavailability (dentistid, startdatetime, enddatetime, isfullday, ...)
+async function fetchDentistUnavailableOnDate(dentistId, dateYmd) {
+  // Manila-local day range, converted to UTC ISO so comparisons are consistent
+  const dayStartUtcIso = new Date(`${dateYmd}T00:00:00+08:00`).toISOString();
+  const dayEndUtcIso = new Date(`${dateYmd}T23:59:59+08:00`).toISOString();
+
+  const dayStart = new Date(dayStartUtcIso);
+  const dayEnd = new Date(dayEndUtcIso);
+
+  const { data, error } = await supabaseClient
+    .from('dentistavailability')
+    .select('availabilityid, dentistid, startdatetime, enddatetime, isfullday, reason')
+    .eq('dentistid', dentistId)
+    // overlap: start < dayEnd AND end > dayStart
+    .lt('startdatetime', dayEndUtcIso)
+    .gt('enddatetime', dayStartUtcIso)
+    .order('startdatetime', { ascending: true });
+
+  if (error) {
+    console.error('fetchDentistUnavailableOnDate error:', error);
+    return [];
+  }
+
+  const intervals = [];
+
+  for (const b of (data || [])) {
+    const isFull = !!b.isfullday;
+    const s = isFull ? dayStart : new Date(b.startdatetime);
+
+    // IMPORTANT: Treat enddatetime as INCLUSIVE.
+    // Convert to exclusive end by adding 1 minute so a block like 09:00–13:00 also blocks 13:00.
+    const rawEnd = isFull ? dayEnd : new Date(b.enddatetime);
+    const e = new Date(rawEnd.getTime() + 60 * 1000);
+
+    // guard
+    if (isNaN(+s) || isNaN(+e)) continue;
+    if (+e <= +s) continue;
+
+    intervals.push({
+      startDt: s,
+      endDt: e,
+      source: 'unavailable',
+      availabilityId: b.availabilityid,
+      reason: b.reason || ''
+    });
+  }
+
+  return intervals;
+}
+
 
 function renderReschedSlots() {
   const grid = document.getElementById("reschedTimeSlots");
@@ -1244,6 +1493,8 @@ function renderReschedSlots() {
   grid.innerHTML = timeSlots.map(t => {
     const startDt = makeManilaDateTime(reschedSelectedDate, t);
     const endDt = new Date(startDt.getTime() + durationMin * 60000);
+    const close = makeManilaDateTime(reschedSelectedDate, "05:00 PM");
+    const exceedsClosing = endDt > close;
 
     const tooSoon = isToday && startDt <= nowPlus1h;
 
@@ -1251,7 +1502,7 @@ function renderReschedSlots() {
       intervalsOverlap(startDt, endDt, b.startDt, b.endDt)
     );
 
-    const disabled = tooSoon || booked;
+    const disabled = tooSoon || booked || exceedsClosing;
     const active = reschedSelectedTime === t;
 
     return `
@@ -1266,7 +1517,11 @@ function renderReschedSlots() {
     `;
   }).join("");
 
-  if (hint) hint.textContent = "Gray slots are unavailable (dentist already booked or too soon).";
+  if (hint) hint.textContent =
+  "Gray slots are unavailable (dentist already booked, dentist unavailable, too soon, or the selected service cannot fit in that time).";
+  console.log("[PATIENT RESCHED] start:", reschedTargetAppointment.AppointmentSchedule,
+            "end:", reschedTargetAppointment.endschedule,
+            "durationMin:", durationMin);
 }
 
 window.selectReschedTime = (t) => {
@@ -1282,6 +1537,7 @@ function getTodayManilaYmd() {
 }
 
 function openReschedPicker(appointment) {
+  clearReschedInlineMessage();
   reschedTargetAppointment = appointment;
   reschedSelectedDate = "";
   reschedSelectedTime = "";
@@ -1292,6 +1548,12 @@ function openReschedPicker(appointment) {
     dateEl.value = "";
     dateEl.min = getTodayManilaYmd(); // ✅ block past dates
   }
+
+  // reset reason inputs
+  const presetEl = document.getElementById('reschedReasonPreset');
+  const textEl = document.getElementById('reschedReasonText');
+  if (presetEl) presetEl.value = '';
+  if (textEl) textEl.value = '';
 
   // reset UI
   renderReschedSlots();
@@ -1344,6 +1606,7 @@ function countAvailableSlotsForDate(dateYmd) {
 
 
 function closeReschedPicker() {
+  clearReschedInlineMessage();
   document.getElementById("reschedPickerModal").classList.add("hidden");
   reschedTargetAppointment = null;
 }
@@ -1356,7 +1619,7 @@ async function onReschedDateChange() {
   // ✅ hard block past even if typed
   const today = getTodayManilaYmd();
   if (reschedSelectedDate && reschedSelectedDate < today) {
-    showToast("You cannot select a past date.", "error");
+    showReschedInlineMessage("You cannot select a past date.");
     reschedSelectedDate = "";
     if (dateEl) dateEl.value = "";
     reschedBookedIntervals = [];
@@ -1370,16 +1633,25 @@ async function onReschedDateChange() {
   }
 
   // dentist-based blocking using the appointment’s DentistID
-  reschedBookedIntervals = await fetchBookedForDentistOnDate(
+  const bookedIntervals = await fetchBookedForDentistOnDate(
     reschedTargetAppointment.DentistID,
     reschedSelectedDate,
     reschedTargetAppointment.AppointmentID
   );
+
+  // ✅ ALSO block dentist schedule (DentistAvailability)
+  const unavailableIntervals = await fetchDentistUnavailableOnDate(
+    reschedTargetAppointment.DentistID,
+    reschedSelectedDate
+  );
+
+  // Combine
+  reschedBookedIntervals = [...bookedIntervals, ...unavailableIntervals];
 
   // ✅ NEW: if there are NO available slots for this day, auto-disable the day
   const availableCount = countAvailableSlotsForDate(reschedSelectedDate);
   if (availableCount === 0) {
-    showToast("No available time slots for that date. Please choose another day.", "error");
+    showReschedInlineMessage("No available time slots for that date. Please choose another day.");
     reschedSelectedDate = "";
     if (dateEl) dateEl.value = "";
     reschedBookedIntervals = [];
@@ -1390,30 +1662,22 @@ async function onReschedDateChange() {
   renderReschedSlots();
 }
 
-async function onReschedDateChange() {
-  const dateEl = document.getElementById("reschedDate");
-  reschedSelectedDate = dateEl?.value || "";
-  reschedSelectedTime = "";
 
-  if (!reschedTargetAppointment || !reschedSelectedDate) {
-    renderReschedSlots();
-    return;
-  }
-
-  // dentist-based blocking using the appointment’s DentistID
-  reschedBookedIntervals = await fetchBookedForDentistOnDate(
-    reschedTargetAppointment.DentistID,
-    reschedSelectedDate,
-    reschedTargetAppointment.AppointmentID
-  );
-
-  renderReschedSlots();
-}
 
 async function confirmReschedSelection() {
   if (!reschedTargetAppointment) return;
+
+  const currentCount = Number(reschedTargetAppointment.RescheduleCount || 0);
+  const clinicOverride = isClinicUnavailable(reschedTargetAppointment);
+
+  // ✅ Only enforce the 2x limit for PATIENT-driven reschedules
+  if (!clinicOverride && currentCount >= 2) {
+    showReschedInlineMessage("You have reached the maximum of 2 reschedule requests.");
+    return;
+  }
+
   if (!reschedSelectedDate || !reschedSelectedTime) {
-    showToast("Please select a date and time.", "error");
+    showReschedInlineMessage("Please select a date and time.");
     return;
   }
 
@@ -1421,7 +1685,7 @@ async function confirmReschedSelection() {
   const preset = document.getElementById("reschedReasonPreset")?.value || "";
   const extra = document.getElementById("reschedReasonText")?.value?.trim() || "";
   if (!preset) {
-    showToast("Please select a reason for rescheduling.", "error");
+    showReschedInlineMessage("Please select a reason for rescheduling.");
     return;
   }
   const reason = preset + (extra ? ` – ${extra}` : "");
@@ -1442,17 +1706,36 @@ async function confirmReschedSelection() {
       Status: "RescheduleRequested",
       RequestType: "RESCHEDULE",
       RequestReason: JSON.stringify(payload),
+      RescheduleCount: clinicOverride ? currentCount : (currentCount + 1),
       RequestRequestedAt: new Date().toISOString()
     })
     .eq("AppointmentID", reschedTargetAppointment.AppointmentID);
 
   if (error) {
     console.error(error);
-    showToast("Failed to submit reschedule request.", "error");
+    showReschedInlineMessage("Failed to submit reschedule request.");
     return;
   }
 
-  showToast("Reschedule request submitted.", "success");
+  showReschedInlineMessage("Reschedule request submitted.", "success");
+  setTimeout(() => { closeReschedPicker(); }, 600);
+
+  // ✅ Email the clinic: patient requested reschedule (includes requested schedule + reason)
+const { error: evErr } = await supabaseClient
+  .from("appointmentevents")
+  .insert({
+    appointment_id: reschedTargetAppointment.AppointmentID,
+    event_type: "RESCHEDULE_REQUESTED",
+    payload: {
+      requestedDate: reschedSelectedDate,
+      requestedTime: reschedSelectedTime,
+      requestedISO: requestedIso,
+      reason
+    }
+  });
+
+if (evErr) console.error("appointmentevents insert error (RESCHEDULE_REQUESTED):", evErr);
+
 
   // reset fields so next open is clean
   const presetEl = document.getElementById("reschedReasonPreset");
@@ -1503,14 +1786,86 @@ window.submitReceiptReupload = submitReceiptReupload;
 
 let toastTimeout = null;
 const timeSlots = [
-  "09:00 AM","10:00 AM","11:00 AM","12:00 PM",
-  "01:00 PM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"
+  "09:00 AM","10:00 AM","11:00 AM",
+  "01:00 PM","02:00 PM","03:00 PM","04:00 PM"
 ];
 
 let reschedTargetAppointment = null;      // appointment object
 let reschedSelectedDate = "";
 let reschedSelectedTime = "";
 let reschedBookedIntervals = [];  
+
+// --- Inline modal messages (so feedback is visible inside the reschedule modal) ---
+function _applyInlineMsgStyles(box, type) {
+  box.classList.remove(
+    "border-red-200", "bg-red-50", "text-red-700",
+    "border-green-200", "bg-green-50", "text-green-700"
+  );
+  if (type === "success") {
+    box.classList.add("border-green-200", "bg-green-50", "text-green-700");
+  } else {
+    box.classList.add("border-red-200", "bg-red-50", "text-red-700");
+  }
+}
+
+function showReschedInlineMessage(message, type = "error") {
+  const box = document.querySelector("#reschedPickerModal #reschedInlineMsg");
+  if (!box) {
+    // fallback
+    showToast(message, type === "success" ? "success" : "error");
+    return;
+  }
+  box.textContent = message;
+  box.classList.remove("hidden");
+  _applyInlineMsgStyles(box, type);
+}
+
+function clearReschedInlineMessage() {
+  const box = document.querySelector("#reschedPickerModal #reschedInlineMsg");
+  if (!box) return;
+  box.textContent = "";
+  box.classList.add("hidden");
+}
+
+// --- Inline modal messages for cancel/reschedule REQUEST modal ---
+function showRequestInlineMessage(message, type = "error") {
+  const box = document.querySelector("#requestModal #requestInlineMsg");
+  if (!box) {
+    // fallback
+    showToast(message, type === "success" ? "success" : "error");
+    return;
+  }
+  box.textContent = message;
+  box.classList.remove("hidden");
+  _applyInlineMsgStyles(box, type);
+}
+
+function clearRequestInlineMessage() {
+  const box = document.querySelector("#requestModal #requestInlineMsg");
+  if (!box) return;
+  box.textContent = "";
+  box.classList.add("hidden");
+}
+
+
+// --- Inline modal messages for the Receipt Re-upload modal ---
+function showReceiptInlineMessage(message, type = "error") {
+  const box = document.querySelector("#receiptReuploadModal #receiptInlineMsg");
+  if (!box) {
+    showToast(message, type === "success" ? "success" : "error");
+    return;
+  }
+  box.textContent = message;
+  box.classList.remove("hidden");
+  _applyInlineMsgStyles(box, type);
+}
+
+function clearReceiptInlineMessage() {
+  const box = document.querySelector("#receiptReuploadModal #receiptInlineMsg");
+  if (!box) return;
+  box.textContent = "";
+  box.classList.add("hidden");
+}
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
@@ -1545,12 +1900,27 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+function openReceiptLightbox(url) {
+  const lb = document.getElementById("receiptLightbox");
+  const img = document.getElementById("receiptLightboxImg");
+  if (!lb || !img) return;
+  img.src = url;
+  lb.classList.remove("hidden");
+}
+
+function closeReceiptLightbox() {
+  const lb = document.getElementById("receiptLightbox");
+  const img = document.getElementById("receiptLightboxImg");
+  if (img) img.src = "";
+  if (lb) lb.classList.add("hidden");
+}
+
 
 window.addEventListener('DOMContentLoaded', async () => {
     const user = await checkAuth();
     if (!user) return;
 
-    initStarRating();   // <-- add this
+    await loadNotifications();
     await loadAppointments();
 });
 
@@ -1558,7 +1928,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 </script>
 
 <div id="appointmentModal" class="fixed inset-0 flex items-center justify-center bg-black/50 hidden z-50">
-  <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+  <div class="bg-white rounded-lg max-w-3xl w-full p-6 relative">
     <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
     <h3 class="font-semibold text-lg mb-4">Appointment Details</h3>
     <div id="modalContent" class="space-y-2 text-left">
@@ -1567,44 +1937,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   </div>
 </div>
 
-<div id="reviewModal" class="fixed inset-0 flex items-center justify-center bg-black/50 hidden z-50">
-  <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
-    <button onclick="closeReviewModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
-    <h3 class="font-semibold text-lg mb-4">Leave a Review</h3>
-    <form id="reviewForm" class="space-y-4" onsubmit="submitReview(event)">
-      <input type="hidden" id="reviewAppointmentId">
-      <input type="hidden" id="reviewDentistId">
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Service</label>
-        <div id="reviewService" class="text-sm text-gray-900"></div>
-      </div>
-
-        <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-        <div id="starRatingDisplay" class="flex items-center gap-1 mb-1 cursor-pointer"></div>
-        <div class="text-xs text-gray-500 mb-1">
-            Rating: <span id="reviewRatingValue">5</span> / 5
-        </div>
-        <input type="hidden" id="reviewRating" value="5">
-        </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Comments (optional)</label>
-        <textarea id="reviewComment" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="Share your experience..."></textarea>
-      </div>
-
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeReviewModal()" class="button-style button-outline text-sm">
-          Cancel
-        </button>
-        <button type="submit" class="button-style bg-[#03555E] hover:bg-[#024449] text-white text-sm">
-          Submit Review
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <div id="toast"
      class="fixed bottom-4 right-4 z-50 hidden transition-opacity duration-300">
@@ -1629,6 +1961,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     <p class="text-xs text-gray-500 mt-2">
       Tip: Make sure the reference number, amount, and date are visible.
     </p>
+
+    <!-- Inline validation message (inside modal) -->
+    <div id="receiptInlineMsg" class="hidden text-sm rounded-md px-3 py-2 border mt-3"></div>
 
     <div class="flex justify-end gap-2 mt-4">
       <button onclick="closeReceiptReuploadModal()" class="button-style button-outline text-sm">Cancel</button>
@@ -1661,6 +1996,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     class="w-full border rounded p-2 text-sm"
     rows="3"
     placeholder="Additional details (optional)"></textarea>
+
+  <!-- Inline validation message (inside modal) -->
+  <div id="requestInlineMsg" class="hidden text-sm rounded-md px-3 py-2 border mt-3"></div>
 
   <div class="flex justify-end gap-2 mt-4">
     <button onclick="closeRequestModal()" class="button-outline">Cancel</button>
@@ -1710,6 +2048,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       <p class="text-xs text-gray-500 mt-1">This will be sent to the clinic for review.</p>
     </div>
 
+      <!-- Inline validation message (inside modal) -->
+      <div id="reschedInlineMsg" class="hidden text-sm rounded-md px-3 py-2 border mt-2"></div>
+
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeReschedPicker()" class="button-style button-outline text-sm">Cancel</button>
         <button onclick="confirmReschedSelection()"
@@ -1721,6 +2062,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   </div>
 </div>
 
+<div id="receiptLightbox" class="hidden fixed inset-0 z-[9999] bg-black/70 p-4">
+  <div class="mx-auto max-w-4xl h-full flex items-center justify-center">
+    <div class="relative bg-white rounded-xl overflow-hidden max-h-full">
+      <button
+        onclick="closeReceiptLightbox()"
+        class="absolute top-2 right-2 bg-black/60 text-white px-3 py-1 rounded-lg"
+      >✕</button>
+      <img id="receiptLightboxImg" src="" class="max-h-[85vh] w-auto block" />
+    </div>
+  </div>
+</div>
+
 
 </body>
-</html>w
+</html>

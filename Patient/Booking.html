@@ -11,8 +11,13 @@
       theme: {
         extend: {
           colors: {
+            // Keep existing Booking tokens
             'primary': '#03555E',
             'primary-foreground': '#FFFFFF',
+
+            // Add Dashboard shell tokens (so bg-custom-primary works)
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
           },
         }
       }
@@ -34,7 +39,92 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
-  <div id="app-root"></div>
+  <!-- Top Header (same shell as Dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img
+            src="/Image/logo.png"
+            alt="Logo"
+            class="absolute inset-0 w-full h-full object-contain"
+            onload="this.nextElementSibling.style.display='none'"
+            onerror="this.remove();"
+          />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fas fa-bell w-6 h-6"></i>
+        </button>
+
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fas fa-user w-6 h-6"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Shell -->
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-house w-5"></i>
+          <span>Home</span>
+        </a>
+        <!-- active page -->
+        <a href="Booking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-plus w-5"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="MyBooking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-check w-5"></i>
+          <span>My Appointment</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-file-lines w-5"></i>
+          <span>Treatment Records</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i>
+          <span>Billing</span>
+        </a>
+        <a href="notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i>
+          <span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i>
+          <span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i>
+          <span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 lg:pl-0">
+      <div id="app-root"></div>
+    </main>
+  </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -80,18 +170,94 @@
   return userData;
 }
 
+
+    // Logout (shell)
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = '/Login.html';
+    }
+
+    async function loadNotifications() {
+      if (localStorage.getItem("prefBellNotif") === "false") return;
+      const bellBtn = document.getElementById('notifBellBtn');
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from('Notifications')
+        .select('*')
+        .eq('UserAccountID', userId)
+        .eq('Status', 'Unread')
+        .order('DateSent', { ascending: false });
+
+      if (error) return console.error(error);
+
+      const existingBadge = document.getElementById('notif-badge');
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellBtn.appendChild(badge);
+      }
+
+      const prevDropdown = document.getElementById('notif-dropdown');
+      if (prevDropdown) prevDropdown.remove();
+
+      bellBtn.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'p-4 text-gray-500 text-sm';
+          emptyMsg.textContent = 'No new notifications';
+          dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900';
+            item.textContent = n.Message;
+            item.addEventListener('click', async () => {
+              await supabaseClient.from('Notifications').update({ Status: 'Read' }).eq('NotificationID', n.NotificationID);
+              dropdown.remove();
+              loadNotifications();
+            });
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', onDocClick), 0);
+      };
+    }
     window.addEventListener('DOMContentLoaded', async () => {
       const user = await checkAuth();
       if (!user) return; // stops script if no user
 
       // store userId in state so confirmBooking can use it
-      state.currentUserId = user.id;
+      state.currentUserId = localStorage.getItem('userId');
 
-      // Optional: show welcome message
-      const welcomeEl = document.getElementById('welcomeMessage');
-      if (welcomeEl) welcomeEl.textContent = `Welcome, ${user.user_metadata?.firstName || 'Patient'}!`;
-
-      render(); // your existing render function
+      render();
+      loadNotifications();
     });
 
         // ---------- REPLACE getBookedTimes WITH getBookedAppointments ----------
@@ -165,6 +331,72 @@ return {
 }
 // -------------------------------------------------------
 
+// ---------- DENTIST UNAVAILABILITY BLOCKS (dentistavailability) ----------
+// IMPORTANT: Your dentistavailability table uses lowercase columns.
+// We also treat enddatetime as INCLUSIVE for blocking. Meaning if a block is
+// 9:00 AM–1:00 PM, the 1:00 PM slot should also be disabled.
+//
+// Each normalized block: { availabilityid, startDt, endDtExclusive, isfullday, reason }
+async function getDentistBlocksForDay(dentistUserAccountId, dateYmd) {
+  if (!dentistUserAccountId || !dateYmd) return [];
+
+  const dayStartUTC = new Date(`${dateYmd}T00:00:00+08:00`).toISOString();
+  const dayEndUTC = new Date(`${dateYmd}T23:59:59+08:00`).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from('dentistavailability')
+    .select('availabilityid, dentistid, startdatetime, enddatetime, isfullday, reason')
+    .eq('dentistid', dentistUserAccountId)
+    // overlap: block.start < dayEnd AND block.end > dayStart
+    .lt('startdatetime', dayEndUTC)
+    .gt('enddatetime', dayStartUTC)
+    .order('startdatetime', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching dentistavailability blocks:', error);
+    return [];
+  }
+
+  return (data || []).map(r => {
+    const startDt = new Date(r.startdatetime);
+    const endDt = new Date(r.enddatetime);
+    const isfullday = !!r.isfullday;
+
+    // Inclusive end -> convert to an exclusive end boundary.
+    // If enddatetime is exactly 1:00 PM, we want 1:00 PM start to be blocked.
+    // Adding 1 minute is enough because your time slots are hourly.
+    const endDtExclusive = isfullday ? endDt : new Date(endDt.getTime() + 60 * 1000);
+
+    return {
+      availabilityid: r.availabilityid,
+      startDt,
+      endDtExclusive,
+      isfullday,
+      reason: r.reason || ''
+    };
+  });
+}
+
+async function getDentistBlocksForMonth(dentistUserAccountId, monthStartISO, monthEndISO) {
+  if (!dentistUserAccountId) return [];
+
+  const { data, error } = await supabaseClient
+    .from('dentistavailability')
+    .select('availabilityid, dentistid, startdatetime, enddatetime, isfullday, reason')
+    .eq('dentistid', dentistUserAccountId)
+    // overlap: block.start < rangeEnd AND block.end > rangeStart
+    .lt('startdatetime', monthEndISO)
+    .gt('enddatetime', monthStartISO)
+    .order('startdatetime', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching dentistavailability month blocks:', error);
+    return [];
+  }
+  return data || [];
+}
+// -------------------------------------------------------
+
         function formatTimeSlot(dt) {
         // Convert Date to "h:mm AM/PM" in PH timezone
         const options = { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' };
@@ -190,10 +422,13 @@ function renderTimeSlots() {
   return timeSlots.map(time => {
     let candidateStart = null;
     let candidateEnd = null;
+    let exceedsClosing = false;
 
     if (selectedDate && totalMinutes > 0) {
       candidateStart = makeManilaDateTime(selectedDate, time);
       candidateEnd = new Date(candidateStart.getTime() + totalMinutes * 60000);
+      const clinicClose = makeManilaDateTime(selectedDate, "5:00 PM");
+      const exceedsClosing = candidateEnd > clinicClose;
     }
 
     // overlap check vs bookedAppointments (dentist-specific list)
@@ -202,6 +437,18 @@ function renderTimeSlots() {
       for (const appt of bookedAppointments) {
         if (intervalsOverlap(candidateStart, candidateEnd, appt.startDt, appt.endDt)) {
           isBooked = true;
+          break;
+        }
+      }
+    }
+
+    // overlap check vs dentistavailability blocks
+    let isBlocked = false;
+    if (state.dentistBlocks && candidateStart && candidateEnd) {
+      for (const b of state.dentistBlocks) {
+        // blocks use endDtExclusive to treat enddatetime as inclusive
+        if (intervalsOverlap(candidateStart, candidateEnd, b.startDt, b.endDtExclusive)) {
+          isBlocked = true;
           break;
         }
       }
@@ -219,7 +466,9 @@ function renderTimeSlots() {
       !selectedDate ||
       totalMinutes <= 0 ||
       isBooked ||
+      isBlocked ||
       isTooSoonToday;
+      exceedsClosing;
 
     const isActive = selectedTime === time;
 
@@ -239,31 +488,111 @@ function renderTimeSlots() {
 // -------------------------------------------------------
 
     // --- Data ---
-// --- MAIN SERVICES (choose ONE) ---
+// --- MAIN SERVICES (specific procedures) ---
 const mainServices = [
-  { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [101,104,105] },
-  { id: 2, name: "Tooth Extraction (Simple)", durationMinutes: 30, basePrice: 2500, allowedAddOnIds: [101,102,106] },
-  { id: 3, name: "Restoration (Composite Filling - 1 Surface)", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [101,102,107] },
-  { id: 4, name: "Root Canal (Anterior / Single Canal)", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [101,102,107] },
-  { id: 5, name: "Orthodontic Adjustment / Check-up", durationMinutes: 30, basePrice: 800, allowedAddOnIds: [101] },
-  { id: 6, name: "Whitening (In-clinic Session)", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [104,105] },
+  // ✅ Existing (already specific)
+  { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", category: "Cleaning", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [] },
+  { id: 6, name: "Whitening (In-clinic Session)", category: "Whitening", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [] },
+  { id: 4, name: "Root Canal (Anterior / Single Canal)", category: "Root Canal", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
+
+  // ✅ EXTRACTION (patient selects the specific type)
+  { id: 401, name: "Simple Extraction – Anterior / Premolar", category: "Extraction", durationMinutes: 30, basePrice: 1500, allowedAddOnIds: [901, 902, 903] },
+  { id: 402, name: "Simple Extraction – Molar", category: "Extraction", durationMinutes: 45, basePrice: 2000, allowedAddOnIds: [901, 902, 903] },
+  { id: 403, name: "Complicated Extraction", category: "Extraction", durationMinutes: 60, basePrice: 3000, allowedAddOnIds: [901, 902, 903] },
+  // NOTE: Surgery extraction is intentionally not selectable by patient.
+
+  // ✅ RESTORATION (patient selects the surface count)
+  { id: 501, name: "Restoration – 1 Surface", category: "Restoration", durationMinutes: 45, basePrice: 1500, allowedAddOnIds: [904, 905] },
+  { id: 502, name: "Restoration – 2 Surfaces", category: "Restoration", durationMinutes: 60, basePrice: 2000, allowedAddOnIds: [904, 905] },
+  { id: 503, name: "Restoration – 3 Surfaces", category: "Restoration", durationMinutes: 75, basePrice: 2500, allowedAddOnIds: [904, 905] },
+
+  // ✅ Bridge / Veneer
+  { id: 201, name: "Fixed Bridge (Porcelain Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
+  { id: 202, name: "Fixed Bridge (Plastic Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 75, basePrice: 5000, allowedAddOnIds: [] },
+  { id: 203, name: "Direct Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 10000, allowedAddOnIds: [] },
+  { id: 204, name: "Indirect Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [] },
+
+  // ✅ Denture
+  { id: 301, name: "Removable Partial Denture (Upper & Lower)", category: "Denture", durationMinutes: 120, basePrice: 10000, allowedAddOnIds: [] },
+  { id: 302, name: "Complete Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 12000, allowedAddOnIds: [] },
+  { id: 303, name: "Flexible Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
+  { id: 304, name: "Ivocap Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
+
+  // ✅ Orthodontics (consultation/check-up only for now)
+  { id: 5, name: "Orthodontic Consultation / Check-up", category: "Orthodontics", durationMinutes: 30, basePrice: 0, allowedAddOnIds: [] },
 ];
+
 const services = mainServices.map(s => ({
   id: s.id,
+  category: s.category || "",
   name: s.name,
   durationMinutes: s.durationMinutes,
   price: s.basePrice, // IMPORTANT: old code uses s.price
   allowedAddOnIds: s.allowedAddOnIds || []
 }));
+
 // --- ADD-ONS (optional, multi-select) ---
+// ✅ Replaced old add-ons with your requested ones only.
 const addOns = [
-  { id: 101, name: "X-ray", durationMinutes: 10, price: 500, description: "Estimated imaging fee (if needed)" },
-  { id: 102, name: "Local Anesthesia", durationMinutes: 5, price: 300, description: "If required for comfort" },
-  { id: 104, name: "Fluoride Treatment", durationMinutes: 10, price: 400, description: "Protective treatment after cleaning" },
-  { id: 105, name: "Desensitizing Gel", durationMinutes: 5, price: 250, description: "For sensitivity protection" },
-  { id: 106, name: "Extraction Medication Pack", durationMinutes: 0, price: 600, description: "Optional meds pack (estimate)" },
-  { id: 107, name: "Temporary Filling / Build-up", durationMinutes: 15, price: 700, description: "If required during procedure" },
+  // Extraction add-ons
+  { id: 901, name: "Additional Anesthesia", durationMinutes: 5, price: 100, description: "For added comfort (if needed)" },
+  { id: 902, name: "Collagen Matrix", durationMinutes: 0, price: 700, description: "Optional dressing/support" },
+  { id: 903, name: "With Suture", durationMinutes: 10, price: 700, description: "If suturing is required" },
+
+  // Restoration add-ons
+  { id: 904, name: "Base / Cavity Liner", durationMinutes: 5, price: 500, description: "For deep / extensive cavity" },
+  { id: 905, name: "Desensitization", durationMinutes: 5, price: 500, description: "For tooth sensitivity" },
 ];
+
+
+// --- SERVICE DESCRIPTIONS (tooltips) ---
+const serviceCategoryDescriptions = {
+  "Cleaning": "Professional cleaning to remove plaque and tartar. Helps prevent cavities and gum disease.",
+  "Extraction": "Removal of a tooth. Select the tooth type so the estimate and duration are more accurate.",
+  "Restoration": "Dental filling. The estimate depends on how many tooth surfaces are involved.",
+  "Root Canal": "Treatment to remove infection inside the tooth (single canal). Final plan may vary after assessment.",
+  "Orthodontics": "Consultation / check-up for braces. The dentist will recommend the proper procedure and cost after evaluation.",
+  "Whitening": "In-clinic teeth whitening session. Results may vary per patient.",
+  "Bridge / Veneer": "Tooth restoration using crowns/veneers. Prices shown are per tooth unless stated otherwise.",
+  "Denture": "Replacement of missing teeth using dentures (upper & lower). Type depends on material and fit."
+};
+
+const serviceProcedureDescriptions = {
+  1: "Basic cleaning to remove plaque and tartar.",
+  4: "Root canal for a single canal tooth (anterior).",
+  5: "Orthodontic consultation/check-up (procedure recommendation after assessment).",
+  6: "In-clinic whitening session.",
+
+  401: "Simple extraction for anterior or premolar teeth.",
+  402: "Simple extraction for molar teeth.",
+  403: "Complicated extraction (e.g., difficult position).",
+
+  501: "Composite restoration on 1 tooth surface.",
+  502: "Composite restoration on 2 tooth surfaces.",
+  503: "Composite restoration on 3 tooth surfaces.",
+
+  201: "Fixed bridge with porcelain crown (per tooth).",
+  202: "Fixed bridge with plastic crown (per tooth).",
+  203: "Direct veneer (per tooth).",
+  204: "Indirect veneer (per tooth).",
+
+  301: "Removable partial denture for upper & lower.",
+  302: "Complete denture for upper & lower.",
+  303: "Flexible denture for upper & lower.",
+  304: "Ivocap denture for upper & lower."
+};
+// ----------------------------------------
+
+function escAttr(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+
+
 
 // Fixed downpayment (NOT %)
 const FIXED_DOWNPAYMENT = 100;
@@ -274,10 +603,23 @@ function getAddOnById(id){ return addOns.find(a=>a.id===id); }
 
 // ---------- INCOMPATIBILITY MAP & HELPERS ----------
 const incompatibleById = {
-  2: [6, 5, 1, 3, 4], // Tooth Extraction
-  // Odontectomy -> add later when you create it, e.g. 7: [1,3,2,6,4,5]
-  4: [6, 5, 1],      // Root Canal
-  6: [5]             // Whitening
+  4: [5, 6, 201, 202, 203, 204, 301, 302, 303, 304, 401, 402, 403],
+  5: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 303, 304],
+  6: [4, 5, 201, 202, 203, 204, 301, 302, 303, 304],
+  201: [1, 6, 4, 401, 402, 403, 501, 502, 503, 202, 203, 204, 301, 302, 303, 304, 5],
+  202: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 203, 204, 301, 302, 303, 304, 5],
+  203: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 204, 301, 302, 303, 304, 5],
+  204: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 301, 302, 303, 304, 5],
+  301: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 302, 303, 304, 5],
+  302: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 303, 304, 5],
+  303: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 304, 5],
+  304: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 303, 5],
+  401: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
+  402: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
+  403: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
+  501: [5, 201, 202, 203, 204, 301, 302, 303, 304],
+  502: [5, 201, 202, 203, 204, 301, 302, 303, 304],
+  503: [5, 201, 202, 203, 204, 301, 302, 303, 304],
 };
 // helper: find service by id
 function getServiceById(id) {
@@ -324,7 +666,7 @@ function intervalsOverlap(s1, e1, s2, e2) {
 }
 // -------------------------------------------------------
 
-    const timeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"];
+    const timeSlots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"];
 
     // IMPORTANT: add real UserAccountID values for dentist.userAccountId
     const dentists = [
@@ -494,23 +836,7 @@ const generateCalendarDays = (currentMonth) => {
   return days;
 };
 
-    // --- Render UI (unchanged structure) ---
-    function renderHeader() {
-      return `
-        <div class="bg-primary text-white p-4">
-          <div class="max-w-4xl mx-auto flex items-center gap-4">
-            <a href="Dashboard.html" class="text-white hover:text-gray-200">
-              <i class="${iconMap.ArrowLeft}"></i>
-            </a>
-            <div>
-              <h1 class="text-xl font-semibold">Book Appointment</h1>
-              <p class="text-primary-foreground/80">Schedule your dental visit</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
+    // --- Render UI ---
     function renderProgressBar() {
       const { currentStep } = state;
       return `
@@ -542,40 +868,65 @@ function renderStep1() {
   const selectedServices = state.selectedServices || [];
   const incompatibleIds = getIncompatibleServiceIds(selectedServices);
 
-  // Add-ons availability depends on selected services (union)
   const allowedSet = getAllowedAddOnIdsForSelectedServices(selectedServices);
   const allowedAddOns = addOns.filter(a => allowedSet.has(a.id));
 
-  // remove add-ons that are no longer allowed
   const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowedSet.has(a.id));
   if (cleanedAddOns.length !== (state.selectedAddOns || []).length) {
     state.selectedAddOns = cleanedAddOns; // direct update to avoid render loop
   }
 
-  const totalMinutes = computeTotalDurationMinutes(selectedServices) +
-    cleanedAddOns.reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+  const totalMinutes =
+    computeTotalDurationMinutes(selectedServices) +
+    cleanedAddOns.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
 
   const totalEstimate =
-    selectedServices.reduce((sum,s)=>sum+(s.price||0),0) +
-    cleanedAddOns.reduce((sum,a)=>sum+(a.price||0),0);
+    selectedServices.reduce((sum, s) => sum + (s.price || 0), 0) +
+    cleanedAddOns.reduce((sum, a) => sum + (a.price || 0), 0);
 
   const durationLabel = totalMinutes
-    ? `${Math.floor(totalMinutes/60) ? Math.floor(totalMinutes/60) + " hr " : ""}${totalMinutes%60 ? (totalMinutes%60) + " min" : ""}`.trim()
+    ? `${Math.floor(totalMinutes / 60) ? Math.floor(totalMinutes / 60) + " hr " : ""}${totalMinutes % 60 ? (totalMinutes % 60) + " min" : ""}`.trim()
     : "—";
 
+  const categoryOrder = [
+    "Cleaning",
+    "Extraction",
+    "Restoration",
+    "Root Canal",
+    "Orthodontics",
+    "Whitening",
+    "Bridge / Veneer",
+    "Denture"
+  ];
+
+  const byCat = {};
+  (services || []).forEach(s => {
+    const cat = s.category || "Other";
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(s);
+  });
+
+  const categories = categoryOrder.filter(c => byCat[c]?.length).concat(
+    Object.keys(byCat).filter(c => !categoryOrder.includes(c))
+  );
+
+  const selectedByCat = (cat) =>
+    (selectedServices || []).find(s => (s.category || "Other") === cat) || null;
+
   return `
-        <div class="p-4 mb-4 text-sm text-amber-800 bg-amber-100 border border-amber-300 rounded-lg">
+    <div class="p-4 mb-4 text-sm text-blue-800 bg-blue-100 border border-blue-300 rounded-lg">
       <div class="flex gap-2">
-        <i class="fas fa-exclamation-triangle mt-0.5"></i>
+        <i class="fas fa-info-circle mt-0.5"></i>
         <div>
-          <p class="font-semibold">Service Combination Notice</p>
+          <p class="font-semibold">Service Selection Info</p>
           <p class="mt-1">
             Some dental services cannot be booked together in one appointment.
-            Incompatible services will be automatically disabled once you select a service.
+            When you select a service, incompatible options will be automatically disabled.
           </p>
         </div>
       </div>
     </div>
+
     <div class="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg border border-blue-300">
       <span class="font-bold"><i class="fas fa-info-circle mr-2"></i>Pricing Notice:</span>
       Prices shown are estimates only and may change after assessment and actual treatment.
@@ -591,27 +942,62 @@ function renderStep1() {
         <p class="text-xs text-gray-500 mt-1">Final price may vary depending on procedures performed.</p>
       </div>
     </div>
-    <h3 class="font-semibold text-lg mb-3">Choose Service(s) (multiple allowed)</h3>
+
+    <h3 class="font-semibold text-lg mb-3">Choose Service(s)</h3>
+    <p class="text-sm text-gray-600 mb-4">
+      Select a <strong>service category</strong>, then choose the <strong>specific procedure</strong> from the dropdown (if applicable).
+    </p>
+
     <div class="grid gap-4 md:grid-cols-2 mb-8">
-      ${services.map(svc => {
-        const isSelected = selectedServices.some(x => x.id === svc.id);
-        const isIncompatible = incompatibleIds.has(svc.id);
+      ${categories.map(cat => {
+        const options = (byCat[cat] || []);
+        const selected = selectedByCat(cat);
+        const isSelected = !!selected;
 
-        const disabled = !isSelected && isIncompatible;
+        const allIncompatible = options.length ? options.every(opt => incompatibleIds.has(opt.id)) : false;
+        const reallyDisabled = !isSelected && allIncompatible;
 
+        const badgePrice = selected
+          ? `₱${(selected.price || 0).toLocaleString()}`
+          : (options.length === 1 ? `₱${(options[0].price || 0).toLocaleString()}` : "—");
+
+        const safeCat = String(cat).replace(/'/g, "\'");
         return `
-          <div class="p-4 border rounded-lg transition-all cursor-pointer
-              ${isSelected ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"}
-              ${disabled ? "opacity-50 cursor-not-allowed" : ""}"
-              ${disabled ? "" : `onclick="toggleService(${svc.id})"`}>
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="font-semibold">${svc.name}</h4>
-                <p class="text-xs text-gray-500">Duration: ${svc.durationMinutes} min</p>
-                ${disabled ? `<p class="text-xs text-red-500 mt-1">Not compatible with selected service(s)</p>` : ""}
+          <div class="p-4 border rounded-lg transition-all ${isSelected ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"} ${reallyDisabled ? "opacity-50 cursor-not-allowed" : ""}">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1">
+                <div class="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    class="mt-1"
+                    ${isSelected ? "checked" : ""}
+                    ${reallyDisabled ? "disabled" : `onchange="toggleCategory('${safeCat}')"` }
+                  />
+                  <div>
+                    <div class="font-semibold flex items-center gap-2" title="${escAttr(serviceCategoryDescriptions[cat] || '')}"><span>${cat}</span><span class="text-gray-400"><i class="fas fa-circle-info"></i></span></div>
+                    ${selected ? `<div class="text-xs text-gray-600 mt-1">Selected: <span class="font-medium">${selected.name}</span></div>` : `<div class="text-xs text-gray-500 mt-1">Not selected</div>`}
+                    ${reallyDisabled ? `<div class="text-xs text-red-500 mt-1">Not compatible with selected service(s)</div>` : ""}
+                    ${cat === "Orthodontics" ? `<div class="text-xs text-gray-500 mt-1">Consultation/check-up only. Procedure & cost will be recommended after assessment.</div>` : ""}
+                  </div>
+                </div>
+
+                ${isSelected && options.length > 1 ? `
+                  <div class="mt-3">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Choose specific procedure</label>
+                    <select class="w-full border rounded p-2 text-sm"
+                      onchange="setCategoryService('${safeCat}', this.value)">
+                      ${options.map(opt => `
+                        <option value="${opt.id}" ${selected?.id === opt.id ? "selected" : ""} title="${escAttr(serviceProcedureDescriptions[opt.id] || '')}">
+                          ${opt.name} — ₱${(opt.price || 0).toLocaleString()}
+                        </option>
+                      `).join("")}
+                    </select>
+                  </div>
+                ` : ""}
               </div>
-              <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
-                ₱${svc.price.toLocaleString()}
+
+              <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
+                ${badgePrice}
               </span>
             </div>
           </div>
@@ -623,27 +1009,31 @@ function renderStep1() {
     ${!selectedServices.length ? `
       <p class="text-sm text-gray-500">Select at least one service to view available add-ons.</p>
     ` : `
-      <div class="grid gap-4 md:grid-cols-2">
-        ${allowedAddOns.map(a => {
-          const isChecked = cleanedAddOns.some(x=>x.id===a.id);
-          return `
-            <div class="p-4 border rounded-lg ${isChecked ? "border-primary bg-primary/5" : "border-gray-200"}">
-              <label class="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleAddOn(${a.id})" class="mt-1">
-                <div class="flex-1">
-                  <div class="flex justify-between">
-                    <span class="font-semibold">${a.name}</span>
-                    <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
-                      ₱${a.price.toLocaleString()}
-                    </span>
+      ${!allowedAddOns.length ? `
+        <p class="text-sm text-gray-500">No add-ons available for the selected service(s).</p>
+      ` : `
+        <div class="grid gap-4 md:grid-cols-2">
+          ${allowedAddOns.map(a => {
+            const isChecked = cleanedAddOns.some(x => x.id === a.id);
+            return `
+              <div class="p-4 border rounded-lg ${isChecked ? "border-primary bg-primary/5" : "border-gray-200"}">
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleAddOn(${a.id})" class="mt-1">
+                  <div class="flex-1">
+                    <div class="flex justify-between">
+                      <span class="font-semibold">${a.name}</span>
+                      <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
+                        ₱${(a.price || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <p class="text-xs text-gray-500">+${a.durationMinutes || 0} min • ${a.description || ""}</p>
                   </div>
-                  <p class="text-xs text-gray-500">+${a.durationMinutes} min • ${a.description || ""}</p>
-                </div>
-              </label>
-            </div>
-          `;
-        }).join("")}
-      </div>
+                </label>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `}
     `}
   `;
 }
@@ -734,6 +1124,9 @@ function renderStep2() {
             <p class="mt-2 text-xs text-gray-500">
               Select a dentist to check availability accurately.
             </p>
+            <p class="mt-2 text-xs text-gray-500">
+              Gray slots are unavailable (dentist already booked, dentist unavailable, too soon, or the selected service duration can’t be accommodated before 5:00 PM).
+            </p>
           `
         }
       </div>
@@ -757,7 +1150,9 @@ function renderStep2() {
               selectedDentist?.id === dentist.id ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"
             }" onclick="setSelectedDentist(${dentist.id})">
               <div class="flex items-center gap-4">
-                <img src="${dentist.image}" alt="${dentist.name}" class="w-16 h-16 rounded-full object-cover"/>
+                <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl">
+                  <i class="fas fa-user-md"></i>
+                </div>
                 <div class="flex-1">
                   <h3 class="font-semibold text-lg">${dentist.name}</h3>
                   <p class="text-primary font-medium">${dentist.specialty}</p>
@@ -832,7 +1227,7 @@ const addons = state.selectedAddOns || [];
           </div>
           <hr class="my-3 border-gray-300"/>
           <div class="flex justify-between">
-            <span class="font-semibold">Downpayment (Fixed):</span>
+            <span class="font-semibold">Appointment Fee (Fixed):</span>
             <span class="font-semibold">₱${downpaymentAmount.toLocaleString()}</span>
           </div>
         </div>
@@ -841,9 +1236,9 @@ const addons = state.selectedAddOns || [];
       <!-- Payment + upload -->
       <div class="space-y-4 text-left">
         <div class="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg">
-          <h4 class="font-semibold mb-2">Downpayment via GCash</h4>
+          <h4 class="font-semibold mb-2">Appointment Fee via GCash</h4>
           <p class="text-sm text-gray-600 mb-3">
-            Please send a ₱${downpaymentAmount.toLocaleString()} downpayment using the GCash QR below.
+            Please pay the ₱${downpaymentAmount.toLocaleString()} appointment fee using the GCash QR below.
             Then upload a clear screenshot or photo of the payment receipt.
           </p>
 
@@ -876,14 +1271,18 @@ const addons = state.selectedAddOns || [];
 
         <!-- Policies -->
         <div class="bg-gray-50 border rounded-lg p-4">
-          <h4 class="font-semibold mb-2">Booking & Cancellation Policy</h4>
-          <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
-          <li>A fixed downpayment of ₱${FIXED_DOWNPAYMENT.toLocaleString()} is required to confirm your appointment.</li>
-          <li>Displayed prices are estimates only; final charges may vary after treatment.</li>
-            <li>Free reschedule at least 12 hours before your appointment time.</li>
-            <li>Cancellations within 12 hours or no-shows may result in forfeited downpayment.</li>
-            <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues).</li>
-          </ul>
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h4 class="font-semibold mb-1">Clinic Policies</h4>
+              <p class="text-sm text-gray-600">Please read the policies and agree before submitting your booking request.</p>
+            </div>
+            <button type="button"
+              onclick="openPolicyModal()"
+              class="px-3 py-2 text-sm rounded-md border border-primary text-primary hover:bg-primary/5">
+              View Policies
+            </button>
+          </div>
+
           <label class="mt-3 flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" id="policyAgree" class="h-4 w-4">
             <span>I have read and agree to the clinic policies.</span>
@@ -891,12 +1290,12 @@ const addons = state.selectedAddOns || [];
         </div>
       </div>
 
-      <!-- Confirm button -->
+<!-- Confirm button -->
       <button
         onclick="confirmBooking()"
         id="confirmBookingBtn"
         class="w-full px-4 py-3 text-lg font-medium rounded-md text-white bg-primary hover:bg-primary/90">
-        Confirm Payment & Book Appointment
+        Pay Appointment Fee & Submit Request
       </button>
     </div>
   `;
@@ -972,8 +1371,7 @@ function isAnySlotAvailableForDateDentistOnly(dateYmd, bookedAppointments) {
     function render() {
       const appRoot = document.getElementById("app-root");
       appRoot.innerHTML = `
-        ${renderHeader()}
-        <div class="max-w-4xl mx-auto px-4 py-8">
+                <div class="max-w-4xl mx-auto">
           <div class="card">
             <div class="card-header">${renderProgressBar()}</div>
             <div class="card-content">${renderStepContent()}</div>
@@ -987,9 +1385,9 @@ function isAnySlotAvailableForDateDentistOnly(dateYmd, bookedAppointments) {
   return `
     <div class="space-y-4 text-left">
       <div class="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg">
-        <h4 class="font-semibold mb-2">Downpayment via GCash</h4>
+        <h4 class="font-semibold mb-2">Appointment Fee via GCash</h4>
         <p class="text-sm text-gray-600 mb-3">
-          Please send a ₱${downpayment.toLocaleString()} downpayment using the GCash QR below.
+          Please pay the ₱${downpayment.toLocaleString()} appointment fee using the GCash QR below.
           Then upload a clear screenshot or photo of the payment receipt.
         </p>
 
@@ -1023,10 +1421,11 @@ function isAnySlotAvailableForDateDentistOnly(dateYmd, bookedAppointments) {
       <div class="bg-gray-50 border rounded-lg p-4">
         <h4 class="font-semibold mb-2">Booking & Cancellation Policy</h4>
         <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
-          <li>A fixed downpayment of ₱${FIXED_DOWNPAYMENT.toLocaleString()} is required to confirm your appointment.</li>
-          <li>Downpayment is applied to your total bill on the day of your visit.</li>
-          <li>Free reschedule at least 12 hours before your appointment time.</li>
-          <li>Cancellations within 12 hours or no-shows may result in forfeited downpayment.</li>
+          <li>A fixed appointment fee of ₱<span id="policyFeeAmount"></span> is required to submit your booking request.</li>
+          <li>The appointment fee is non-refundable and is not deducted from the final treatment cost.</li>
+          <li>Reschedule is allowed up to 2 times per appointment, and requests must be made at least 24 hours before the appointment time.</li>
+          <li>Valid cancellation (24+ hours): appointment fee may be refunded or applied as booking credit (after verification).</li>
+          <li>Late cancellation (within 24 hours) or no-show may result in forfeiture of the appointment fee.</li>
           <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues).</li>
         </ul>
         <label class="mt-3 flex items-center gap-2 text-sm font-medium">
@@ -1103,6 +1502,27 @@ async function refreshMonthAvailability(monthDate = state.currentMonth) {
     return;
   }
 
+  // ✅ Also fetch dentistavailability blocks for the month so blocked days
+  // are reflected in the calendar date picker.
+  const monthBlocks = await getDentistBlocksForMonth(
+    state.selectedDentist.userAccountId,
+    monthStartUTC.toISOString(),
+    monthEndUTC.toISOString()
+  );
+
+  // Group blocks by Manila date YYYY-MM-DD
+  const groupedBlocks = {};
+  (monthBlocks || []).forEach(row => {
+    const startDt = new Date(row.startdatetime);
+    const endDt = new Date(row.enddatetime);
+    const dateYmd = startDt.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+    if (!groupedBlocks[dateYmd]) groupedBlocks[dateYmd] = [];
+
+    // For slot-start checks, treat enddatetime as inclusive
+    const endExclusive = row.isfullday ? endDt : new Date(endDt.getTime() + 60 * 1000);
+    groupedBlocks[dateYmd].push({ startDt, endDt: endExclusive, isfullday: !!row.isfullday });
+  });
+
   // Group appointments by Manila date YYYY-MM-DD
   const grouped = {};
   (data || []).forEach(row => {
@@ -1130,16 +1550,25 @@ async function refreshMonthAvailability(monthDate = state.currentMonth) {
     const dateYmd = dateObjUTC.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 
     const intervals = grouped[dateYmd] || [];
+    const blockIntervals = groupedBlocks[dateYmd] || [];
     const isToday = dateYmd === todayYmd;
 
     let anyAvailable = false;
 
     for (const label of timeSlots) {
       const slotStart = makeManilaDateTime(dateYmd, label);
+      const totalMinutes =
+        computeTotalDurationMinutes(state.selectedServices) +
+        (state.selectedAddOns || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
 
+      const slotEnd = new Date(slotStart.getTime() + totalMinutes * 60000);
+      const close = makeManilaDateTime(dateYmd, "5:00 PM");
+      if (totalMinutes > 0 && slotEnd > close) continue; // ✅ doesn't fit
       if (isToday && slotStart <= nowPlus1h) continue;
 
-      const blocked = intervals.some(b => slotStart >= b.startDt && slotStart < b.endDt);
+      const blocked =
+        intervals.some(b => slotStart >= b.startDt && slotStart < b.endDt) ||
+        blockIntervals.some(b => (b.isfullday === true) || (slotStart >= b.startDt && slotStart < b.endDt));
       if (!blocked) {
         anyAvailable = true;
         break;
@@ -1154,6 +1583,104 @@ async function refreshMonthAvailability(monthDate = state.currentMonth) {
 
 
 // ---------- REPLACE toggleService (UPDATED for better state management) ----------
+
+// ---------- CATEGORY (generalized) SELECTION HELPERS ----------
+window.toggleCategory = (category) => {
+  const cat = String(category || "");
+  const selected = state.selectedServices || [];
+  const existing = selected.find(s => (s.category || "Other") === cat);
+
+  // remove whole category
+  if (existing) {
+    const updatedServices = selected.filter(s => (s.category || "Other") !== cat);
+
+    const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
+    const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
+
+    setState({
+      selectedServices: updatedServices,
+      selectedAddOns: cleanedAddOns,
+      selectedTime: ""
+    });
+
+    // refresh bookings if needed
+    if (state.selectedDentist && state.selectedDate) {
+      getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
+        .then(booked => setState({ bookedAppointments: booked }));
+    }
+    return;
+  }
+
+  // add default option (first option in category)
+  const options = (services || []).filter(s => (s.category || "Other") === cat);
+  if (!options.length) return;
+
+  const candidate = options[0];
+
+  // compatibility check vs already selected services
+  for (const sel of selected) {
+    const a = incompatibleById[sel.id] || [];
+    const b = incompatibleById[candidate.id] || [];
+    if (a.includes(candidate.id) || b.includes(sel.id)) {
+      showMessage(`${candidate.name} cannot be booked with ${sel.name}.`, "error", 4000);
+      return;
+    }
+  }
+
+  const updatedServices = [...selected, candidate];
+
+  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
+  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
+
+  setState({
+    selectedServices: updatedServices,
+    selectedAddOns: cleanedAddOns,
+    selectedTime: ""
+  });
+
+  if (state.selectedDentist && state.selectedDate) {
+    getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
+      .then(booked => setState({ bookedAppointments: booked }));
+  }
+};
+
+window.setCategoryService = (category, serviceId) => {
+  const cat = String(category || "");
+  const id = parseInt(serviceId, 10);
+  const candidate = (services || []).find(s => s.id === id && (s.category || "Other") === cat);
+  if (!candidate) return;
+
+  const selected = state.selectedServices || [];
+  const others = selected.filter(s => (s.category || "Other") !== cat);
+
+  // compatibility check vs other categories
+  for (const sel of others) {
+    const a = incompatibleById[sel.id] || [];
+    const b = incompatibleById[candidate.id] || [];
+    if (a.includes(candidate.id) || b.includes(sel.id)) {
+      showMessage(`${candidate.name} cannot be booked with ${sel.name}.`, "error", 4000);
+      return;
+    }
+  }
+
+  const updatedServices = [...others, candidate];
+
+  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
+  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
+
+  setState({
+    selectedServices: updatedServices,
+    selectedAddOns: cleanedAddOns,
+    selectedTime: ""
+  });
+
+  if (state.selectedDentist && state.selectedDate) {
+    getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
+      .then(booked => setState({ bookedAppointments: booked }));
+  }
+};
+// -------------------------------------------------------------
+
 window.toggleService = (serviceId) => {
   const fullService = services.find(s => s.id === serviceId);
   if (!fullService) return;
@@ -1204,9 +1731,10 @@ window.toggleService = (serviceId) => {
   // only fetch if dentist selected
   if (state.selectedDentist) {
     const bookedAppointments = await getBookedAppointments(state.selectedDentist.userAccountId, date);
-    setState({ bookedAppointments });
+    const dentistBlocks = await getDentistBlocksForDay(state.selectedDentist.userAccountId, date);
+    setState({ bookedAppointments, dentistBlocks });
   } else {
-    setState({ bookedAppointments: [] });
+    setState({ bookedAppointments: [], dentistBlocks: [] });
   }
 };
 
@@ -1225,9 +1753,10 @@ window.setSelectedDentist = async (dentistId) => {
 
   if (state.selectedDate) {
     const bookedAppointments = await getBookedAppointments(fullDentist.userAccountId, state.selectedDate);
-    setState({ bookedAppointments });
+    const dentistBlocks = await getDentistBlocksForDay(fullDentist.userAccountId, state.selectedDate);
+    setState({ bookedAppointments, dentistBlocks });
   } else {
-    setState({ bookedAppointments: [] });
+    setState({ bookedAppointments: [], dentistBlocks: [] });
   }
 
   await refreshMonthAvailability();
@@ -1301,6 +1830,13 @@ window.setSelectedTime = (time) => {
     }
   }
 
+  for (const b of (state.dentistBlocks || [])) {
+    if (intervalsOverlap(candidateStart, candidateEnd, b.startDt, b.endDtExclusive)) {
+      showMessage("Selected time falls on a dentist unavailable block. Please choose another time.", "error");
+      return;
+    }
+  }
+
   setState({ selectedTime: time });
 };
 
@@ -1339,10 +1875,34 @@ function openTransactionModal(data) {
 // Close Modal
 function closeTransactionModal() {
   const modal = document.getElementById("transactionModal");
+  if (!modal) return;
   modal.classList.add("hidden");
   modal.classList.remove("flex");
 }
 
+// ----------------- POLICY MODAL -----------------
+function openPolicyModal() {
+  const feeEl = document.getElementById("policyFeeAmount");
+  if (feeEl) feeEl.textContent = (FIXED_DOWNPAYMENT ?? 0).toLocaleString();
+  const modal = document.getElementById("policyModal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+}
+
+function closePolicyModal() {
+  const modal = document.getElementById("policyModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+function acceptPolicyModal() {
+  const cb = document.getElementById("policyAgree");
+  if (cb) cb.checked = true;
+  closePolicyModal();
+}
+// -------------------------------------------------
 function computeEstimatedDurationMinutes(mainSvc, addOnList) {
   const main = mainSvc ? (mainSvc.durationMinutes || 0) : 0;
   const add = (addOnList || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
@@ -1455,18 +2015,19 @@ const totalDurationMinutes =
     const appointmentEnd = new Date(appointmentStart.getTime() + totalDurationMinutes * 60000);
     const endIsoUTC = appointmentEnd.toISOString();
 
-    // 🔹 8. Build ServiceType CSV (main + addons) and readable Service string
-    const selectedIds = [
-      ...(state.selectedServices || []).map(s => s.id),
-      ...(state.selectedAddOns || []).map(a => a.id)
-    ].filter(Boolean);
+    // 🔹 8. Build ServiceType CSV (MAIN procedures only) + readable Service string + AddOns JSON
+    const selectedServiceIds = (state.selectedServices || []).map(s => s.id).filter(Boolean);
+    const serviceType = selectedServiceIds.join(',');
 
-    const serviceType = selectedIds.join(',');
+    const serviceNames = (state.selectedServices || []).map(s => s.name).join(', ');
 
-    const serviceNames = [
-      ...(state.selectedServices || []).map(s => s.name),
-      ...(state.selectedAddOns || []).map(a => `Add-on: ${a.name}`)
-    ].join(', ');
+    // Snapshot selected add-ons into JSON (so historical pricing stays accurate)
+    const addonsJson = (state.selectedAddOns || []).map(a => ({
+      id: a.id,
+      name: a.name,
+      price: a.price || 0,
+      durationMinutes: a.durationMinutes || 0
+    }));
 
     // 🔹 9. Dentist mapping
     const dentistRecord = dentists.find(d => d.id === state.selectedDentist.id);
@@ -1488,6 +2049,7 @@ const totalDurationMinutes =
         DentistID: dentistUserAccountId,
         ServiceType: serviceType,
         Service: serviceNames,
+        AddOns: addonsJson,
         AppointmentSchedule: startIsoUTC,
         endschedule: endIsoUTC,
         Status: 'Pending',
@@ -1495,7 +2057,6 @@ const totalDurationMinutes =
         AppointmentNotes: document.getElementById('appointmentNotes')?.value || '',
         TransactionID: transactionId,
         DownpaymentAmount: downpaymentAmount,
-        TotalAmount: estimatedTotalAmount, // ✅ estimated only
         PaymentState: 'DOWNPAYMENT PENDING REVIEW'
       }])
       .select();
@@ -1517,7 +2078,7 @@ const totalDurationMinutes =
           UserAccountID: userId,
           AppointmentID: appointmentId,
           Amount: downpaymentAmount,
-          PaymentType: 'DOWNPAYMENT',
+          PaymentType: 'APPOINTMENT_FEE',
           PaymentMethod: 'GCASH',
           PaymentStatus: 'PENDING',
           DateIssued: new Date().toISOString()
@@ -1549,7 +2110,24 @@ const totalDurationMinutes =
     }
 
     // 🔹 12. Success UI & reset
-    showMessage("Appointment request sent successfully! Secretary will review the downpayment.", "success", 5000);
+    showMessage("Appointment request sent successfully! Secretary will review the appointment fee.", "success", 5000);
+
+    // ✅ 10c) Email confirmation to patient: request received
+if (appointmentId) {
+  const { error: evErr } = await supabaseClient
+    .from("appointmentevents")
+    .insert({
+      appointment_id: appointmentId,
+      event_type: "BOOKING_REQUEST_RECEIVED",
+      payload: {
+        transactionId,
+        downpaymentAmount,
+        paymentMethod: "GCASH"
+      }
+    });
+
+  if (evErr) console.error("appointmentevents insert error (BOOKING_REQUEST_RECEIVED):", evErr);
+}
 
     openTransactionModal({
       transactionId,
@@ -1607,7 +2185,7 @@ setState({
         <div id="modalServices" class="ml-4"></div>
       </div>
       <div>
-      <strong>Downpayment:</strong>
+      <strong>Appointment Fee:</strong>
       ₱<span id="modalDownpayment"></span>
     </div>
     </div>
@@ -1618,6 +2196,75 @@ setState({
     </div>
   </div>
 </div>
+
+
+<div id="policyModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg">
+    <div class="flex items-start justify-between gap-4">
+      <h2 class="text-xl font-bold">Clinic Policies</h2>
+      <button onclick="closePolicyModal()" class="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Close</button>
+    </div>
+
+    <div class="mt-4 space-y-4 text-sm text-gray-700 max-h-[70vh] overflow-y-auto pr-2">
+      <div>
+        <h3 class="font-semibold">Appointment Fee</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>A fixed <strong>appointment fee</strong> of <strong>₱<span id="policyFeeAmount"></span></strong> is required to submit a booking request.</li>
+          <li>The appointment fee is <strong>non-refundable</strong> and <strong>not deductible</strong> from the final treatment cost.</li>
+          <li>Your booking request will be reviewed after receipt verification.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Pricing & Treatment</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>Prices shown are <strong>estimates only</strong>. Final cost may change after assessment and actual treatment.</li>
+          <li>Some procedures may require additional steps based on the dentist’s evaluation.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Reschedule</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>Reschedule requests must be made at least <strong>24 hours</strong> before the appointment time.</li>
+          <li>Each appointment may be rescheduled up to <strong>2 times</strong> only.</li>
+          <li>Reschedule is subject to dentist availability.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Cancellation & No-show</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li><strong>Valid cancellation:</strong> If you cancel at least <strong>24 hours</strong> before your scheduled time, your cancellation is valid.</li>
+          <li><strong>Refund eligibility:</strong> For valid cancellations (24+ hours), the <strong>appointment fee may be refunded</strong>, after verification.</li>
+          <li><strong>Late cancellation / no-show:</strong> Cancellations within <strong>24 hours</strong> of the appointment time or no-shows may result in <strong>forfeiture</strong> of the appointment fee.</li>
+          <li>Repeated no-shows may restrict future booking requests.</li>
+</ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Receipt Verification</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>Please upload a clear receipt. If the receipt is unclear/invalid, the clinic may request a re-upload.</li>
+          <li>If a re-upload request is not complied with within <strong>24 hours</strong>, the booking request may be declined.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Clinic-Initiated Changes</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues). You will be notified as soon as possible.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button onclick="closePolicyModal()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+      <button onclick="acceptPolicyModal()" class="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90">I Agree</button>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>

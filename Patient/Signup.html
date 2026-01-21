@@ -45,12 +45,36 @@
             <label for="firstName" class="block text-sm font-medium">First Name <span class="text-red-500">*</span></label>
             <input id="firstName" type="text" placeholder="Enter your first name"
               class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errFirstName" class="text-red-500 text-xs mt-1"></p>
           </div>
           <div>
-            <label for="dateOfBirth" class="block text-sm font-medium">Date of Birth <span class="text-red-500">*</span></label>
-            <input id="dateOfBirth" type="date"
-              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
-          </div>
+  <label class="block text-sm font-medium">Date of Birth <span class="text-red-500">*</span></label>
+  <div class="grid grid-cols-3 gap-2 mt-1">
+    <div>
+      <select id="dobMonth" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required>
+        <option value="">Month</option>
+        <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+        <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+      </select>
+      <p id="errDobMonth" class="text-red-500 text-xs mt-1"></p>
+    </div>
+    <div>
+      <select id="dobDay" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required>
+        <option value="">Day</option>
+      </select>
+      <p id="errDobDay" class="text-red-500 text-xs mt-1"></p>
+    </div>
+    <div>
+      <select id="dobYear" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required>
+        <option value="">Year</option>
+      </select>
+      <p id="errDobYear" class="text-red-500 text-xs mt-1"></p>
+    </div>
+  </div>
+  <p id="errDob" class="text-red-500 text-xs mt-1"></p>
+</div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
@@ -58,6 +82,7 @@
             <label for="middleName" class="block text-sm font-medium">Middle Name</label>
             <input id="middleName" type="text" placeholder="Enter your middle name"
               class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" />
+            <p id="errMiddleName" class="text-red-500 text-xs mt-1"></p>
           </div>
           <div>
             <label for="gender" class="block text-sm font-medium">Gender</label>
@@ -75,30 +100,57 @@
             <label for="lastName" class="block text-sm font-medium">Last Name <span class="text-red-500">*</span></label>
             <input id="lastName" type="text" placeholder="Enter your last name"
               class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errLastName" class="text-red-500 text-xs mt-1"></p>
           </div>
           <div>
             <label for="phoneNumber" class="block text-sm font-medium">Phone Number <span class="text-red-500">*</span></label>
-            <input id="phoneNumber" type="text" placeholder="Enter your number"
+            <input id="phoneNumber" type="tel" inputmode="numeric" placeholder="Enter your number"
               class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errPhone" class="text-red-500 text-xs mt-1"></p>
           </div>
         </div>
 
         <div>
-          <label for="Address" class="block text-sm font-medium">Address <span class="text-red-500">*</span></label>
-          <input id="Address" type="text" placeholder="Enter your address"
-            class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
-        </div>
+  <label class="block text-sm font-medium">Address <span class="text-red-500">*</span></label>
+  <div class="grid md:grid-cols-2 gap-3 mt-1">
+    <div class="md:col-span-2">
+      <input id="addrStreet" type="text" placeholder="House No. / Street" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required />
+      <p id="errAddrStreet" class="text-red-500 text-xs mt-1"></p>
+    </div>
+    <div>
+      <input id="addrBarangay" type="text" placeholder="Barangay" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required />
+      <p id="errAddrBarangay" class="text-red-500 text-xs mt-1"></p>
+    </div>
+    <div>
+      <select id="addrCity" class="w-full border rounded px-3 py-2">
+        <option value="">Select City / Municipality</option>
+      </select>
+    </div>
+    <div>
+      <select id="addrProvince" class="w-full border rounded px-3 py-2">
+        <option value="">Select Province</option>
+      </select>
+    </div>
+    <div>
+      <input id="addrZip" type="text" inputmode="numeric" placeholder="ZIP (optional)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" />
+      <p id="errAddrZip" class="text-red-500 text-xs mt-1"></p>
+    </div>
+  </div>
+  <p id="errAddress" class="text-red-500 text-xs mt-1"></p>
+</div>
 
         <div>
           <label for="username" class="block text-sm font-medium">Username <span class="text-red-500">*</span></label>
           <input id="username" type="text" placeholder="Create a username"
             class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errUsername" class="text-red-500 text-xs mt-1"></p>
         </div>
 
         <div>
           <label for="email" class="block text-sm font-medium">Email Address <span class="text-red-500">*</span></label>
           <input id="email" type="email" placeholder="Email Address"
             class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errEmail" class="text-red-500 text-xs mt-1"></p>
           <p class="text-sm text-gray-600 mt-1">This will be used for account verification and appointment notifications</p>
         </div>
 
@@ -106,6 +158,7 @@
           <label for="password" class="block text-sm font-medium">Password <span class="text-red-500">*</span></label>
           <input id="password" type="password" placeholder="Create a password"
             class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errPassword" class="text-red-500 text-xs mt-1"></p>
           <p class="text-sm text-gray-600 mt-1">Please use a strong password</p>
         </div>
 
@@ -113,6 +166,7 @@
           <label for="confirmPassword" class="block text-sm font-medium">Confirm Password <span class="text-red-500">*</span></label>
           <input id="confirmPassword" type="password" placeholder="Confirm your password"
             class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-[#03555E]" required />
+            <p id="errConfirmPassword" class="text-red-500 text-xs mt-1"></p>
         </div>
 
         <div class="flex items-center space-x-2">
@@ -123,6 +177,7 @@
             and
             <a href="#" id="openPrivacy" class="text-[#03555E] hover:underline">Privacy Policy</a>
           </label>
+          <p id="errTerms" class="text-red-500 text-xs mt-1"></p>
         </div>
 
         <div id="messageBox" class="hidden p-4 mb-4 rounded text-white"></div>
@@ -301,6 +356,52 @@
       document.getElementById('privacyModal').classList.add('hidden');
     });
 
+const PH_LOCATIONS = {
+  "Metro Manila": [
+    "Caloocan City","Las Piñas City","Makati City","Malabon City","Mandaluyong City",
+    "Manila","Marikina City","Muntinlupa City","Navotas City","Parañaque City",
+    "Pasay City","Pasig City","Pateros","Quezon City","San Juan City",
+    "Taguig City","Valenzuela City"
+  ],
+  "Cavite": [
+    "Bacoor","Cavite City","Dasmariñas","General Mariano Alvarez","General Trias",
+    "Imus","Indang","Kawit","Naic","Noveleta","Rosario","Silang","Tagaytay",
+    "Tanza","Trece Martires"
+  ],
+  "Laguna": [
+    "Alaminos","Bay","Biñan","Cabuyao","Calamba","Los Baños",
+    "San Pablo","San Pedro","Santa Rosa"
+  ],
+  "Bulacan": [
+    "Angat","Balagtas","Baliwag","Bocaue","Bulakan","Calumpit",
+    "Guiguinto","Hagonoy","Malolos","Marilao","Meycauayan",
+    "Norzagaray","Obando","Paombong","Plaridel","San Jose del Monte"
+  ]
+};
+
+const provinceSelect = document.getElementById("addrProvince");
+const citySelect = document.getElementById("addrCity");
+
+// Populate provinces
+Object.keys(PH_LOCATIONS).forEach(province => {
+  const opt = document.createElement("option");
+  opt.value = province;
+  opt.textContent = province;
+  provinceSelect.appendChild(opt);
+});
+
+// Update cities on province change
+provinceSelect.addEventListener("change", () => {
+  citySelect.innerHTML = '<option value="">Select City / Municipality</option>';
+  const cities = PH_LOCATIONS[provinceSelect.value] || [];
+  cities.forEach(city => {
+    const opt = document.createElement("option");
+    opt.value = city;
+    opt.textContent = city;
+    citySelect.appendChild(opt);
+  });
+});
+
 
 
     function showMessage(message, type = "error") {
@@ -328,128 +429,405 @@
 
     const form = document.getElementById('signup-form');
 
+    // ---------- Live validation helpers ----------
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    function setErr(inputEl, errEl, msg) {
+      if (!inputEl || !errEl) return;
+      errEl.textContent = msg || "";
+      inputEl.setCustomValidity(msg || "");
+      inputEl.setAttribute("aria-invalid", msg ? "true" : "false");
+      inputEl.classList.toggle("border-red-500", !!msg);
+    }
+
+    function reqText(id, errId, label) {
+      const el = document.getElementById(id);
+      const err = document.getElementById(errId);
+      const v = (el?.value || "").trim();
+      const msg = v ? "" : `${label} is required.`;
+      setErr(el, err, msg);
+      return !msg;
+    }
+
+    function validateEmailLive() {
+      const el = document.getElementById("email");
+      const err = document.getElementById("errEmail");
+      const v = (el.value || "").trim();
+      if (!v) return setErr(el, err, "Email is required."), false;
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      setErr(el, err, ok ? "" : "Enter a valid email address.");
+      return ok;
+    }
+
+    function validatePhoneLive() {
+      const el = document.getElementById("phoneNumber");
+      const err = document.getElementById("errPhone");
+      const v = (el.value || "").trim();
+      if (!v) return setErr(el, err, "Phone number is required."), false;
+      const ok = /^09\d{9}$/.test(v);
+      setErr(el, err, ok ? "" : "Phone must be 11 digits and start with 09.");
+      return ok;
+    }
+
+    function validateUsernameLive() {
+      const el = document.getElementById("username");
+      const err = document.getElementById("errUsername");
+      const v = (el.value || "").trim();
+      if (!v) return setErr(el, err, "Username is required."), false;
+      if (v.length < 4) return setErr(el, err, "Username must be at least 4 characters."), false;
+      const ok = /^[a-zA-Z0-9_]+$/.test(v);
+      setErr(el, err, ok ? "" : "Username can only contain letters, numbers, and underscore.");
+      return ok;
+    }
+
+    function validatePasswordLive() {
+      const el = document.getElementById("password");
+      const err = document.getElementById("errPassword");
+      const v = el.value || "";
+      if (!v) return setErr(el, err, "Password is required."), false;
+      if (v.length < 8) return setErr(el, err, "Password must be at least 8 characters."), false;
+      setErr(el, err, "");
+      return true;
+    }
+
+    function validateConfirmPasswordLive() {
+      const el = document.getElementById("confirmPassword");
+      const err = document.getElementById("errConfirmPassword");
+      const pw = document.getElementById("password").value || "";
+      const v = el.value || "";
+      if (!v) return setErr(el, err, "Please confirm your password."), false;
+      const ok = v === pw;
+      setErr(el, err, ok ? "" : "Passwords do not match.");
+      return ok;
+    }
+
+    // DOB selects
+    const dobMonth = document.getElementById("dobMonth");
+    const dobDay = document.getElementById("dobDay");
+    const dobYear = document.getElementById("dobYear");
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function populateYears() {
+      const now = new Date();
+      const maxYear = now.getFullYear() - 18;
+      const minYear = 1900;
+      dobYear.innerHTML = `<option value="">Year</option>`;
+      for (let y = maxYear; y >= minYear; y--) {
+        const opt = document.createElement("option");
+        opt.value = String(y);
+        opt.textContent = String(y);
+        dobYear.appendChild(opt);
+      }
+    }
+
+    function daysInMonth(year, month) {
+      if (!year || !month) return 31;
+      return new Date(year, month, 0).getDate(); // month is 1-12
+    }
+
+    function populateDays() {
+      const y = parseInt(dobYear.value, 10);
+      const m = parseInt(dobMonth.value, 10);
+      const maxD = daysInMonth(y, m);
+      const current = dobDay.value;
+      dobDay.innerHTML = `<option value="">Day</option>`;
+      for (let d=1; d<=maxD; d++) {
+        const opt = document.createElement("option");
+        opt.value = String(d);
+        opt.textContent = String(d);
+        dobDay.appendChild(opt);
+      }
+      if (current && parseInt(current,10) <= maxD) dobDay.value = current;
+    }
+
+    function getDobISO() {
+      const y = parseInt(dobYear.value, 10);
+      const m = parseInt(dobMonth.value, 10);
+      const d = parseInt(dobDay.value, 10);
+      if (!y || !m || !d) return null;
+      return `${y}-${pad2(m)}-${pad2(d)}`;
+    }
+
+    function validateDOBLive(showToast=false) {
+      const err = document.getElementById("errDob");
+      const iso = getDobISO();
+
+      // clear per-field required errors
+      setErr(dobMonth, document.getElementById("errDobMonth"), dobMonth.value ? "" : "Required");
+      setErr(dobDay, document.getElementById("errDobDay"), dobDay.value ? "" : "Required");
+      setErr(dobYear, document.getElementById("errDobYear"), dobYear.value ? "" : "Required");
+
+      if (!iso) {
+        err.textContent = "Date of Birth is required.";
+        return false;
+      }
+
+      const dob = new Date(iso + "T00:00:00");
+      const today = new Date();
+      if (dob > today) {
+        err.textContent = "Date of Birth cannot be in the future.";
+        if (showToast) showMessage(err.textContent, "error");
+        return false;
+      }
+
+      let age = today.getFullYear() - dob.getFullYear();
+      const mm = today.getMonth() - dob.getMonth();
+      if (mm < 0 || (mm === 0 && today.getDate() < dob.getDate())) age--;
+
+      if (age < 18) {
+        err.textContent = "You must be at least 18 years old to register.";
+        if (showToast) showMessage(err.textContent, "error");
+        return false;
+      }
+
+      err.textContent = "";
+      return true;
+    }
+
+    function validateAddressLive() {
+      const ok1 = reqText("addrStreet", "errAddrStreet", "House No. / Street");
+      const ok2 = reqText("addrBarangay", "errAddrBarangay", "Barangay");
+      const ok3 = reqText("addrCity", "errAddrCity", "City / Municipality");
+      const ok4 = reqText("addrProvince", "errAddrProvince", "Province");
+      // ZIP optional, but if provided should be digits (PH zip usually 4)
+      const zipEl = document.getElementById("addrZip");
+      const zipErr = document.getElementById("errAddrZip");
+      const zv = (zipEl.value || "").trim();
+      const zipOk = !zv || /^\d{4}$/.test(zv);
+      setErr(zipEl, zipErr, zipOk ? "" : "ZIP should be 4 digits.");
+      const allOk = ok1 && ok2 && ok3 && ok4 && zipOk;
+      const err = document.getElementById("errAddress");
+      if (err) err.textContent = allOk ? "" : "Please complete your address.";
+      return allOk;
+    }
+
+    function validateTermsLive() {
+      const terms = document.getElementById("terms");
+      const err = document.getElementById("errTerms");
+      const ok = !!terms.checked;
+      if (err) err.textContent = ok ? "" : "You must agree to the terms.";
+      return ok;
+    }
+
+    function validateAll(showToast=false) {
+      const ok =
+        reqText("firstName", "errFirstName", "First name") &&
+        reqText("lastName", "errLastName", "Last name") &&
+        validateDOBLive(showToast) &&
+        validateUsernameLive() &&
+        validateEmailLive() &&
+        validatePhoneLive() &&
+        validateAddressLive() &&
+        validatePasswordLive() &&
+        validateConfirmPasswordLive() &&
+        validateTermsLive();
+
+      return ok;
+    }
+
+    // Live listeners
+    document.getElementById("firstName").addEventListener("input", () => reqText("firstName","errFirstName","First name"));
+    document.getElementById("lastName").addEventListener("input", () => reqText("lastName","errLastName","Last name"));
+    document.getElementById("email").addEventListener("input", validateEmailLive);
+    document.getElementById("phoneNumber").addEventListener("input", validatePhoneLive);
+    document.getElementById("username").addEventListener("input", validateUsernameLive);
+
+    document.getElementById("password").addEventListener("input", () => { validatePasswordLive(); validateConfirmPasswordLive(); });
+    document.getElementById("confirmPassword").addEventListener("input", validateConfirmPasswordLive);
+
+    ["addrStreet","addrBarangay","addrCity","addrProvince","addrZip"].forEach(id=>{
+      document.getElementById(id).addEventListener("input", validateAddressLive);
+    });
+
+    document.getElementById("terms").addEventListener("change", validateTermsLive);
+
+    populateYears();
+    populateDays();
+    dobMonth.addEventListener("change", () => { populateDays(); validateDOBLive(false); });
+    dobYear.addEventListener("change", () => { populateDays(); validateDOBLive(false); });
+    dobDay.addEventListener("change", () => validateDOBLive(false));
+
+    // ---------- Duplicate checks (blur) ----------
+    let emailCheckTimer = null;
+    let usernameCheckTimer = null;
+
+    async function checkEmailExists() {
+      if (!validateEmailLive()) return;
+      const email = document.getElementById("email").value.trim();
+      const { data, error } = await supabaseClient.from('UserAccount').select('Email').eq('Email', email);
+      if (error) return; // don't block typing on network errors
+      const exists = data && data.length > 0;
+      const el = document.getElementById("email");
+      const err = document.getElementById("errEmail");
+      setErr(el, err, exists ? "This email is already registered." : "");
+    }
+
+async function checkUsernameExists() {
+  if (!validateUsernameLive()) return;
+  const username = document.getElementById("username").value.trim();
+
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("Username")
+    .eq("Username", username);
+
+  if (error) {
+    console.error("Username check error:", error);
+    return; // don't block typing
+  }
+
+  const exists = data && data.length > 0;
+  const el = document.getElementById("username");
+  const err = document.getElementById("errUsername");
+  setErr(el, err, exists ? "This username is already taken." : "");
+}
+
+    document.getElementById("email").addEventListener("blur", () => {
+      clearTimeout(emailCheckTimer);
+      emailCheckTimer = setTimeout(checkEmailExists, 250);
+    });
+
+    document.getElementById("username").addEventListener("blur", () => {
+      clearTimeout(usernameCheckTimer);
+      usernameCheckTimer = setTimeout(checkUsernameExists, 250);
+    });
+
+    // ---------- Submit ----------
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      console.log("Form submitted"); // Debug log
 
-      // Gather values
+      // validate everything (and show a toast only for DOB main errors)
+      const ok = validateAll(true);
+      if (!ok) return;
+
+      // Ensure duplicate checks are OK before submit (final guard)
+      await checkEmailExists();
+      await checkUsernameExists();
+
+      // If duplicate checks set errors, block submit
+      if (document.getElementById("email").validationMessage || document.getElementById("username").validationMessage) {
+        showMessage("Please fix the highlighted fields.", "error");
+        return;
+      }
+
       const firstName = document.getElementById('firstName').value.trim();
       const middleName = document.getElementById('middleName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
-      const birthDate = document.getElementById('dateOfBirth').value;
-      const gender = document.getElementById('gender').value;
       const username = document.getElementById('username').value.trim();
       const email = document.getElementById('email').value.trim();
       const phoneNumber = document.getElementById('phoneNumber').value.trim();
-      const address = document.getElementById('Address').value.trim();
       const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      const termsChecked = document.getElementById('terms').checked;
 
-      
-      // Validation
-// Validation
-    if (!termsChecked) return alert("Please agree to the terms.");
-    if (password !== confirmPassword) return showMessage("Passwords do not match.");
+      const birthDateISO = getDobISO(); // YYYY-MM-DD
 
-    // ✅ DOB required + must be at least 18
-    if (!birthDate) return showMessage("Date of Birth is required.");
+      // Compose Address string (keeps your DB schema unchanged)
+      const addrStreet = document.getElementById("addrStreet").value.trim();
+      const addrBarangay = document.getElementById("addrBarangay").value.trim();
+      const addrCity = document.getElementById("addrCity").value.trim();
+      const addrProvince = document.getElementById("addrProvince").value.trim();
+      const addrZip = document.getElementById("addrZip").value.trim();
+      const address = `${addrStreet}, Brgy. ${addrBarangay}, ${addrCity}, ${addrProvince}${addrZip ? ' ' + addrZip : ''}`;
 
-    const dob = new Date(birthDate + "T00:00:00"); // avoid timezone issues
-    const today = new Date();
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-60","cursor-not-allowed");
 
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-
-    if (age < 18) return showMessage("You must be at least 18 years old to register.");
-    if (dob > today) return showMessage("Date of Birth cannot be in the future.");
-
- 
       try {
+      const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/Login.html`
+        }
+      });
 
-        showMessage("Signing up... please wait", "info");
+      if (signUpError) {
+        showMessage(signUpError.message || "Sign up failed.", "error");
+        return;
+      }
 
-        // Disable button
-        
+      const userId = authData?.user?.id;
+      if (!userId) {
+        showMessage("Sign up succeeded, but user id was not returned.", "error");
+        return;
+      }
+
+      // ✅ If email confirmation is ON, session is usually null here
+        if (!authData?.session) {
+          const profile = {
+            UserAccountID: userId,
+            FirstName: firstName,
+            MiddleName: middleName,
+            LastName: lastName,
+            Username: username,
+            Email: email,
+            ContactNumber: phoneNumber,
+            BirthDate: birthDateISO,
+            Gender: document.getElementById("gender").value,
+            Address: address,
+            Role: "Patient"
+          };
+
+          const { error: pendErr } = await supabaseClient
+            .from("PendingProfiles")
+            .upsert([{
+              UserAccountID: userId,
+              ProfileData: profile
+            }]);
+
+          if (pendErr) {
+            console.error("PendingProfiles upsert failed:", pendErr);
+            showMessage("Account created but setup failed. Please contact support.", "error");
+            return;
+          }
+
+          console.log("SIGNUP origin:", window.location.origin);
+          console.log("Pending profile saved to DB:", profile);
+
+          showMessage("Account created! Please verify your email, then log in to finish setup.", "success");
+          form.reset();
+          populateYears();
+          populateDays();
+          return;
+        }
+
+      // ✅ Only insert immediately if session exists (email confirm OFF)
+        const { error: insertError } = await supabaseClient
+          .from("UserAccount")
+          .insert([{
+            UserAccountID: userId,
+            FirstName: firstName,
+            MiddleName: middleName,
+            LastName: lastName,
+            Username: username,
+            Email: email,
+            ContactNumber: phoneNumber,
+            BirthDate: birthDateISO,
+            Gender: document.getElementById("gender").value,
+            Address: address,
+            Role: "Patient"
+          }]);
 
 
-        // --- 1️⃣ Check duplicate email ---
-  let { data: existingEmail, error: emailError } = await supabaseClient
-    .from('UserAccount')
-    .select('"Email"')
-    .eq('Email', email)
-    .maybeSingle();
+      if (insertError) {
+        console.error(insertError);
+        showMessage(insertError.message || "Account created, but profile insert failed.", "error");
+        return;
+      }
 
-  if (emailError) {
-    console.error(emailError);
-    return showMessage("Error checking email: " + emailError.message, "error");
-  }
-  if (existingEmail) {
-    return showMessage("This email is already registered.", "error");
-  }
+      showMessage("Account created successfully! Please check your email to verify your account.", "success");
+      form.reset();
+      populateYears();
+      populateDays();
+            } catch (err) {
+              console.error(err);
+              showMessage("Unexpected error during signup.", "error");
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.classList.remove("opacity-60","cursor-not-allowed");
+            }
+          });
 
-  // --- 2️⃣ Check duplicate username ---
-  let { data: existingUsername, error: usernameError } = await supabaseClient
-    .from('UserAccount')
-    .select('"Username"')
-    .eq('Username', username)
-    .limit(1);
-
-  if (usernameError) {
-    console.error(usernameError);
-    return showMessage("Error checking username: " + usernameError.message, "error");
-  }
-
-  if (existingUsername.length > 0) {
-    return showMessage("This username is already taken.", "error");
-  }
-
-  // --- 3️⃣ Sign up with Supabase Auth ---
-   const { data: authData, error: authError } = await supabaseClient.auth.signUp(
-  {
-    email: email,
-    password: password,
-  },
-);
-
-  if (authError) {
-    return showMessage("Sign up error: " + authError.message, "error");
-  }
-
-  console.log("Auth signup successful:", authData);
-
-  // --- 4️⃣ Insert into UserAccountTable ---
-  const { data: tableData, error: tableError } = await supabaseClient
-    .from('UserAccount')
-    .insert([{
-      UserAccountID: authData.user.id,
-      FirstName: firstName,
-      MiddleName: middleName,
-      LastName: lastName,
-      BirthDate: birthDate,
-      Gender: gender,
-      Username: username,
-      Role: 'patient',
-      ContactNumber: phoneNumber,
-      Email: email,
-      CreatedAt: new Date(),
-      Address: address,
-    }]);
-
-  if (tableError) {
-    console.error(tableError);
-    showMessage("Failed to save user info: " + tableError.message, "error");
-  } else {
-    showMessage("Sign up successful! Please check your email to confirm.", "success");
-    form.reset();
-  }
-
-} catch (err) {
-  console.error(err);
-  showMessage("Unexpected error occurred.", "error");
-}
-    });
   </script>
 </body>
 </html>

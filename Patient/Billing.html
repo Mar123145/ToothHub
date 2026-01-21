@@ -1,72 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billing & Payments</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom colors from the original component */
-        .bg-\[\#03555E\] { background-color: #03555E; }
-        .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
-        .text-\[\#03555E\] { color: #03555E; }
-        .border-\[\#03555E\] { border-color: #03555E; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Billing & Payments</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "custom-primary": "#03555E",
+            "custom-hover": "#024449",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
-        /* Approximate shadcn/ui styles */
-        .card {
-            border-radius: 0.5rem;
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            background-color: white;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        }
-        .card-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .card-title {
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 600; /* font-semibold */
-        }
-        .card-content {
-            padding: 1.5rem;
-        }
-        .button-style {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            line-height: 1.25;
-            font-weight: 500;
-            transition: background-color 0.15s;
-        }
-        .button-ghost {
-            background-color: transparent;
-            border: none;
-        }
-        .button-outline {
-             border: 1px solid #e5e7eb;
-             background-color: white;
-        }
-    </style>
+  <style>
+    /* Keep legacy utility classes used in Billing content */
+    .bg-\[\#03555E\] { background-color: #03555E; }
+    .hover\:bg-\[\#024449\]:hover { background-color: #024449; }
+    .text-\[\#03555E\] { color: #03555E; }
+    .border-\[\#03555E\] { border-color: #03555E; }
+
+    /* Approximate shadcn/ui styles (from your original Billing file) */
+    .card {
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      background-color: white;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .card-content {
+      padding: 1.5rem;
+    }
+    .button-style {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      line-height: 1.25;
+      font-weight: 500;
+      transition: background-color 0.15s;
+    }
+    .button-ghost {
+      background-color: transparent;
+      border: none;
+    }
+    .button-outline {
+      border: 1px solid #e5e7eb;
+      background-color: white;
+    }
+  </style>
 </head>
-<body>
-    <div class="min-h-screen bg-gray-50">
-        <header class="bg-[#03555E] text-white">
-            <div class="container mx-auto px-4 py-4 flex items-center gap-4">
-                <a href="Dashboard.html">
-                    <button class="button-style button-ghost text-white hover:bg-[#024449] flex items-center text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
-                            <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
-                        </svg>
-                        Back
-                    </button>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold">Billing & Payments</h1>
-                    <p class="text-sm opacity-90">Manage your payments and invoices</p>
-                </div>
-            </div>
-        </header>
 
-        <div class="container mx-auto px-4 py-8">
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same as Dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img
+            src="/Image/logo.png"
+            alt="Logo"
+            class="absolute inset-0 w-full h-full object-contain"
+            onload="this.nextElementSibling.style.display='none'"
+            onerror="this.remove();"
+          />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fas fa-bell w-6 h-6"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fas fa-user w-6 h-6"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-house w-5"></i>
+          <span>Home</span>
+        </a>
+        <a href="Booking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-plus w-5"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="MyBooking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-check w-5"></i>
+          <span>My Appointment</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-file-lines w-5"></i>
+          <span>Treatment Records</span>
+        </a>
+        <!-- active -->
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i>
+          <span>Billing</span>
+        </a>
+        <a href="notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i>
+          <span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i>
+          <span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i>
+          <span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+      <h1 class="text-2xl font-bold text-gray-900">Billing & Payments</h1>
+      <p class="text-gray-600 mb-6">Manage your payments and invoices</p>
+
+      <div class="max-w-6xl mx-auto">
+        <div class="grid gap-6">
+
             <div class="grid gap-6">
 
                 <div class="card">
@@ -74,11 +155,7 @@
                         <h2 class="card-title">Account Summary</h2>
                     </div>
                     <div class="card-content">
-                      <div class="grid md:grid-cols-3 gap-4">
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <div id="outstandingAmount" class="text-2xl font-bold text-green-600">₱0.00</div>
-                        <div class="text-sm text-gray-600">Outstanding Balance</div>
-                    </div>
+                      <div class="grid md:grid-cols-2 gap-4">
                     <div class="text-center p-4 bg-blue-50 rounded-lg">
                         <div id="totalPaidAmount" class="text-2xl font-bold text-blue-600">₱0.00</div>
                         <div class="text-sm text-gray-600">Total Paid</div>
@@ -106,12 +183,14 @@
                     </div>
                     </div>
                 </div>
-            </div>
         </div>
-    </div>
+      </div>
+      </div>
+    </main>
+  </div>
 
-    <!-- Invoice Details Modal -->
-<div id="invoice-details-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <!-- Invoice Details Modal -->
+  <div id="invoice-details-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
   <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative">
     <button
       class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
@@ -137,8 +216,7 @@
   </div>
 </div>
 
-</body>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
@@ -189,6 +267,14 @@
     return userData;
     }
 
+
+    // Logout (used by the sidebar)
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = '/Login.html';
+    }
+
     function formatCurrency(amount) {
   const num = Number(amount) || 0;
   return "₱" + num.toLocaleString("en-PH", {
@@ -210,7 +296,6 @@ async function loadAccountSummary(userId) {
 
   if (apptError) {
     console.error('Error loading appointments for summary:', apptError);
-    if (outstandingEl) outstandingEl.textContent = '₱0.00';
     if (totalPaidEl) totalPaidEl.textContent = '₱0.00';
     if (invoicesEl) invoicesEl.textContent = '0';
     return;
@@ -227,7 +312,7 @@ async function loadAccountSummary(userId) {
   // 2) Get all billing rows for those appointments (for this user)
   const { data: bills, error: billError } = await supabaseClient
     .from('Billing')
-    .select('AppointmentID, Amount, PaymentStatus')
+    .select('AppointmentID, Amount, PaymentStatus, PaymentType')
     .eq('UserAccountID', userId)
     .in('AppointmentID', appointmentIds);
 
@@ -240,29 +325,54 @@ async function loadAccountSummary(userId) {
   }
 
   // 3) Sum PAID per appointment
-  const paidByAppointment = {};
-  (bills || []).forEach(b => {
+  // - BILL payments reduce outstanding
+  // - Appointment fee payments should count toward Total Paid, but should NOT reduce outstanding
+  const isApptFeeType = (t) => t === 'DOWNPAYMENT' || t === 'APPOINTMENT_FEE' || t === 'APPOINTMENTFEE';
+
+  const billPaidByAppointment = {};
+  let apptFeePaidTotal = 0;
+  let billPaidTotal = 0;
+
+  (bills || []).forEach((b) => {
     if (b.PaymentStatus !== 'PAID') return;
-    const appId = b.AppointmentID;
-    if (!paidByAppointment[appId]) paidByAppointment[appId] = 0;
-    paidByAppointment[appId] += Number(b.Amount || 0);
+    const amt = Number(b.Amount || 0);
+    if (!amt) return;
+
+    // total paid includes BOTH bill payments + appointment fees
+    if (isApptFeeType(b.PaymentType)) {
+      apptFeePaidTotal += amt;
+      return;
+    }
+
+    if (b.PaymentType === 'BILL') {
+      billPaidTotal += amt;
+      const appId = b.AppointmentID;
+      if (!billPaidByAppointment[appId]) billPaidByAppointment[appId] = 0;
+      billPaidByAppointment[appId] += amt;
+    }
   });
+
 
   let outstanding = 0;
   let totalPaid = 0;
   let totalInvoices = 0;
 
-  (appointments || []).forEach(appt => {
-    const total = Number(appt.TotalAmount || 0);
-    const paidForAppt = paidByAppointment[appt.AppointmentID] || 0;
-    const remaining = Math.max(total - paidForAppt, 0);
+(appointments || []).forEach(appt => {
+  const total = Number(appt.TotalAmount || 0);
 
-    if (total > 0) {
-      totalInvoices += 1;
-    }
-    totalPaid += paidForAppt;
-    outstanding += remaining;
-  });
+  // only count invoices/outstanding when bill is defined
+  if (total <= 0) return;
+
+  const paidForAppt = billPaidByAppointment[appt.AppointmentID] || 0;
+  const remaining = Math.max(total - paidForAppt, 0);
+
+  totalInvoices += 1;
+  // Total Paid shown to patient = Bill payments + Appointment fees
+  // (even if bill isn't issued yet, appointment fee still counts)
+  totalPaid = billPaidTotal + apptFeePaidTotal;
+  outstanding += remaining;
+});
+
 
   if (outstandingEl) outstandingEl.textContent = formatCurrency(outstanding);
   if (totalPaidEl) totalPaidEl.textContent = formatCurrency(totalPaid);
@@ -270,14 +380,16 @@ async function loadAccountSummary(userId) {
 }
 
 function getTypeChip(type) {
+  // Support both legacy + newer enums
+  const isApptFee = type === 'DOWNPAYMENT' || type === 'APPOINTMENT_FEE' || type === 'APPOINTMENTFEE';
   const label =
-    type === 'DOWNPAYMENT'
-      ? 'Downpayment'
-      : type === 'FINAL_PAYMENT'
-      ? 'Full Payment'
+    isApptFee
+      ? 'Appointment Fee'
+      : type === 'BILL'
+      ? 'Bill Payment'
       : type || '';
 
-  const isDown = type === 'DOWNPAYMENT';
+  const isDown = isApptFee;
   const baseClass = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium";
   const color = isDown
     ? "bg-blue-50 text-blue-700"
@@ -468,11 +580,26 @@ async function openInvoiceDetails(billingId) {
       console.error('Error loading billing rows for details:', billErr);
     }
 
-    const totalAmount = appt ? Number(appt.TotalAmount || 0) : 0;
-    const totalPaid = (billRows || [])
-      .filter(b => b.PaymentStatus === 'PAID')
-      .reduce((sum, b) => sum + Number(b.Amount || 0), 0);
-    const remaining = Math.max(totalAmount - totalPaid, 0);
+const totalAmount = Number(appt?.TotalAmount || 0);
+
+// Appointment Fee paid (support legacy + newer enums)
+const isApptFeeType2 = (t) => t === 'DOWNPAYMENT' || t === 'APPOINTMENT_FEE' || t === 'APPOINTMENTFEE';
+const appointmentFeePaid = (billRows || [])
+  .filter(b => b.PaymentStatus === 'PAID' && isApptFeeType2(b.PaymentType))
+  .reduce((sum, b) => sum + Number(b.Amount || 0), 0);
+
+// Bill payments paid
+const billPaid = (billRows || [])
+  .filter(b => b.PaymentStatus === 'PAID' && b.PaymentType === 'BILL')
+  .reduce((sum, b) => sum + Number(b.Amount || 0), 0);
+
+// Has dentist already issued a bill?
+const hasBillDefined = totalAmount > 0;
+
+// Remaining only makes sense if bill is defined
+const remaining = hasBillDefined ? Math.max(totalAmount - billPaid, 0) : 0;
+
+
 
     const apptDate = appt?.AppointmentSchedule ? new Date(appt.AppointmentSchedule) : null;
     const apptDateStr = apptDate
@@ -510,34 +637,36 @@ async function openInvoiceDetails(billingId) {
       `;
     }).join('');
 
-    contentEl.innerHTML = `
-      <div class="space-y-1">
-        <p><span class="font-medium">Appointment date:</span> ${apptDateStr}</p>
-        <p><span class="font-medium">Services:</span> ${serviceText}</p>
-      </div>
+contentEl.innerHTML = `
+  <div class="space-y-1">
+    <p><span class="font-medium">Appointment date:</span> ${apptDateStr}</p>
+    <p><span class="font-medium">Services:</span> ${serviceText}</p>
+  </div>
 
-      <div class="grid grid-cols-3 gap-3 text-sm">
-        <div class="p-3 rounded-lg bg-gray-50">
-          <div class="text-[11px] text-gray-500">Total Amount</div>
-          <div class="font-semibold text-gray-900">${formatCurrency(totalAmount)}</div>
-        </div>
-        <div class="p-3 rounded-lg bg-green-50">
-          <div class="text-[11px] text-green-700">Total Paid</div>
-          <div class="font-semibold text-green-800">${formatCurrency(totalPaid)}</div>
-        </div>
-        <div class="p-3 rounded-lg bg-amber-50">
-          <div class="text-[11px] text-amber-700">Remaining</div>
-          <div class="font-semibold text-amber-800">${formatCurrency(remaining)}</div>
-        </div>
+  <div class="grid grid-cols-2 gap-3 text-sm">
+    <div class="p-3 rounded-lg bg-gray-50">
+      <div class="text-[11px] text-gray-500">Total Bill</div>
+      <div class="font-semibold text-gray-900">
+        ${hasBillDefined ? formatCurrency(totalAmount) : 'Not issued yet'}
       </div>
+    </div>
 
-      <div class="pt-3">
-        <h3 class="text-sm font-semibold mb-2">Payment History</h3>
-        <div class="border rounded-lg divide-y">
-          ${paymentsHtml || '<div class="p-3 text-xs text-gray-500">No payments yet.</div>'}
-        </div>
-      </div>
-    `;
+    <div class="p-3 rounded-lg bg-blue-50">
+      <div class="text-[11px] text-blue-700">Appointment Fee</div>
+      <div class="font-semibold text-blue-800">${formatCurrency(appointmentFeePaid)}</div>
+    </div>
+
+  
+  </div>
+
+  <div class="pt-3">
+    <h3 class="text-sm font-semibold mb-2">Payment History</h3>
+    <div class="border rounded-lg divide-y">
+      ${paymentsHtml || '<div class="p-3 text-xs text-gray-500">No payments yet.</div>'}
+    </div>
+  </div>
+`;
+
 
     const modal = document.getElementById('invoice-details-modal');
     modal.classList.remove('hidden');
@@ -556,6 +685,79 @@ function closeInvoiceDetails() {
 
 
 
+// Add Dashboard-style notifications dropdown + badge (Billing didn't have this before)
+    async function loadNotifications() {
+      if (localStorage.getItem("prefBellNotif") === "false") return;
+      const bellBtn = document.getElementById("notifBellBtn");
+      if (!bellBtn) return;
+
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      const { data: notifications, error } = await supabaseClient
+        .from("Notifications")
+        .select("*")
+        .eq("UserAccountID", userId)
+        .eq("Status", "Unread")
+        .order("DateSent", { ascending: false });
+
+      if (error) return console.error(error);
+
+      const existingBadge = document.getElementById("notif-badge");
+      if (existingBadge) existingBadge.remove();
+
+      if (notifications && notifications.length > 0) {
+        const badge = document.createElement("span");
+        badge.id = "notif-badge";
+        badge.textContent = notifications.length;
+        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+        bellBtn.appendChild(badge);
+      }
+
+      const prevDropdown = document.getElementById("notif-dropdown");
+      if (prevDropdown) prevDropdown.remove();
+
+      bellBtn.onclick = async () => {
+        let dropdown = document.getElementById("notif-dropdown");
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement("div");
+        dropdown.id = "notif-dropdown";
+        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+        dropdown.style.maxHeight = "320px";
+
+        if (!notifications || notifications.length === 0) {
+          const emptyMsg = document.createElement("div");
+          emptyMsg.className = "p-4 text-gray-500 text-sm";
+          emptyMsg.textContent = "No new notifications";
+          dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach((n) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+            item.textContent = n.Message;
+            item.addEventListener("click", async () => {
+              await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
+              dropdown.remove();
+              loadNotifications();
+            });
+            dropdown.appendChild(item);
+          });
+        }
+
+        document.body.appendChild(dropdown);
+
+        const onDocClick = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener("click", onDocClick);
+          }
+        };
+        setTimeout(() => document.addEventListener("click", onDocClick), 0);
+      };
+    }
+
 window.addEventListener('DOMContentLoaded', async () => {
   const user = await checkAuth();
   if (!user) return;
@@ -572,10 +774,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // notifications bell (same behavior as Dashboard)
+  try { await loadNotifications(); } catch (e) {}
+
    await loadAccountSummary(userId);
-  await loadRecentInvoices(userId);w
+  await loadRecentInvoices(userId);
 });
 
 
 </script>
-</html>
+
+  
+</body>
