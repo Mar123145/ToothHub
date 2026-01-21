@@ -119,58 +119,106 @@
 
     try {
       // Show loading
-      showMessage("Logging in... please wait", "info");
-      submitBtn.disabled = true;
+showMessage("Logging in... please wait", "info");
+submitBtn.disabled = true;
 
-      // 1️⃣ Fetch user by email or username (quoted for safety)
-      let { data: userData, error: fetchError } = await supabaseClient
-        .from("UserAccount")
-        .select("*")
-        .or(`Email.eq."${identifier}",Username.eq."${identifier}"`)
-        .maybeSingle();
+const safeIdentifier = identifier.replaceAll('"', '\\"');
+let emailToUse = safeIdentifier;
 
-      if (fetchError) {
-        submitBtn.disabled = false;
-        return showMessage("Error fetching user info: " + fetchError.message, "error");
-      }
+// If user typed a username (no @), try to resolve it to an email via UserAccount
+if (!safeIdentifier.includes("@")) {
+  const { data: u, error: uErr } = await supabaseClient
+    .from("UserAccount")
+    .select("Email")
+    .eq("Username", safeIdentifier)
+    .maybeSingle();
 
-      if (!userData) {
-        submitBtn.disabled = false;
-        return showMessage("No account found with that email or username.", "error");
-      }
+  if (uErr) {
+    submitBtn.disabled = false;
+    return showMessage("Error fetching username: " + uErr.message, "error");
+  }
+  if (!u) {
+    submitBtn.disabled = false;
+    return showMessage("No account found with that username.", "error");
+  }
 
-      const email = userData.Email;
+  emailToUse = u.Email;
+}
 
-      // 2️⃣ Supabase Auth sign-in (email only)
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+// 1) Auth sign-in first
+const { data, error } = await supabaseClient.auth.signInWithPassword({
+  email: emailToUse,
+  password
+});
 
-      if (error) {
-        submitBtn.disabled = false;
-        return showMessage("Login failed: " + error.message, "error");
-      }
+if (error) {
+  submitBtn.disabled = false;
+  return showMessage("Login failed: " + error.message, "error");
+}
 
-      // 3️⃣ Check if email is confirmed
-      if (!data.user.email_confirmed_at) {
-        submitBtn.disabled = false;
-        return showMessage("Please verify your email before logging in.", "error");
-      }
+// 2) Require verified email  
+if (!data.user.email_confirmed_at) {
+  submitBtn.disabled = false;
+  return showMessage("Please verify your email before logging in.", "error");
+}
 
-      // 4️⃣ Save user info
-      localStorage.setItem("userFirstName", userData.FirstName);
-      localStorage.setItem("userRole", userData.Role);
-      localStorage.setItem("userId", userData.UserAccountID);
+// ✅ Finish signup from DB (PendingProfiles → UserAccount)
+const { data: pend, error: pendFetchErr } = await supabaseClient
+  .from("PendingProfiles")
+  .select("ProfileData")
+  .eq("UserAccountID", data.user.id)
+  .maybeSingle();
 
-      console.log("Auth ID:", data.user.id);
-      console.log("UserAccountID:", userData.UserAccountID);
+if (pendFetchErr) {
+  console.error("PendingProfiles fetch failed:", pendFetchErr);
+}
 
-      showMessage("Login successful! Redirecting...", "success");
+if (pend?.ProfileData) {
+  const profile = pend.ProfileData;
 
-      // 5️⃣ Redirect based on role (✅ use relative paths if you're using Live Server)
-      setTimeout(() => {
-        if (userData.Role === "secretary") window.location.href = "Secretary/Dashboard.html";
-        else if (userData.Role === "dentist") window.location.href = "Dentist/Dashboard.html";
-        else window.location.href = "Patient/Dashboard.html";
-      }, 1000);
+  const { error: insErr } = await supabaseClient
+    .from("UserAccount")
+    .insert([profile]);
+
+  if (insErr) {
+    console.error("UserAccount insert failed:", insErr);
+    submitBtn.disabled = false;
+    return showMessage("Profile setup failed: " + insErr.message, "error");
+  }
+
+  // cleanup
+  await supabaseClient
+    .from("PendingProfiles")
+    .delete()
+    .eq("UserAccountID", data.user.id);
+}
+
+
+// 4) Now fetch UserAccount row (it should exist now)
+const { data: userData, error: fetchError } = await supabaseClient
+  .from("UserAccount")
+  .select("*")
+  .eq("UserAccountID", data.user.id)
+  .maybeSingle();
+
+if (fetchError || !userData) {
+  submitBtn.disabled = false;
+  return showMessage("Login succeeded but profile not found. Please contact support.", "error");
+}
+
+// 5) Save user info
+localStorage.setItem("userFirstName", userData.FirstName);
+localStorage.setItem("userRole", userData.Role);
+localStorage.setItem("userId", userData.UserAccountID);
+
+showMessage("Login successful! Redirecting...", "success");
+
+// 6) Redirect
+setTimeout(() => {
+  if (userData.Role === "secretary") window.location.href = "Secretary/Dashboard.html";
+  else if (userData.Role === "dentist") window.location.href = "Dentist/Dashboard.html";
+  else window.location.href = "Patient/Dashboard.html";
+}, 1000);
 
     } catch (err) {
       console.error(err);
