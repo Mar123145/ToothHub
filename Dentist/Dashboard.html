@@ -67,7 +67,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar (Secretary shell style, Dentist links) -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -77,6 +77,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -90,10 +93,6 @@
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
-        </a>
-
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
@@ -185,20 +184,26 @@
           </select>
         </div>
 
-        <div class="card" id="appointmentsCard">
-          <div class="card-header border-b border-gray-100">
-            <h2 class="card-title flex items-center gap-2">
-              <i data-lucide="calendar-clock" class="w-5 h-5"></i>
-              <span id="appointmentsCardTitleText">Today's Appointments</span>
-            </h2>
-          </div>
-          <div class="card-content">
-            <div class="text-center py-8 text-gray-500">
-              <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-              <p class="text-sm">No appointments for today</p>
-            </div>
-          </div>
-        </div>
+    <div class="card" id="appointmentsCard">
+      <div class="card-header border-b border-gray-100">
+        <h2 class="card-title flex items-center gap-2">
+          <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+          <span id="appointmentsCardTitleText">Today's Appointments</span>
+        </h2>
+      </div>
+
+      <div class="card-content">
+        <!-- ✅ JS will append cards here -->
+        <div id="appointmentsCards" class="space-y-3"></div>
+
+        <!-- ✅ JS will show/hide this -->
+        <div id="noAppointments" class="text-center py-8 text-gray-500">
+          <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+          <p class="text-sm">No appointments for today</p>
+    </div>
+  </div>
+</div>
+
       </div>
     </main>
   </div>
@@ -253,129 +258,161 @@ function getTodayRangeISO() {
     };
 }
 
-async function loadDentistAppointments(filter = 'today') {
-    const dentistId = localStorage.getItem('userId');
-    if (!dentistId) return;
-
-    const now = new Date();
-    let query = supabaseClient
-        .from('Appointment')
-        .select('*')
-        .eq('Status', 'Approved')
-        .eq('DentistID', dentistId)
-        .order('AppointmentSchedule', { ascending: true });
-
-    const { startISO, endISO } = getTodayRangeISO();
-
-    if (filter === 'today') {
-        query = query
-            .gte('AppointmentSchedule', startISO)
-            .lt('AppointmentSchedule', endISO);
-    } else if (filter === 'upcoming') {
-        query = query.gte('AppointmentSchedule', now.toISOString());
-    } else if (filter === 'all') {
-        // no extra date filter; all Approved for this dentist
-    }
-
-    const { data: appointments, error } = await query;
-    if (error) {
-        console.error("Error fetching appointments:", error);
-        return;
-    }
-
-    const cardContent = document.querySelector("#appointmentsCard .card-content");
-    const titleTextEl = document.getElementById('appointmentsCardTitleText');
-
-    // Update card title based on filter
-    if (titleTextEl) {
-        if (filter === 'today') titleTextEl.textContent = "Today's Appointments";
-        else if (filter === 'upcoming') titleTextEl.textContent = "Upcoming Appointments";
-        else if (filter === 'all') titleTextEl.textContent = "All Approved Appointments";
-        else titleTextEl.textContent = "Appointments";
-    }
-
-    // No results handling
-    if (!appointments || appointments.length === 0) {
-        const label = filter === 'today'
-            ? "today"
-            : filter === 'upcoming'
-                ? "upcoming"
-                : "approved";
-
-        cardContent.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-                <p class="text-sm">No ${label} appointments found</p>
-            </div>
-        `;
-        lucide.createIcons();
-        return;
-    }
-
-    // Fetch patient names (basic, one-by-one)
-    for (let appt of appointments) {
-        if (appt.UserAccountID) {
-            const { data: patient } = await supabaseClient
-                .from('UserAccount')
-                .select('FirstName, LastName')
-                .eq('UserAccountID', appt.UserAccountID)
-                .maybeSingle();
-
-            appt.PatientName = patient ? `${patient.FirstName} ${patient.LastName}` : appt.UserAccountID;
-        } else {
-            appt.PatientName = 'Unknown';
-        }
-    }
-
-    cardContent.innerHTML = appointments.map(a => `
-        <div class="border rounded-lg p-4 flex justify-between items-center mb-4 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex flex-col">
-                <h3 class="font-semibold text-gray-800 text-lg">${a.Service}</h3>
-                <p class="text-sm text-gray-500">
-                    ${new Date(a.AppointmentSchedule).toLocaleString([], {
-                        hour:'2-digit',
-                        minute:'2-digit',
-                        year:'numeric',
-                        month:'short',
-                        day:'numeric'
-                    })}
-                </p>
-                <p class="text-sm text-gray-600">Patient: ${a.PatientName}</p>
-                ${a.AppointmentNotes ? `<p class="text-sm text-gray-400 mt-1">Notes: ${a.AppointmentNotes}</p>` : ''}
-            </div>
-            <div class="flex-shrink-0 ml-4">
-                <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
-                    ${a.Status}
-                </span>
-            </div>
-        </div>
-    `).join('');
-
-    lucide.createIcons();
+function getStatusBadgeClass(status) {
+  switch ((status || "").toLowerCase()) {
+    case "approved":
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    case "rescheduled":
+      return "bg-purple-50 text-purple-700 border-purple-200";
+    case "finished":
+      return "bg-green-50 text-green-700 border-green-200";
+    case "cancelled":
+      return "bg-red-50 text-red-700 border-red-200";
+    default:
+      return "bg-gray-50 text-gray-700 border-gray-200";
+  }
 }
+
+
+async function loadDentistAppointments(filter = 'today') {
+  const cardsContainer = document.getElementById('appointmentsCards');
+  const noAppts = document.getElementById('noAppointments');
+
+   if (!cardsContainer || !noAppts) {
+    console.warn('Appointments container not found');
+    return;
+  }
+
+  cardsContainer.innerHTML = '';
+  noAppts.classList.add('hidden');
+
+  // Get logged-in dentist user id
+  const dentistId = localStorage.getItem('userId');
+  if (!dentistId) {
+    noAppts.classList.remove('hidden');
+    return;
+  }
+
+  // Build Manila-ish day boundaries using local device time (matches your Appointment.html approach)
+  const now = new Date();
+
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+  let query = supabaseClient
+    .from('Appointment')
+    .select(`
+      AppointmentID,
+      AppointmentSchedule,
+      Status,
+      Service,
+      Patient:UserAccount!Appointment_UserAccountID_fkey (
+        FirstName,
+        LastName
+      )
+    `)
+    .eq('DentistID', dentistId)
+    .in('Status', ['Approved', 'Rescheduled'])
+    .order('AppointmentSchedule', { ascending: true });
+
+  if (filter === 'today') {
+    // ✅ Today only (00:00 - tomorrow 00:00)
+    query = query
+      .gte('AppointmentSchedule', startOfToday.toISOString())
+      .lt('AppointmentSchedule', startOfTomorrow.toISOString());
+  } else if (filter === 'upcoming') {
+    // ✅ Option B: Upcoming starts tomorrow 00:00
+    query = query.gte('AppointmentSchedule', startOfTomorrow.toISOString());
+  } else if (filter === 'finished') {
+    // ✅ Finished is before today 00:00
+    query = query.lt('AppointmentSchedule', startOfToday.toISOString());
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error loading appointments:', error);
+    noAppts.classList.remove('hidden');
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    noAppts.classList.remove('hidden');
+    return;
+  }
+
+  data.forEach(appt => {
+  const patientName = appt.Patient
+    ? `${appt.Patient.FirstName || ''} ${appt.Patient.LastName || ''}`.trim()
+    : 'Unknown Patient';
+
+
+    const serviceName = appt.Service || 'Unknown Service';
+    const schedule = appt.AppointmentSchedule
+      ? new Date(appt.AppointmentSchedule).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
+      : '—';
+    const status = appt.Status || '';
+    const statusClass = getStatusBadgeClass(status);
+
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition';
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-sm text-gray-500">Patient</p>
+          <p class="font-semibold text-gray-800 truncate">${patientName}</p>
+
+          <p class="text-sm text-gray-500 mt-2">Service</p>
+          <p class="text-sm font-medium text-gray-700 truncate">${serviceName}</p>
+
+          <p class="text-sm text-gray-500 mt-2">Schedule</p>
+          <p class="text-sm font-medium text-gray-700">${schedule}</p>
+        </div>
+
+        <span class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border ${statusClass}">
+          ${status}
+        </span>
+      </div>
+    `;
+
+    cardsContainer.appendChild(card);
+  });
+}
+
 
 async function loadTodayAppointmentsCount() {
-    const dentistId = localStorage.getItem('userId');
-    if (!dentistId) return;
+  const dentistId = localStorage.getItem('userId');
+  const countEl = document.getElementById('todayAppointmentsCount');
 
-    const { startISO, endISO } = getTodayRangeISO();
+  if (!dentistId || !countEl) return;
 
-    const { data, error } = await supabaseClient
-        .from('Appointment')
-        .select('AppointmentID')
-        .eq('DentistID', dentistId)
-        .eq('Status', 'Approved')
-        .gte('AppointmentSchedule', startISO)
-        .lt('AppointmentSchedule', endISO);
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
 
-    if (error) {
-        console.error('Error fetching today appointment count:', error);
-        return;
-    }
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-    const statEl = document.getElementById('todayAppointmentsStat');
-    if (statEl) statEl.textContent = data.length;
+  const { count, error } = await supabaseClient
+    .from('Appointment')
+    .select('AppointmentID', { count: 'exact', head: true })
+    .eq('DentistID', dentistId)
+    .in('Status', ['Approved', 'Rescheduled']) // ✅ include Rescheduled
+    .gte('AppointmentSchedule', startOfToday.toISOString())
+    .lt('AppointmentSchedule', startOfTomorrow.toISOString());
+
+  if (error) {
+    console.error('Error counting today appointments:', error);
+    return;
+  }
+
+  countEl.textContent = String(count ?? 0);
 }
+
 
 async function loadTotalPatients() {
     const { data, error } = await supabaseClient
@@ -498,7 +535,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         loadDentistAppointments(e.target.value);
     });
 
-    loadDentistAppointments(document.getElementById('appointmentFilter').value);
 
     // 🔢 Load stats
     loadTodayAppointmentsCount();

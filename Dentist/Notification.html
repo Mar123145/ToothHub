@@ -85,7 +85,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -95,6 +95,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -108,10 +111,6 @@
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
-        </a>
-
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">

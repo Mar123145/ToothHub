@@ -111,7 +111,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -121,6 +121,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -133,9 +136,6 @@
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -160,6 +160,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/feedback.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script type="text/babel">
 
@@ -391,6 +392,9 @@ function TreatmentRecordsPage() {
     const [otherMedicalConcerns, setOtherMedicalConcerns] = useState('');
     const [medicalAlert, setMedicalAlert] = useState('');
     const [medicalConditionsObj, setMedicalConditionsObj] = useState({});
+    const [heightCm, setHeightCm] = useState('');
+    const [weightKg, setWeightKg] = useState('');
+    const [bloodPressure, setBloodPressure] = useState('');
 
     const [pendingFiles, setPendingFiles] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -421,7 +425,8 @@ function TreatmentRecordsPage() {
                 Service,
                 Status,
                 AppointmentSchedule,
-                Patient:UserAccountID(FirstName, LastName, Email)
+                Patient:UserAccountID(FirstName, LastName, Email),
+                Dentist:DentistID(FirstName, LastName)
             `)
             .order('AppointmentSchedule', { ascending: false }) // newest first
             .then(({ data, error }) => {
@@ -453,6 +458,9 @@ const fetchData = async () => {
       supabaseClient
         .from("MedicalRecord")
         .select(`
+          HeightCm,
+          WeightKg,
+          BloodPressure,
           EmergencyContactName,
           EmergencyContactNumber,
           PreviousHospitalizations,
@@ -481,6 +489,9 @@ const fetchData = async () => {
     setFamilyMedicationProblems(mrData?.FamilyMedicationProblems ?? '');
     setOtherMedicalConcerns(mrData?.OtherMedicalConcerns ?? '');
     setMedicalAlert(mrData?.MedicalAlert ?? '');
+    setHeightCm(mrData?.HeightCm ?? '');
+    setWeightKg(mrData?.WeightKg ?? '');
+    setBloodPressure(mrData?.BloodPressure ?? '');
 
     let cond = mrData?.MedicalConditions || {};
     if (typeof cond === "string") { try { cond = JSON.parse(cond); } catch { cond = {}; } }
@@ -505,7 +516,6 @@ setIsEditing(false);
 
        setTreatmentNotes(trData?.TreatmentNotes || '');
     setTreatmentDetails(trData?.TreatmentDetails || '');
-    setTeethStatus(teeth);
     originalSnapshotRef.current = {
   treatmentNotes: trData?.TreatmentNotes || '',
   treatmentDetails: trData?.TreatmentDetails || '',
@@ -582,8 +592,12 @@ const closePreview = () => {
         setTreatmentNotes('');
         setTreatmentDetails('');
         setActiveTool('Cavity');
+        
 
         // medical
+        setHeightCm('');
+        setWeightKg('');
+        setBloodPressure('');
         setEmergencyContactName('');
         setEmergencyContactNumber('');
         setPrevHosp('');
@@ -627,101 +641,94 @@ const closePreview = () => {
 }
 
     // --- Save Medical + Treatment + ToothChart (per appointment) ---
-    const handleSave = async () => {
-        if (!selectedAppointment?.AppointmentID) return;
+const handleSave = async () => {
+  if (!selectedAppointment?.AppointmentID) return;
 
-        try {
-           
-            // 2) Upsert TreatmentRecord by AppointmentID (one per appointment)
-            const hasTreatmentContent = (treatmentNotes || '').trim() || (treatmentDetails || '').trim();
-            if (!hasTreatmentContent) {
-                showMessage("Please enter Treatment Notes or Treatment Details.", "error");
-                return;
-            }
+  // ✅ validate FIRST (no loading yet)
+  const hasTreatmentContent =
+    (treatmentNotes || "").trim() || (treatmentDetails || "").trim();
 
-            const { data: existingTR } = await supabaseClient
-                .from('TreatmentRecord')
-                .select('TreatmentRecordID')
-                .eq('AppointmentID', selectedAppointment.AppointmentID)
-                .maybeSingle();
+  if (!hasTreatmentContent) {
+    showMessage("Please enter Treatment Notes or Treatment Details.", "error");
+    return;
+  }
 
-            let trId = existingTR?.TreatmentRecordID;
+  // ✅ NOW show loading (so it won't get stuck on validation return)
+  showLoading("Saving treatment record…", "Please wait");
 
-            if (trId) {
-                const { error: trUpdErr } = await supabaseClient
-                    .from('TreatmentRecord')
-                    .update({
-                        TreatmentNotes: treatmentNotes,
-                        TreatmentDetails: treatmentDetails
-                    })
-                    .eq('AppointmentID', selectedAppointment.AppointmentID);
+  try {
+    // 2) Upsert TreatmentRecord by AppointmentID (one per appointment)
+    const { data: existingTR } = await supabaseClient
+      .from("TreatmentRecord")
+      .select("TreatmentRecordID")
+      .eq("AppointmentID", selectedAppointment.AppointmentID)
+      .maybeSingle();
 
-                if (trUpdErr) {
-                    console.error("Error updating TreatmentRecord:", trUpdErr);
-                    showMessage("Failed to save treatment record.", "error");
-                    return;
-                }
-            } else {
-                trId = crypto.randomUUID();
-                const { error: trInsErr } = await supabaseClient
-                    .from('TreatmentRecord')
-                    .insert({
-                        TreatmentRecordID: trId,
-                        AppointmentID: selectedAppointment.AppointmentID,
-                        TreatmentNotes: treatmentNotes,
-                        TreatmentDetails: treatmentDetails
-                    });
+    let trId = existingTR?.TreatmentRecordID;
 
-                if (trInsErr) {
-                    console.error("Error inserting TreatmentRecord:", trInsErr);
-                    showMessage("Failed to save treatment record.", "error");
-                    return;
-                }
-            }
+    if (trId) {
+      const { error: trUpdErr } = await supabaseClient
+        .from("TreatmentRecord")
+        .update({
+          TreatmentNotes: treatmentNotes,
+          TreatmentDetails: treatmentDetails,
+        })
+        .eq("AppointmentID", selectedAppointment.AppointmentID);
 
-            // 3) Upsert ToothChart by TreatmentRecordID
-const { error: tcErr } = await supabaseClient
-  .from('ToothChart')
-  .upsert(
-    { TreatmentRecordID: trId, TeethStatus: teethStatus },
-    { onConflict: ['TreatmentRecordID'] }
-  );
+      if (trUpdErr) {
+        console.error("Error updating TreatmentRecord:", trUpdErr);
+        showMessage("Failed to save treatment record.", "error");
+        return;
+      }
+    } else {
+      trId = crypto.randomUUID();
+      const { error: trInsErr } = await supabaseClient
+        .from("TreatmentRecord")
+        .insert({
+          TreatmentRecordID: trId,
+          AppointmentID: selectedAppointment.AppointmentID,
+          TreatmentNotes: treatmentNotes,
+          TreatmentDetails: treatmentDetails,
+        });
 
-if (tcErr) {
-  console.error("Error saving ToothChart:", tcErr);
-  showMessage("Failed to save tooth chart.", "error");
-  return;
-}
+      if (trInsErr) {
+        console.error("Error inserting TreatmentRecord:", trInsErr);
+        showMessage("Failed to save treatment record.", "error");
+        return;
+      }
+    }
 
-await uploadTreatmentFiles(trId);
+    // 3) Upsert ToothChart by TreatmentRecordID
+    const { error: tcErr } = await supabaseClient
+      .from("ToothChart")
+      .upsert({ TreatmentRecordID: trId, TeethStatus: teethStatus }, { onConflict: ["TreatmentRecordID"] });
 
-// refresh uploaded list...
+    if (tcErr) {
+      console.error("Error saving ToothChart:", tcErr);
+      showMessage("Failed to save tooth chart.", "error");
+      return;
+    }
 
+    await uploadTreatmentFiles(trId);
 
-// refresh uploaded list
-const { data: att } = await supabaseClient
-  .from("treatmentattachment")
-  .select("filepath, filename, mimetype, sizebytes, createdat")
-  .eq("treatmentrecordid", trId)
-  .order("createdat", { ascending: false });
+    const { data: att } = await supabaseClient
+      .from("treatmentattachment")
+      .select("filepath, filename, mimetype, sizebytes, createdat")
+      .eq("treatmentrecordid", trId)
+      .order("createdat", { ascending: false });
 
-setUploadedFiles(att || []);
-setPendingFiles([]);
+    setUploadedFiles(att || []);
+    setPendingFiles([]);
 
-
-            if (tcErr) {
-                console.error("Error saving ToothChart:", tcErr);
-                showMessage("Failed to save tooth chart.", "error");
-                return;
-            }
-
-            showMessage("Record saved successfully!", "success");
-            closeModal();
-        } catch (err) {
-            console.error("Unexpected error:", err);
-            showMessage("Unexpected error while saving.", "error");
-        }
-    };
+    showMessage("Record saved successfully!", "success");
+    closeModal();
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    showMessage("Unexpected error while saving.", "error");
+  } finally {
+    hideLoading(); // ✅ only here
+  }
+};
 
     const getStatusStyles = (status) => {
     const s = (status || '').toLowerCase();
@@ -867,6 +874,15 @@ useEffect(() => {
                                     {a.Service}
                                 </p>
 
+                                <p className="text-sm text-gray-600 mb-2">
+                                  Dentist:{" "}
+                                  <span className="font-semibold text-gray-700">
+                                    {a.Dentist
+                                      ? `${a.Dentist.FirstName || ""} ${a.Dentist.LastName || ""}`.trim()
+                                      : "—"}
+                                  </span>
+                                </p>
+
                                 {/* Appointment Details */}
                                 <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-gray-600">
                                     <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
@@ -946,7 +962,7 @@ useEffect(() => {
 <div className="border p-4 rounded-xl bg-white shadow-sm">
   <div className="flex items-start justify-between gap-3 mb-4">
     <div>
-      <label className="block text-sm font-bold text-gray-700">Medical Records</label>
+      <label className="block text-sm font-bold text-gray-700">Assessment Form</label>
       <p className="text-xs text-gray-500 mt-0.5">Saved by secretary • View only</p>
     </div>
 
@@ -965,6 +981,42 @@ useEffect(() => {
 
     {/* LEFT COLUMN */}
     <div className="space-y-4">
+      {/* VITAL SIGNS */}
+<div className="grid grid-cols-3 gap-3">
+  <div>
+    <label className="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+      HEIGHT (CM)
+    </label>
+    <input
+      value={heightCm}
+      disabled
+      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+    />
+  </div>
+
+  <div>
+    <label className="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+      WEIGHT (KG)
+    </label>
+    <input
+      value={weightKg}
+      disabled
+      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+    />
+  </div>
+
+  <div>
+    <label className="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+      BP
+    </label>
+    <input
+      value={bloodPressure}
+      disabled
+      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+    />
+  </div>
+</div>
+
       <div className="space-y-4">
         <div>
           <label className="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
@@ -1090,7 +1142,7 @@ useEffect(() => {
                                     placeholder="Enter notes..." className="min-h-[100px] border-gray-300 focus:border-[#03555E] focus:ring-[#03555E]" value={treatmentNotes}
                                 onChange={e => setTreatmentNotes(e.target.value)} />
                             </div>
-                            <div>
+                            <div class="hidden">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Treatment Details</label>
                                 <Textarea disabled={!isEditing}
                                      placeholder="Enter notes..." className="min-h-[100px] border-gray-300 focus:border-[#03555E] focus:ring-[#03555E]"  value={treatmentDetails}
@@ -1201,31 +1253,10 @@ useEffect(() => {
                                         )}
                                     </div>
                                     </div>
-                                        <div className="flex justify-end gap-3 pt-4">
+                                      <div className="flex justify-end gap-3 pt-4">
                                         <Button variant="outline" onClick={closeModal}>Close</Button>
+                                      </div>
 
-                                        {!isEditing ? (
-                                            <Button onClick={() => setIsEditing(true)}>Edit</Button>
-                                        ) : (
-                                            <>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                const snap = originalSnapshotRef.current;
-                                                if (!snap) return setIsEditing(false);
-                                                setTreatmentNotes(snap.treatmentNotes);
-                                                setTreatmentDetails(snap.treatmentDetails);
-                                                setTeethStatus(snap.teethStatus);
-                                                setPendingFiles([]);
-                                                setIsEditing(false);
-                                                }}
-                                            >
-                                                Cancel Edit
-                                            </Button>
-                                            <Button onClick={handleSave}>Save</Button>
-                                            </>
-                                        )}
-                                        </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -1299,30 +1330,6 @@ useEffect(() => {
     );
 
 }
-function showMessage(message, type = "error") {
-  const box = document.getElementById("messageBox");
-  if (!box) return;
-
-  // Set message text
-  box.textContent = message;
-  box.classList.remove("hidden");
-
-  // Reset color classes first
-  box.classList.remove("bg-red-500", "bg-green-500");
-
-  // Apply background color based on message type
-  if (type === "success") {
-    box.classList.add("bg-green-500");
-  } else {
-    box.classList.add("bg-red-500");
-  }
-
-  // Automatically hide the message after 4 seconds
-  setTimeout(() => {
-    box.classList.add("hidden");
-  }, 4000);
-}
-
 
 const _signedUrlCache = new Map(); // key -> { url, expAt }
 
@@ -1552,7 +1559,8 @@ function closeConsentModal() {
 window.openConsentsListForAppointment = async function (appointmentId) {
   const wrap = document.getElementById("consentsListContainer");
   if (!wrap) return showMessage("Consent UI missing.", "error");
-
+  showLoading("Loading consents…", "Please wait");
+  try{
   wrap.innerHTML = `<div class="text-gray-600 text-sm">Loading...</div>`;
   showConsentsList();
 
@@ -1590,9 +1598,14 @@ window.openConsentsListForAppointment = async function (appointmentId) {
       </button>
     </div>
   `).join("");
+}finally{
+  hideLoading()
+}
 };
 
 async function loadConsentById(consentId) {
+  showLoading("Opening consent…", "Please wait");
+  try{
   const { data, error } = await supabaseClient
     .from("AppointmentConsent")
     .select("*")
@@ -1647,6 +1660,9 @@ async function loadConsentById(consentId) {
     const staffUrl = await getSignedUrlCached("consent-signatures", data.StaffSignaturePath);
     if (staffUrl) await window.staffPad?.loadFromUrl(staffUrl);
   });
+}finally{
+hideLoading();
+}
 }
 
 function getTodayRangePH() {
@@ -1765,10 +1781,6 @@ async function logout() {
 ReactDOM.createRoot(document.getElementById('root')).render(<TreatmentRecordsPage />);
 
 </script>
-<div id="messageBox"
-                    class="hidden fixed bottom-6 right-6 p-4 rounded text-white font-medium shadow-lg z-50 transition-all duration-300">
-                    </div>
-
 <div id="consentModal" class="fixed inset-0 bg-black bg-opacity-50 z-[60] hidden items-center justify-center p-4 overflow-y-auto">
   <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
     <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">

@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dentist Treatment Plans</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <style>
+    /* Same card styling as your Dashboard shell */
+    .card {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      background-color: #ffffff;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    .card-header { padding: 1rem 1.5rem; }
+    .card-title { font-size: 1.125rem; font-weight: 600; }
+    .card-content { padding: 1.5rem; }
+
+  /* ✅ Tooth chart layout (needed so boxes aren't huge) */
+  .tooth-chart-container{
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 14px;
+    align-items:center;
+  }
+  .quadrant-grid{
+    display:grid;
+    grid-template-columns: repeat(8, minmax(38px, 42px));
+    gap: 10px;
+    justify-content:center;
+  }
+  .tooth-shape{
+    border-radius: 18px;
+    width: 42px;
+    height: 42px;
+    line-height: 1;
+  }
+  .tooth-button-inner{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    height:100%;
+  }
+
+  @media (max-width: 768px){
+    .quadrant-grid{
+      grid-template-columns: repeat(4, minmax(38px, 42px));
+    }
+    .tooth-chart-container{
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same as Dashboard.html) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Dentist Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="bellContainer" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+
+        <!-- kept for existing JS compatibility -->
+        <button id="menuToggle" class="hidden" aria-hidden="true"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same as Dashboard.html, with Treatment Plans added + highlighted) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Viewing_PatientRecord.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-users w-5"></i><span>Patient Records</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+
+        <!-- ✅ NEW -->
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
+
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
+        </a>
+        <a href="Analytics_and_Report.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="Notification.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold mb-2">Treatment Plans</h1>
+          <p class="text-gray-600">Orthodontic treatment plans you handle (Diagnostic / Consult dentist).</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-6">
+          <div class="card-content">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div class="flex-1">
+                <label class="text-sm text-gray-600">Search patient</label>
+                <input id="searchInput" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                  placeholder="Type patient name..." />
+              </div>
+              <div>
+                <label class="text-sm text-gray-600">Show</label>
+                <select id="statusFilter" class="mt-1 border rounded-lg px-3 py-2 text-sm">
+                    <option value="all">All</option>
+                    <option value="proposed">Proposed</option>
+                    <option value="active">Active</option>
+                </select>
+              </div>
+              <div class="pt-6 sm:pt-0">
+                <button id="refreshBtn" class="px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm">
+                  Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="plansList" class="grid grid-cols-1 gap-4"></div>
+
+        <div id="plansEmpty" class="hidden card">
+          <div class="card-content text-center py-10 text-gray-500">
+            <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-3 opacity-60"></i>
+            <p class="text-sm">No treatment plans found for this dentist.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Hidden mobile menu elements kept so existing JS doesn't break -->
+  <div id="menuOverlay" class="hidden" aria-hidden="true"></div>
+  <div id="mobileMenu" class="hidden" aria-hidden="true"></div>
+  <button id="menuClose" class="hidden" aria-hidden="true"></button>
+
+  <!-- Plan Progress Modal -->
+  <div id="planModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+    <div class="bg-white w-[95%] max-w-4xl rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-4 border-b flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Treatment Plan Progress</h2>
+          <p id="planModalSubtitle" class="text-sm text-gray-600 mt-1">Loading...</p>
+        </div>
+        <button id="planModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <!-- Current Clinical Status (case-level summary) -->
+          <div class="rounded-xl border bg-white overflow-hidden">
+            <div class="px-4 py-3 border-b flex items-center justify-between gap-3">
+              <div>
+                <div class="font-semibold text-gray-900">Current Clinical Status</div>
+                <div class="text-xs text-gray-500">Short summary: where we are now + what to do when patient returns</div>
+              </div>
+                <div id="clinical-status-image-actions" class="hidden shrink-0">
+                  <button id="clinical-status-view"
+                    type="button"
+                    class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50">
+                    View Photo
+                  </button>
+                </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span id="clinical-status-updated" class="text-xs text-gray-500">—</span>
+
+              <div class="flex items-center gap-2">
+                <input id="clinical-status-file" type="file" accept="image/*"
+                  class="text-xs border rounded-lg px-2 py-1 bg-white" />
+
+                <button id="clinical-status-upload"
+                  class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50">
+                  Upload Photo
+                </button>
+
+                <button id="clinical-status-save"
+                  class="px-3 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm">
+                  Save
+                </button>
+              </div>
+            </div>
+            </div>
+
+            <div class="p-4">
+              <textarea id="clinical-status-input"
+                class="w-full min-h-[110px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50"></textarea>
+              <div class="text-xs text-gray-500 mt-2">
+                Tip: Keep this short and updated each finished visit (TR notes are the full history).
+              </div>
+            </div>
+          </div>
+        
+          <!-- Pre-treatment Checklist -->
+<div class="rounded-xl border bg-white overflow-hidden">
+  <div class="px-4 py-3 border-b flex items-start justify-between gap-3">
+    <div>
+      <div class="font-semibold text-gray-900">Pre-treatment Requirements</div>
+      <div id="pretreat-summary" class="text-xs text-gray-500 mt-1">—</div>
+    </div>
+  </div>
+
+  <!-- Add requirement form (hidden by default) -->
+  <div id="pretreat-add-wrap" class="hidden p-4 border-b bg-gray-50">
+    <div class="grid md:grid-cols-3 gap-3">
+      <div class="md:col-span-1">
+        <label class="text-xs text-gray-600">Service name</label>
+        <input id="pretreat-service-name" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+               placeholder="e.g., Dental Cleaning" />
+      </div>
+
+      <div class="md:col-span-1">
+        <label class="text-xs text-gray-600">Tooth numbers (optional)</label>
+        <input id="pretreat-toothnumbers" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+               placeholder="e.g., 36, 37" />
+      </div>
+
+      <div class="md:col-span-1">
+        <label class="text-xs text-gray-600">Notes (optional)</label>
+        <input id="pretreat-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+               placeholder="Short note…" />
+      </div>
+    </div>
+
+    <div class="mt-3 flex justify-end gap-2">
+      <button id="pretreat-add-cancel" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-100">
+        Cancel
+      </button>
+      <button id="pretreat-add-btn" class="px-3 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm">
+        Add
+      </button>
+    </div>
+
+    <div class="text-[11px] text-gray-500 mt-2">
+      (If you already store serviceid/servicename via a picker, we can replace this with a dropdown later.)
+    </div>
+  </div>
+
+  <!-- Readiness banner -->
+  <div id="pretreat-banner" class="px-4 py-3 border-b text-sm hidden"></div>
+
+<div id="pretreat-body" class="p-4 space-y-3">
+  <div class="text-sm text-gray-500">Loading…</div>
+</div>
+</div>
+
+
+        <div id="progress-diagnostic" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+          Loading diagnostic...
+        </div>
+
+        <div id="progress-install" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+          Loading installation...
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-3">
+          <div class="p-4 rounded-xl border bg-white">
+            <div class="text-sm text-gray-600">Finished Adjustments</div>
+            <div id="sum-count" class="text-2xl font-bold text-gray-900 mt-1">—</div>
+          </div>
+          <div class="p-4 rounded-xl border bg-white">
+            <div class="text-sm text-gray-600">Total (Finished Adjustments)</div>
+            <div id="sum-total" class="text-2xl font-bold text-gray-900 mt-1">—</div>
+          </div>
+          <div class="p-4 rounded-xl border bg-white">
+            <div class="text-sm text-gray-600">Last Finished Adjustment</div>
+            <div id="sum-last" class="text-lg font-semibold text-gray-900 mt-2">—</div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border bg-white overflow-hidden">
+          <div class="px-4 py-3 border-b flex items-center justify-between">
+            <div class="font-semibold text-gray-900">Finished Adjustment History</div>
+            <div id="progress-adjustment-count" class="text-sm text-gray-600">0 record(s)</div>
+          </div>
+
+          <div class="overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                  <th class="text-left px-4 py-3">Date</th>
+                  <th class="text-left px-4 py-3">Service</th>
+                  <th class="text-left px-4 py-3">Status</th>
+                  <th class="text-right px-4 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody id="progress-adjustments-body" class="divide-y"></tbody>
+            </table>
+          </div>
+          <div class="px-4 py-3 border-t flex items-center justify-between">
+            <div id="adj-page-meta" class="text-xs text-gray-500">—</div>
+            <button id="adj-show-more" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50 hidden">
+              Show more
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+   <script src="/feedback.js"></script>
+
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allPlans = [];
+    let modalAppts = []; // appointments loaded for current plan
+    let modalAdjPage = 1;
+    const MODAL_ADJ_PAGE_SIZE = 10;
+
+    // ---------- Auth (same pattern as your Dashboard.html) ----------
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
+
+      if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+      if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
+
+      return userData;
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    // ---------- Utils ----------
+        function fmtDateLong(iso) {
+        if (!iso) return "—";
+        try {
+            return new Date(iso).toLocaleDateString("en-US", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            });
+        } catch {
+            return iso;
+        }
+        }
+
+    function money(v) {
+      const n = Number(v || 0);
+      return n.toLocaleString("en-PH", { style: "currency", currency: "PHP" });
+    }
+
+    function badge(status) {
+      const s = String(status || "").toLowerCase();
+      if (s === "finished") return "bg-green-50 text-green-700 border-green-200";
+      if (s === "approved") return "bg-blue-50 text-blue-700 border-blue-200";
+      if (s === "pending") return "bg-gray-50 text-gray-700 border-gray-200";
+      if (s === "rescheduled") return "bg-purple-50 text-purple-700 border-purple-200";
+      if (s === "cancelled") return "bg-red-50 text-red-700 border-red-200";
+      return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+
+    function pretreatBadge(status) {
+      const s = String(status || "").toLowerCase();
+      if (s === "done") return "bg-green-50 text-green-700 border-green-200";
+      return "bg-amber-50 text-amber-700 border-amber-200"; // pending
+    }
+
+
+    function isDiagnosticAppt(a) {
+      const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
+      return s.includes("diagnostic") || s.includes("consult");
+    }
+    function isInstallAppt(a) {
+      const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
+      return s.includes("installation") || s.includes("bonding") || s.includes("brace") && s.includes("install");
+    }
+    function isAdjustmentAppt(a) {
+      const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
+      return s.includes("adjustment");
+    }
+
+    function applyFiltersAndRender() {
+      const q = String(document.getElementById("searchInput")?.value || "").trim().toLowerCase();
+      const f = String(document.getElementById("statusFilter")?.value || "all").toLowerCase();
+
+      const filtered = (allPlans || []).filter(p => {
+        const name = String(p.patientName || "").toLowerCase();
+        if (q && !name.includes(q)) return false;
+
+        if (f === "all") return true;
+
+        // simple heuristics based on cached summary
+        if (f === "active") return String(p.planStage).toLowerCase() === "active";
+        if (f === "proposed") return String(p.planStage).toLowerCase() === "proposed";
+
+        return true;
+      });
+
+      renderPlans(filtered);
+    }
+
+  async function loadPreTreatments(planId) {
+  const body = document.getElementById("pretreat-body");
+  const summary = document.getElementById("pretreat-summary");
+  const banner = document.getElementById("pretreat-banner");
+
+  if (body) body.innerHTML = `<div class="text-sm text-gray-500">Loading…</div>`;
+
+
+  const { data, error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("pretreatmentid, serviceid, servicename, status, createdat, completedat")
+    .eq("treatmentplanid", planId)
+    .order("createdat", { ascending: true });
+
+  if (error) {
+    console.error("Pretreat load error:", error);
+    if (body) body.innerHTML = `<div class="text-sm text-red-600 text-center py-6">Failed to load pre-treatments.</div>`;
+
+    if (summary) summary.textContent = "Failed to load";
+    if (banner) banner.classList.add("hidden");
+    return;
+  }
+
+  const rows = data || [];
+  renderPreTreatments(rows);
+}
+
+function renderPreTreatments(rows) {
+  const body = document.getElementById("pretreat-body");
+  const summary = document.getElementById("pretreat-summary");
+  const banner = document.getElementById("pretreat-banner");
+
+  const total = rows.length;
+  const completed = rows.filter(r => String(r.status || "").toLowerCase() === "done").length;
+  const pending = rows.filter(r => String(r.status || "").toLowerCase() === "pending");
+
+  if (summary) {
+    summary.textContent = total ? `${completed}/${total} completed` : "No pre-treatment requirements added yet.";
+  }
+
+  if (banner) {
+    if (!total) {
+      banner.classList.add("hidden");
+    } else if (pending.length === 0) {
+      banner.classList.remove("hidden");
+      banner.className = "px-4 py-3 border-b text-sm bg-green-50 text-green-800";
+      banner.textContent = "READY for Braces Installation (all pre-treatment completed).";
+    } else {
+      banner.classList.remove("hidden");
+      banner.className = "px-4 py-3 border-b text-sm bg-amber-50 text-amber-800";
+      banner.textContent = `NOT ready — missing: ${pending.map(p => p.servicename).filter(Boolean).join(", ")}`;
+    }
+  }
+
+  if (!body) return;
+
+  if (!rows.length) {
+    body.innerHTML = `<div class="text-sm text-gray-500 text-center py-6">No requirements yet.</div>`;
+    return;
+  }
+
+  const order = { pending: 0, done: 1 };
+  const sorted = [...rows].sort(
+    (a, b) => (order[String(a.status).toLowerCase()] ?? 9) - (order[String(b.status).toLowerCase()] ?? 9)
+  );
+
+  body.innerHTML = sorted.map(r => {
+    const st = String(r.status || "PENDING").toUpperCase();
+    const isPending = String(r.status || "").toLowerCase() === "pending";
+const proof = findProofAppointmentForPretreat(r);
+const isFinished = proof && String(proof.Status).toLowerCase() === "finished";
+
+const viewBtn = proof ? `
+  <button class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50 ${isFinished ? "" : "opacity-50 cursor-not-allowed"}"
+    ${isFinished ? `onclick="openTRModal('${proof.AppointmentID}')"` : "disabled"}>
+    View Details
+  </button>
+` : "";
+
+    return `
+      <div class="rounded-xl border bg-white p-4 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="font-semibold text-gray-900 truncate">${escapeHtml(r.servicename || "—")}</div>
+          <div class="mt-2">
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold border ${pretreatBadge(st)}">${st}</span>
+          </div>
+        </div>
+
+        <div class="shrink-0 flex items-center gap-2">
+          ${viewBtn}
+          ${
+            isPending
+              ? `<button class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                  onclick="setPretreatStatus('${r.pretreatmentid}', 'DONE')">
+                  Mark Done
+                </button>`
+              : ""
+          }
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function parseServiceTypeIds(serviceType) {
+  if (!serviceType) return [];
+  return String(serviceType)
+    .split(",")
+    .map(s => Number(s.trim()))
+    .filter(n => Number.isFinite(n));
+}
+
+function findProofAppointmentForPretreat(r) {
+  const sid = Number(r.serviceid);
+  if (!sid) return null;
+
+  const matches = (modalAppts || []).filter(a => {
+    if (String(a.TreatmentPlanID) !== String(window.__currentPlanId)) return false;
+    const ids = parseServiceTypeIds(a.ServiceType);
+    return ids.includes(sid);
+  });
+
+  // Prefer Finished appointment if available
+  return matches.find(a => String(a.Status).toLowerCase() === "finished")
+      || matches[0]
+      || null;
+}
+
+
+async function setPretreatStatus(pretreatmentId, status) {
+  const s = String(status || "").toUpperCase();
+  const completedat =
+  s === "DONE" ? new Date().toISOString() : null;
+
+  const { error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .update({ status: s, completedat })
+    .eq("pretreatmentid", pretreatmentId);
+
+  if (error) {
+    console.error("Pretreat status update error:", error);
+    showMessage("Failed to update pre-treatment status.", "error");
+    return;
+  }
+
+  showMessage("Pre-treatment updated.", "success");
+
+  // refresh table by using last opened plan id stored globally
+  if (window.__currentPlanId) await loadPreTreatments(window.__currentPlanId);
+}
+
+async function addPretreatRequirement(planId) {
+  const nameEl = document.getElementById("pretreat-service-name");
+  const toothEl = document.getElementById("pretreat-toothnumbers");
+  const notesEl = document.getElementById("pretreat-notes");
+
+  const servicename = String(nameEl?.value || "").trim();
+  const toothnumbers = String(toothEl?.value || "").trim();
+  const notes = String(notesEl?.value || "").trim();
+
+  if (!servicename) {
+    showMessage("Please enter a service name.", "warning");
+    return;
+  }
+
+  const payload = {
+    pretreatmentid: crypto.randomUUID(),
+    treatmentplanid: planId,
+    serviceid: null, // if you have real IDs later, set this
+    servicename,
+    toothnumbers: toothnumbers || null,
+    notes: notes || null,
+    status: "PENDING",
+    createdat: new Date().toISOString(),
+    completedat: null
+  };
+
+  const { error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .insert(payload);
+
+  if (error) {
+    console.error("Pretreat insert error:", error);
+    showMessage("Failed to add requirement.", "error");
+    return;
+  }
+
+  showMessage("Requirement added.", "success");
+
+  // clear inputs + hide form
+  if (nameEl) nameEl.value = "";
+  if (toothEl) toothEl.value = "";
+  if (notesEl) notesEl.value = "";
+
+  document.getElementById("pretreat-add-wrap")?.classList.add("hidden");
+
+  await loadPreTreatments(planId);
+}
+  
+
+  async function uploadClinicalStatusImage(planId) {
+  const inp = document.getElementById("clinical-status-file");
+  const f = inp?.files?.[0];
+  if (!f) return showMessage("Please choose an image first.", "warning");
+
+  await withLoading(async () => {
+    const safeName = `${Date.now()}_${f.name}`.replaceAll(" ", "_");
+    const path = `${planId}/${safeName}`;
+
+    const { error: upErr } = await supabaseClient.storage
+  .from("clinical-status")
+  .upload(path, f, { contentType: f.type, upsert: true });
+
+    if (upErr) throw upErr;
+
+    const { error: dbErr } = await supabaseClient
+      .from("TreatmentPlan")
+      .update({ ClinicalStatusImagePath: path })
+      .eq("TreatmentPlanID", planId);
+
+    if (dbErr) throw dbErr;
+  }, "Uploading photo…", "Uploading");
+
+  showMessage("Clinical status photo uploaded.", "success");
+  await loadClinicalStatus(planId);
+}
+  
+
+async function loadClinicalStatus(planId) {
+  const input = document.getElementById("clinical-status-input");
+  const updated = document.getElementById("clinical-status-updated");
+  const saveBtn = document.getElementById("clinical-status-save");
+  if (!input || !updated || !saveBtn) return;
+
+  input.value = "";
+  saveBtn.disabled = true;
+
+  const { data, error } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("CurrentClinicalStatus, ClinicalStatusImagePath, CreatedAt")
+    .eq("TreatmentPlanID", planId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Load clinical status error:", error);
+    updated.textContent = "—";
+    saveBtn.disabled = false;
+    return;
+  }
+
+    input.value = data?.CurrentClinicalStatus || "";
+
+    // 👇 ADD THIS BLOCK HERE
+const actions = document.getElementById("clinical-status-image-actions");
+const viewBtn = document.getElementById("clinical-status-view");
+
+if (actions && viewBtn) {
+  const path = data?.ClinicalStatusImagePath || "";
+  if (!path) {
+    actions.classList.add("hidden");
+    viewBtn.onclick = null;
+  } else {
+    const url = supabaseClient.storage
+      .from("clinical-status")
+      .getPublicUrl(path).data.publicUrl;
+
+    actions.classList.remove("hidden");
+    viewBtn.onclick = () =>
+      openPreview(url, "Clinical status photo", "image/*");
+  }
+}
+}
+
+async function saveClinicalStatus(planId) {
+  const input = document.getElementById("clinical-status-input");
+  const updated = document.getElementById("clinical-status-updated");
+  const saveBtn = document.getElementById("clinical-status-save");
+  if (!input || !updated || !saveBtn) return;
+
+  const value = String(input.value || "").trim();
+
+  saveBtn.disabled = true;
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = "Saving…";
+
+  const { error } = await supabaseClient
+    .from("TreatmentPlan")
+    .update({ CurrentClinicalStatus: value })
+    .eq("TreatmentPlanID", planId);
+
+  saveBtn.disabled = false;
+  saveBtn.textContent = originalText;
+  if (error) {
+    showMessage("Failed to save clinical status. Please try again.", "error");
+    updated.textContent = "Failed to save";
+    return;
+  }
+
+  showMessage("Clinical status saved.", "success");
+
+  // Update local cache so it stays consistent if you use it later
+  const idx = (allPlans || []).findIndex(p => String(p.TreatmentPlanID) === String(planId));
+  if (idx >= 0) allPlans[idx].CurrentClinicalStatus = value;
+
+  updated.textContent = `Last updated: ${fmtDateLong(new Date().toISOString())}`;
+}
+
+
+    // ---------- Load dentist plans ----------
+    async function loadDentistPlans() {
+      const dentistId = localStorage.getItem("userId");
+      if (!dentistId) return;
+
+      const list = document.getElementById("plansList");
+      const empty = document.getElementById("plansEmpty");
+      if (list) list.innerHTML = "";
+      if (empty) empty.classList.add("hidden");
+
+      // Step A: get consult/diagnostic appointments handled by this dentist
+      const { data: consults, error: e1 } = await supabaseClient
+        .from("Appointment")
+        .select("AppointmentID")
+        .eq("DentistID", dentistId)
+        .or("Service.ilike.%diagnostic%,Service.ilike.%consult%");
+
+      if (e1) {
+        console.error("Consult fetch error:", e1);
+        if (empty) empty.classList.remove("hidden");
+        return;
+      }
+
+      const consultIds = (consults || []).map(x => x.AppointmentID);
+      if (consultIds.length === 0) {
+        allPlans = [];
+        if (empty) empty.classList.remove("hidden");
+        return;
+      }
+
+      // Step B: plans whose SourceAppointmentID is in those consult IDs
+      const { data: plans, error: e2 } = await supabaseClient
+        .from("TreatmentPlan")
+        .select(`
+          TreatmentPlanID,
+          SourceAppointmentID,
+          UserAccountID,
+          PlanType,
+          Status,
+          CreatedAt,
+          CurrentClinicalStatus,
+          Patient:UserAccountID(FirstName, LastName)
+        `)
+        .eq("PlanType", "BRACES")
+        .in("SourceAppointmentID", consultIds)
+        .order("CreatedAt", { ascending: false });
+
+      if (e2) {
+        console.error("Plans fetch error:", e2);
+        if (empty) empty.classList.remove("hidden");
+        return;
+      }
+
+      // Optional: compute quick summary flags using appointments per plan (lightweight)
+      // (We do it sequentially but only for N plans; if you have many, we can batch later.)
+      const enriched = [];
+      for (const p of (plans || [])) {
+        const patientName = p.Patient
+          ? `${p.Patient.FirstName || ""} ${p.Patient.LastName || ""}`.trim()
+          : "Unknown Patient";
+
+        // get minimal appts for future/finished adjustment flags
+        const { data: ap, error: e3 } = await supabaseClient
+          .from("Appointment")
+          .select("AppointmentID, AppointmentSchedule, Status, Service, ServiceType, TreatmentPlanID")
+          .eq("TreatmentPlanID", p.TreatmentPlanID);
+
+        if (e3) console.warn("Appts summary error:", e3);
+
+        const rows = [...(ap || [])];
+
+        // ALSO include the source diagnostic appt even if TreatmentPlanID is null
+        if (p.SourceAppointmentID) {
+          const { data: src, error: srcErr } = await supabaseClient
+            .from("Appointment")
+            .select("AppointmentID, AppointmentSchedule, Status, Service, ServiceType, TreatmentPlanID")
+            .eq("AppointmentID", p.SourceAppointmentID)
+            .maybeSingle();
+
+          if (srcErr) console.warn("Source appt fetch error:", srcErr);
+
+          if (src && !rows.some(a => a.AppointmentID === src.AppointmentID)) rows.push(src);
+        }
+        if (e3) console.warn("Appts summary error:", e3);
+
+        const now = new Date();
+        const hasFutureAppt = (ap || []).some(a => a.AppointmentSchedule && new Date(a.AppointmentSchedule) > now);
+
+        const diagDone = (ap || []).some(a => isDiagnosticAppt(a) && String(a.Status || "").toLowerCase() === "finished");
+        const installDone = (ap || []).some(a => isInstallAppt(a) && String(a.Status || "").toLowerCase() === "finished");
+
+        // ✅ Proposed vs Active
+        // Proposed = diagnostic is finished but installation not finished yet
+        // Active = has any future appointment
+        const planStage = String(p.Status || "PROPOSED").toLowerCase();
+        enriched.push({
+        ...p,
+        patientName,
+        hasFutureAppt,
+        planStage,
+        });
+
+      }
+
+      allPlans = enriched;
+      applyFiltersAndRender();
+
+      if (!allPlans.length && empty) empty.classList.remove("hidden");
+    }
+
+    function renderPlans(plans) {
+      const list = document.getElementById("plansList");
+      const empty = document.getElementById("plansEmpty");
+      if (!list) return;
+
+      list.innerHTML = "";
+      if (!plans || plans.length === 0) {
+        if (empty) empty.classList.remove("hidden");
+        return;
+      }
+      if (empty) empty.classList.add("hidden");
+
+        plans.forEach(p => {
+        const statusTag =
+            String(p.planStage || "").toLowerCase() === "active"
+            ? `<span class="px-2 py-1 text-xs font-semibold rounded-full border bg-blue-50 text-blue-700 border-blue-200">Active</span>`
+            : `<span class="px-2 py-1 text-xs font-semibold rounded-full border bg-amber-50 text-amber-700 border-amber-200">Proposed</span>`;
+
+        const el = document.createElement("div");
+            el.className = "card";
+
+            el.innerHTML = `
+            <div class="card-content flex flex-col h-full">
+                <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-xs text-gray-500">Patient</div>
+                    <div class="text-lg font-bold text-gray-900 truncate">
+                    ${p.patientName}
+                    </div>
+                </div>
+                <div class="shrink-0">${statusTag}</div>
+                </div>
+
+                <!-- fixed bottom area -->
+                <div class="mt-auto pt-4">
+                <button class="w-full px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                    onclick="openPlan('${p.TreatmentPlanID}', '${escapeHtml(p.patientName)}')">
+                    View Progress
+                </button>
+                </div>
+            </div>
+            `;
+        list.appendChild(el);
+        });
+
+
+      lucide.createIcons();
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+    function matchesPretreatment(serviceId) {
+  return (state.pendingPretreatments || []).some(
+    p => Number(p.serviceid) === Number(serviceId)
+  );
+}
+
+
+    // ---------- Open plan modal ----------
+    async function openPlan(planId, patientName) {
+      const modal = document.getElementById("planModal");
+      const subtitle = document.getElementById("planModalSubtitle");
+      const diagBox = document.getElementById("progress-diagnostic");
+      const installBox = document.getElementById("progress-install");
+      const body = document.getElementById("progress-adjustments-body");
+      const countEl = document.getElementById("progress-adjustment-count");
+      const sumCount = document.getElementById("sum-count");
+      const sumTotal = document.getElementById("sum-total");
+      const sumLast = document.getElementById("sum-last");
+      const toggle = document.getElementById("pretreat-add-toggle");
+      const wrap = document.getElementById("pretreat-add-wrap");
+      const cancel = document.getElementById("pretreat-add-cancel");
+      const addBtn = document.getElementById("pretreat-add-btn");
+
+      if (toggle && wrap) toggle.onclick = () => wrap.classList.toggle("hidden");
+      if (cancel && wrap) cancel.onclick = () => wrap.classList.add("hidden");
+      if (addBtn) addBtn.onclick = () => addPretreatRequirement(planId);
+
+      if (!modal) return;
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      if (subtitle) subtitle.textContent = `Patient: ${patientName}`;
+      window.__currentPlanId = planId;
+      await loadPreTreatments(planId);
+      await loadClinicalStatus(planId);
+
+      // attach save handler (rebind each time modal opens)
+      const saveBtn = document.getElementById("clinical-status-save");
+      if (saveBtn) {
+        saveBtn.onclick = () => saveClinicalStatus(planId);
+      }
+      const upBtn = document.getElementById("clinical-status-upload");
+      if (upBtn) upBtn.onclick = () => uploadClinicalStatusImage(planId); 
+      if (diagBox) diagBox.textContent = "Loading diagnostic...";
+      if (installBox) installBox.textContent = "Loading installation...";
+      if (body) body.innerHTML = "";
+      if (countEl) countEl.textContent = "0 record(s)";
+      if (sumCount) sumCount.textContent = "—";
+      if (sumTotal) sumTotal.textContent = "—";
+      if (sumLast) sumLast.textContent = "—";
+
+      // Load appointments under plan (same rule as patient side)
+      const { data: appts, error } = await supabaseClient
+        .from("Appointment")
+        .select(`
+          AppointmentID,
+          AppointmentSchedule,
+          Service,
+          ServiceType,
+          Status,
+          TotalAmount,
+          TreatmentPlanID,
+          Dentist:DentistID(FirstName, LastName),
+          Patient:UserAccountID(FirstName, LastName)
+        `)
+        .eq("TreatmentPlanID", planId)
+        .order("AppointmentSchedule", { ascending: true });
+
+      if (error) {
+        console.error("Plan appts error:", error);
+        if (diagBox) diagBox.innerHTML = `<div class="text-red-600 text-sm">Failed to load appointments.</div>`;
+        if (installBox) installBox.innerHTML = `<div class="text-red-600 text-sm">Failed to load appointments.</div>`;
+        return;
+      }
+
+      modalAppts = appts || [];
+      window.appts = modalAppts;
+      await loadPreTreatments(planId);
+
+      // ✅ Include SourceAppointmentID diagnostic even if not linked by TreatmentPlanID
+const planRow = (allPlans || []).find(p => String(p.TreatmentPlanID) === String(planId));
+const sourceId = planRow?.SourceAppointmentID || null;
+
+if (sourceId) {
+  const { data: srcRow, error: srcErr } = await supabaseClient
+    .from("Appointment")
+    .select(`
+      AppointmentID,
+      AppointmentSchedule,
+      Service,
+      ServiceType,
+      Status,
+      TotalAmount,
+      TreatmentPlanID,
+      Dentist:DentistID(FirstName, LastName),
+      Patient:UserAccountID(FirstName, LastName)
+    `)
+    .eq("AppointmentID", sourceId)
+    .maybeSingle();
+
+  if (srcErr) console.error("Source appt fetch error:", srcErr);
+
+  if (srcRow && !modalAppts.some(a => a.AppointmentID === srcRow.AppointmentID)) {
+    modalAppts.push(srcRow);
+  }
+}
+
+
+      // Diagnostic card
+      const diagFinished = modalAppts
+        .filter(a => isDiagnosticAppt(a) && String(a.Status || "").toLowerCase() === "finished")
+        .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
+
+      const diagScheduled = modalAppts
+        .filter(a => isDiagnosticAppt(a) && ["approved","pending","rescheduled"].includes(String(a.Status || "").toLowerCase()))
+        .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
+
+      if (diagBox) {
+        if (!diagFinished && !diagScheduled) {
+          diagBox.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-semibold text-gray-900">Diagnostic</div>
+                <div class="text-gray-600 text-sm mt-1">No diagnostic appointment found yet.</div>
+              </div>
+              <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge("—")}">—</span>
+            </div>
+          `;
+                }else {
+        const d = diagFinished || diagScheduled;
+        const st = String(d.Status || "").toUpperCase();
+        const isDone = String(d.Status || "").toLowerCase() === "finished";
+
+        diagBox.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+            <div>
+                <div class="font-semibold text-gray-900">Diagnostic</div>
+                <div class="text-gray-600 text-sm mt-1">${fmtDateLong(d.AppointmentSchedule)}</div>
+            </div>
+            <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge(st)}">${st || "—"}</span>
+            </div>
+
+            ${isDone
+            ? `<div class="mt-3 pt-3 border-t flex justify-end">
+                <button class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                    onclick="openTRModal('${d.AppointmentID}')">View Details</button>
+                </div>`
+            : ""
+            }
+        `;
+        }
+      }
+
+      // Installation card
+      const install = modalAppts
+        .filter(isInstallAppt)
+        .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
+
+      if (installBox) {
+        if (!install) {
+          installBox.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-semibold text-gray-900">Braces Installation</div>
+                <div class="text-gray-600 text-sm mt-1">No installation appointment found yet.</div>
+              </div>
+              <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge("—")}">—</span>
+            </div>
+          `;
+        } else {
+          const st = String(install.Status || "").toUpperCase();
+          installBox.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-semibold text-gray-900">Braces Installation</div>
+                <div class="text-gray-600 text-sm mt-1">${fmtDateLong(install.AppointmentSchedule)}</div>
+              </div>
+              <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge(st)}">${st || "—"}</span>
+            </div>
+            ${String(install.Status || "").toLowerCase() === "finished"
+              ? `<div class="mt-3 pt-3 border-t flex justify-end">
+                   <button class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                     onclick="openTRModal('${install.AppointmentID}')">View Details</button>
+                 </div>`
+              : ""
+            }
+          `;
+        }
+      }
+
+      // Adjustments: FINISHED only
+      const adjustments = modalAppts
+        .filter(a => isAdjustmentAppt(a) && String(a.Status || "").toLowerCase() === "finished")
+        .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule));
+
+      const totalRevenue = adjustments.reduce((acc, a) => acc + Number(a.TotalAmount || 0), 0);
+      const lastAdj = adjustments.length ? adjustments[0] : null;
+
+      if (sumCount) sumCount.textContent = String(adjustments.length);
+      if (sumTotal) sumTotal.textContent = money(totalRevenue);
+      if (sumLast) sumLast.textContent = lastAdj ? fmtDateLong(lastAdj.AppointmentSchedule) : "—";
+      if (countEl) countEl.textContent = `${adjustments.length} record(s)`;
+
+function renderAdjustmentsPage() {
+  const body = document.getElementById("progress-adjustments-body");
+  const meta = document.getElementById("adj-page-meta");
+  const moreBtn = document.getElementById("adj-show-more");
+
+  const total = adjustments.length;
+  const maxShown = Math.min(modalAdjPage * MODAL_ADJ_PAGE_SIZE, total);
+  const shown = adjustments.slice(0, maxShown);
+
+  if (meta) meta.textContent = `Showing ${maxShown} of ${total}`;
+
+  if (moreBtn) {
+    moreBtn.classList.toggle("hidden", maxShown >= total);
+    moreBtn.onclick = () => {
+      modalAdjPage += 1;
+      renderAdjustmentsPage();
+    };
+  }
+
+  if (!body) return;
+
+  if (!shown.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+          No finished adjustments yet.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  body.innerHTML = shown.map(a => {
+    const st = String(a.Status || "").toUpperCase();
+    return `
+      <tr>
+        <td class="px-4 py-3">${fmtDateLong(a.AppointmentSchedule)}</td>
+        <td class="px-4 py-3">${escapeHtml(a.Service || a.ServiceType || "—")}</td>
+        <td class="px-4 py-3">
+          <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold border ${badge(st)}">${st}</span>
+        </td>
+        <td class="px-4 py-3 text-right">
+          <button class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+            onclick="openTRModal('${a.AppointmentID}')">
+            View Details
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ✅ CALL IT
+modalAdjPage = 1;
+renderAdjustmentsPage();
+        
+      
+    }
+
+function esc(s) {
+  return (s == null ? "" : String(s))
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function closeTRModal() {
+  document.getElementById("trModal").classList.add("hidden");
+}
+
+function openPreview(url, filename, mimetype) {
+  const modal = document.getElementById("previewModal");
+  const title = document.getElementById("previewTitle");
+  const meta = document.getElementById("previewMeta");
+  const body = document.getElementById("previewBody");
+  const openBtn = document.getElementById("previewOpenNewTab");
+
+  title.textContent = filename || "File";
+  meta.textContent = mimetype || "";
+  openBtn.href = url;
+
+  const isImage = String(mimetype || "").startsWith("image/");
+  body.innerHTML = isImage
+    ? `
+      <div class="w-full flex justify-center">
+        <img src="${url}" alt="${esc(filename)}" class="max-h-[70vh] rounded-lg border bg-white" />
+      </div>
+    `
+    : `
+      <div class="p-6 bg-white rounded-lg border">
+        <div class="text-sm text-gray-700">Preview not available for this file type.</div>
+        <a href="${url}" target="_blank" rel="noreferrer"
+           class="inline-flex mt-3 px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+          Open file
+        </a>
+      </div>
+    `;
+
+  modal.classList.remove("hidden");
+}
+
+function closePreview() {
+  document.getElementById("previewModal").classList.add("hidden");
+}
+
+
+    function closePlanModal() {
+      const modal = document.getElementById("planModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+const TOOTH_STATUS_META = {
+  "Cavity": { border: "border-red-600", overlay: "" },
+  "OK/Pasta": { border: "border-emerald-600", overlay: "" },
+  "Root Fragments": { border: "border-orange-600", overlay: "" },
+  "Impacted": { border: "border-yellow-500", overlay: "" },
+  "Missing": { border: "border-gray-700", overlay: "×" },
+  "Amalgam": { border: "border-slate-600", overlay: "" },
+  "Composite": { border: "border-sky-600", overlay: "" },
+  "Complete Denture": { border: "border-violet-600", overlay: "" },
+  "Crowns": { border: "border-indigo-600", overlay: "" },
+  "Clear": { border: "border-gray-300", overlay: "" },
+};
+
+const TOOTH_STATUS_OPTIONS = Object.keys(TOOTH_STATUS_META);
+
+function toothBtnHTML(n, status) {
+  const meta = TOOTH_STATUS_META[status || "Clear"] || TOOTH_STATUS_META.Clear;
+  const isMarked = status && status !== "Clear";
+  return `
+    <button type="button"
+      class="w-full aspect-square relative flex items-center justify-center tooth-shape bg-white transition-all duration-200 shadow-sm border-4 ${meta.border} ${isMarked ? "shadow-md" : ""}">
+      <div class="tooth-button-inner">
+        <span class="text-xl font-bold text-gray-900">${n}</span>
+        ${meta.overlay ? `<div class="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-gray-700/70">${meta.overlay}</div>` : ""}
+      </div>
+    </button>
+  `;
+}
+
+function renderToothChartHTML(teethStatus) {
+  const Q1 = [8,7,6,5,4,3,2,1];
+  const Q2 = [9,10,11,12,13,14,15,16];
+  const Q4 = [32,31,30,29,28,27,26,25];
+  const Q3 = [24,23,22,21,20,19,18,17];
+
+  const quad = (nums, upper) => `
+    <div class="quadrant-grid ${upper ? "upper-arch" : "lower-arch"}">
+      ${nums.map(n => toothBtnHTML(n, teethStatus?.[n])).join("")}
+    </div>
+  `;
+
+  const legend = `
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+      ${TOOTH_STATUS_OPTIONS.filter(s => s !== "Clear").map(s => {
+        const m = TOOTH_STATUS_META[s];
+        return `
+          <div class="flex items-center gap-2 px-3 py-2 rounded-lg border bg-gray-50">
+            <span class="w-4 h-4 border-4 rounded ${m.border} bg-white"></span>
+            <span class="text-xs font-semibold">${esc(s)}</span>
+          </div>
+        `;
+      }).join("")}
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white">
+        <span class="w-3 h-3 rounded-full bg-white border border-gray-300"></span>
+        <span class="text-xs font-semibold">Clear</span>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="border p-4 rounded-xl bg-gray-50">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-sm font-bold text-gray-700">Tooth Chart</div>
+          <div class="text-xs text-gray-500">View only</div>
+        </div>
+      </div>
+
+      ${legend}
+
+      <div class="bg-white p-4 rounded-xl border shadow-inner">
+        <h4 class="text-center text-xs font-semibold text-gray-500 mb-2 uppercase tracking-widest">
+          Maxillary Arch (Upper)
+        </h4>
+        <div class="tooth-chart-container">
+          ${quad(Q1, true)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quad(Q2, true)}
+        </div>
+
+        <div class="w-full h-1 bg-gray-100 my-4 rounded-full"></div>
+
+        <div class="tooth-chart-container">
+          ${quad(Q4, false)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quad(Q3, false)}
+        </div>
+
+        <h4 class="text-center text-xs font-semibold text-gray-500 mt-2 uppercase tracking-widest">
+          Mandibular Arch (Lower)
+        </h4>
+      </div>
+    </div>
+  `;
+}
+    // ---------- Treatment Record modal (view-only v1) ----------
+async function openTRModal(appointmentId) {
+  let dentistName = "—";
+  const modal = document.getElementById("trModal");
+  const body = document.getElementById("trModalBody");
+
+  modal.classList.remove("hidden");
+  body.innerHTML = `<div class="text-sm text-gray-500">Loading…</div>`;
+
+  // 1) TreatmentRecord
+  const { data: tr, error: trErr } = await supabaseClient
+    .from("TreatmentRecord")
+    .select("TreatmentRecordID, TreatmentNotes")
+    .eq("AppointmentID", appointmentId)
+    .maybeSingle();
+
+  if (trErr || !tr) {
+    body.innerHTML = `<p class="text-gray-500">No treatment record found.</p>`;
+    return;
+  }
+
+  // 2) ToothChart (by TreatmentRecordID)
+  const { data: tc } = await supabaseClient
+    .from("ToothChart")
+    .select("TeethStatus")
+    .eq("TreatmentRecordID", tr.TreatmentRecordID)
+    .maybeSingle();
+
+  const teethStatus = tc?.TeethStatus || {};
+
+  // 3) Uploaded files (attachments)
+  const { data: att, error: attErr } = await supabaseClient
+    .from("treatmentattachment")
+    .select("filepath, filename, mimetype, createdat")
+    .eq("treatmentrecordid", tr.TreatmentRecordID)
+    .order("createdat", { ascending: false });
+
+  const files = attErr ? [] : (att || []);
+
+  // ✅ IMPORTANT bridge for dentist page:
+  // patient uses window.appts; dentist page must set window.appts too
+  const appt = (window.appts || []).find(a => a.AppointmentID === appointmentId);
+  if (appt?.Dentist) {
+    dentistName = `${appt.Dentist.FirstName || ""} ${appt.Dentist.LastName || ""}`.trim();
+  }
+
+  const filesHtml = files.length === 0
+    ? `<p class="text-sm text-gray-500">No files uploaded.</p>`
+    : `
+      <div class="space-y-2">
+        ${files.map(f => {
+          const url = supabaseClient.storage
+            .from("treatment-files")
+            .getPublicUrl(f.filepath).data.publicUrl;
+
+          return `
+            <div class="flex items-center justify-between border rounded-lg px-3 py-2">
+              <div class="min-w-0">
+                <div class="text-sm font-semibold truncate">${esc(f.filename || "File")}</div>
+                <div class="text-xs text-gray-500 truncate">${esc(f.mimetype || "")}</div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  onclick="openPreview('${url}','${esc(f.filename)}','${esc(f.mimetype)}')"
+                  class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+                  Preview
+                </button>
+                <a href="${url}" target="_blank"
+                   class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+                  Open
+                </a>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+  document.getElementById("trTitle").textContent = "Treatment Record";
+  document.getElementById("trSub").textContent = "";
+  document.getElementById("trDentist").textContent = `Dentist: ${dentistName}`;
+
+  body.innerHTML = `
+    <div class="space-y-6">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">Treatment Notes</label>
+        <textarea class="min-h-[100px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          readonly>${esc(tr.TreatmentNotes || "—")}</textarea>
+      </div>
+
+      ${renderToothChartHTML(teethStatus)}
+
+    <div class="border p-4 rounded-xl bg-white">
+      ${`
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <div class="text-sm font-bold text-gray-700">Upload more files</div>
+            <div class="text-xs text-gray-500">X-ray, photos, documents</div>
+          </div>
+          </div>
+        </div>
+      `}
+      <div class="mt-2">${filesHtml}</div>
+    </div>
+
+  `;
+
+  document.getElementById("trUploadBtn")?.addEventListener("click", async () => {
+  try {
+    await uploadTRFiles(tr.TreatmentRecordID);
+    await openTRModal(appointmentId); // quick refresh
+  } catch (e) {
+    console.error(e);
+    showMessage("Upload failed. Check permissions or file size.", "error");
+  }
+});
+}
+async function uploadTRFiles(treatmentRecordId) {
+  const inp = document.getElementById("trUploadInput");
+  const files = Array.from(inp?.files || []);
+  if (!files.length) return showMessage("Please select file(s) to upload.", "warning");
+
+  await withLoading(async () => {
+    for (const f of files) {
+      const safeName = `${Date.now()}_${f.name}`.replaceAll(" ", "_");
+      const path = `${treatmentRecordId}/${safeName}`;
+
+      const { error: upErr } = await supabaseClient.storage
+        .from("treatment-files")  
+        .upload(path, f, { contentType: f.type });
+
+      if (upErr) throw upErr;
+
+      const { error: insErr } = await supabaseClient
+        .from("treatmentattachment")
+        .insert({
+          treatmentrecordid: treatmentRecordId,
+          filepath: path,
+          filename: f.name,
+          mimetype: f.type
+        });
+
+      if (insErr) throw insErr;
+    }
+  }, "Uploading files…", "Uploading");
+
+  showMessage("Files uploaded.", "success");
+}
+
+
+    function closeTRModal() {
+      const modal = document.getElementById("trModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    // ---------- Notifications (reuse your existing pattern) ----------
+ async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('bellContainer');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+function findProofAppointmentForPretreat(r) {
+  const sid = Number(r.serviceid);
+  if (!sid) return null;
+
+  return (modalAppts || []).find(a => {
+    const samePlan = String(a.TreatmentPlanID || "") === String(window.__currentPlanId || "");
+    if (!samePlan) return false;
+
+    const ids = parseServiceTypeIds(a.ServiceType);
+    return ids.includes(sid); // ✅ works for "3,4"
+  }) || null;
+}
+
+
+
+
+
+    // ---------- Init ----------
+    window.addEventListener("DOMContentLoaded", async () => {
+      await withLoading(loadDentistPlans, "Loading treatment plans…", "Please wait");
+      const user = await checkAuth();
+      if (!user || user.Role !== "dentist") { window.location.href = "/Login.html"; return; }
+
+      lucide.createIcons();
+      loadNotifications();
+
+      document.getElementById("refreshBtn")?.addEventListener("click", () =>
+        withLoading(loadDentistPlans, "Loading treatment plans…", "Please wait")
+      );
+      document.getElementById("searchInput")?.addEventListener("input", applyFiltersAndRender);
+      document.getElementById("statusFilter")?.addEventListener("change", applyFiltersAndRender);
+
+      document.getElementById("planModalClose")?.addEventListener("click", closePlanModal);
+      document.getElementById("trClose")?.addEventListener("click", closeTRModal);
+
+      // close on backdrop click
+      document.getElementById("planModal")?.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "planModal") closePlanModal();
+      });
+      document.getElementById("trModal")?.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "trModal") closeTRModal();
+      });
+
+    });
+  </script>
+
+<!-- Treatment Record Modal (match MyTreatmentPlan style) -->
+<div id="trModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTRModal()"></div>
+
+  <div class="relative w-full max-w-4xl mx-auto mt-8 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="relative sticky top-0 bg-white border-b z-10 px-6 py-4">
+      <div class="text-center">
+        <div id="trTitle" class="text-xl font-semibold text-custom-primary">Treatment Record</div>
+        <div id="trSub" class="text-sm text-gray-600 mt-1">—</div>
+        <div id="trDentist" class="text-xs text-gray-500 mt-1">Dentist: —</div>
+      </div>
+
+      <button onclick="closeTRModal()"
+        class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-900">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="trModalBody" class="p-6 overflow-y-auto">
+      Loading…
+    </div>
+  </div>
+</div>
+
+<!-- File Preview Modal -->
+<div id="previewModal" class="fixed inset-0 z-[80] hidden">
+  <div class="absolute inset-0 bg-black/70" onclick="closePreview()"></div>
+
+  <div class="relative max-w-4xl mx-auto mt-10 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between p-4 border-b">
+      <div class="min-w-0">
+        <div id="previewTitle" class="font-bold truncate">File</div>
+        <div id="previewMeta" class="text-xs text-gray-500 truncate"></div>
+      </div>
+      <button type="button" onclick="closePreview()" class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="previewBody" class="p-4 bg-gray-50"></div>
+
+    <div class="p-4 border-t flex justify-end gap-2 bg-white">
+      <a id="previewOpenNewTab" href="#" target="_blank" rel="noreferrer"
+         class="px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+        Open in new tab
+      </a>
+      <button type="button" onclick="closePreview()"
+              class="px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm font-medium">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

@@ -93,7 +93,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar (Secretary shell style, Dentist links) -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -103,6 +103,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -115,9 +118,6 @@
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -157,9 +157,20 @@
     const HOVER_COLOR = 'hover:bg-[#024449]';
 
     let state = {
-        searchTerm: '',
-        showAddForm: false,
+      searchTerm: '',
+      showAddForm: false,
+      patientsCache: null,
+      cacheLoaded: false,
     };
+
+    async function ensurePatientsLoaded() {
+  if (state.cacheLoaded && Array.isArray(state.patientsCache)) return;
+
+  const patients = await fetchPatients();
+  state.patientsCache = patients;
+  state.cacheLoaded = true;
+}
+
 
     function showMessage(message, type = "error") {
       const box = document.getElementById("messageBox");
@@ -232,14 +243,42 @@
     return [];
   }
 
-  return data.map(p => ({
+return await Promise.all((data || []).map(async (p) => {
+  const profilePath = p.ProfileImagePath || "";
+  const profileUrl = await getProfileUrl(profilePath);
+
+  return {
     id: p.UserAccountID,
     firstName: p.FirstName || '',
     lastName: p.LastName || '',
     email: p.Email || '',
     phone: p.ContactNumber || '',
     lastVisit: p.LastVisit || 'N/A',
-  }));
+    profileUrl, // ✅ use signed URL
+  };
+}));
+}
+
+const PROFILE_BUCKET = "Logo";
+
+async function getProfileUrl(profilePath) {
+  if (!profilePath) return "";
+
+  // If it's already a full URL, use it
+  if (/^https?:\/\//i.test(profilePath)) return profilePath;
+
+  // Otherwise, treat it as a storage path and sign it
+  try {
+    const { data, error } = await supabaseClient
+      .storage
+      .from(PROFILE_BUCKET)
+      .createSignedUrl(profilePath, 60 * 60); // 1 hour
+
+    if (error || !data?.signedUrl) return "";
+    return data.signedUrl;
+  } catch {
+    return "";
+  }
 }
 
 
@@ -261,13 +300,6 @@ function renderPatientControls() {
     <div class="card mb-6">
       <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 class="text-xl font-semibold text-gray-900">Patient Directory</h2>
-        <button
-          id="toggle-add-form"
-          class="bg-[#03555E] text-white hover:bg-[#024449] h-10 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          ${state.showAddForm ? 'Hide Form' : 'Add New Patient'}
-        </button>
       </div>
 
       <div class="p-6 flex gap-3 flex-col sm:flex-row">
@@ -287,7 +319,7 @@ function renderPatientControls() {
           type="button"
           class="border border-gray-300 bg-white text-[#03555E] hover:bg-gray-50 h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-1"
         >
-          <i data-lucide="filter" class="w-4 h-4"></i>
+          <i data-lucide="search" class="w-4 h-4"></i>
           <span class="hidden sm:inline">Search</span>
           <span class="sm:hidden">Go</span>
         </button>
@@ -363,6 +395,16 @@ function renderAddForm() {
       `;
     }
 
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
     function renderPatientList(patients) {
       let patientListContent;
 
@@ -393,8 +435,14 @@ function renderAddForm() {
             ${patients.map(p => `
               <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-xl bg-white hover:bg-gray-50 transition-colors shadow-sm">
                 <div class="flex items-start gap-3 min-w-0 mb-3 sm:mb-0">
-                  <div class="hidden sm:flex w-10 h-10 rounded-full bg-[#03555E]/10 text-[#03555E] items-center justify-center font-semibold text-sm uppercase">
-                    ${p.firstName?.[0] || '?'}${p.lastName?.[0] || ''}
+                  <div class="hidden sm:flex w-10 h-10 rounded-full overflow-hidden bg-[#03555E]/10 items-center justify-center">
+                    ${
+                      p.profileUrl
+                        ? `<img src="${escapeHtml(p.profileUrl)}" class="w-full h-full object-cover" alt="Profile" />`
+                        : `<span class="text-[#03555E] font-semibold text-sm uppercase">
+                            ${p.firstName?.[0] || '?'}${p.lastName?.[0] || ''}
+                          </span>`
+                    }
                   </div>
                   <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-800 text-base sm:text-lg truncate">
@@ -513,17 +561,12 @@ function renderAddForm() {
       }
     }
 
-    // --- Main render ---
-   async function renderApp() {
-  await checkAuth();
-
-  const patients = await fetchPatients();
-
+function renderPatientListOnly() {
   const normalizedSearchTerm = (state.searchTerm || '').toLowerCase().trim();
+  const patients = state.patientsCache || [];
 
   const filteredPatients = patients.filter(p => {
-    if (!normalizedSearchTerm) return true; // no search → show all
-
+    if (!normalizedSearchTerm) return true;
     const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
     const email = (p.email || '').toLowerCase();
     const phoneDigits = (p.phone || '').replace(/[^0-9]/g, '');
@@ -536,58 +579,100 @@ function renderAddForm() {
     );
   });
 
+  // Replace only the list card (keep search input alive)
+  const listHost = document.getElementById("patient-list-host");
+  if (listHost) listHost.innerHTML = renderPatientList(filteredPatients);
+
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+}
+
+
+    // --- Main render ---
+async function renderApp() {
+  const prevActiveId = document.activeElement?.id || null;
+  const prevCursor = document.activeElement?.selectionStart ?? null;
+
+  await checkAuth();
+
+  await ensurePatientsLoaded();
+  const patients = state.patientsCache || [];
+
+  const normalizedSearchTerm = (state.searchTerm || '').toLowerCase().trim();
+
+  const filteredPatients = patients.filter(p => {
+    if (!normalizedSearchTerm) return true;
+    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+    const email = (p.email || '').toLowerCase();
+    const phoneDigits = (p.phone || '').replace(/[^0-9]/g, '');
+    const searchDigits = normalizedSearchTerm.replace(/[^0-9]/g, '');
+    return (
+      fullName.includes(normalizedSearchTerm) ||
+      email.includes(normalizedSearchTerm) ||
+      (searchDigits && phoneDigits.includes(searchDigits))
+    );
+  });
+
   const app = document.getElementById('app-container');
   app.innerHTML = `
     <div class="space-y-6">
       ${renderPatientControls()}
-      ${renderAddForm()}
-      ${renderPatientList(filteredPatients)}
+      <div id="patient-list-host">
+        ${renderPatientList(filteredPatients)}
+      </div>
     </div>
   `;
 
-  // Render Lucide icons (including dynamically injected ones)
+  // icons first
   if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
     lucide.createIcons();
   }
-  console.log('searchTerm:', state.searchTerm, 'filtered:', filteredPatients.length);
 
-
-  // wire events
+  // events next
   setupEventListeners();
+
+  // restore focus last
+  if (prevActiveId) {
+    const el = document.getElementById(prevActiveId);
+    if (el) {
+      el.focus();
+      const vlen = (el.value || "").length;
+      const pos = (prevCursor != null) ? prevCursor : vlen;
+      el.setSelectionRange?.(pos, pos);
+    }
+  }
 }
 
-
-   function setupEventListeners() {
-  // toggle add form
-  const toggleButton = document.getElementById('toggle-add-form');
-  if (toggleButton) {
-    toggleButton.onclick = () => setState({ showAddForm: !state.showAddForm });
-  }
-
+function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
   const searchButton = document.getElementById('search-button');
 
-  // Run search when clicking the button
-  if (searchButton && searchInput) {
-    searchButton.onclick = () => {
-      const term = searchInput.value.trim();
-      setState({ searchTerm: term });
+  let searchTimer;
+
+  if (searchInput) {
+    searchInput.oninput = () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.searchTerm = searchInput.value;
+        renderPatientListOnly(); // don't trim while typing
+      }, 200);
+    };
+
+    searchInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        setState({ searchTerm: searchInput.value.trim() });
+      }
     };
   }
 
-  // Run search when pressing Enter in the box
-  if (searchInput) {
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const term = searchInput.value.trim();
-        setState({ searchTerm: term });
-      }
-    });
+  if (searchButton && searchInput) {
+    searchButton.onclick = () => {
+      setState({ searchTerm: searchInput.value.trim() });
+    };
   }
 }
-
-
 
 
     function setState(newState) {

@@ -185,7 +185,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -195,6 +195,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors bg-white/10">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -208,10 +211,6 @@
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
-        </a>
-
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
@@ -323,6 +322,29 @@
 
     <!-- LEFT COLUMN -->
     <div class="space-y-4">
+      <!-- VITAL SIGNS (READ-ONLY) -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">HEIGHT (CM)</label>
+    <input id="mr-height-cm" type="text"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+      disabled />
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">WEIGHT (KG)</label>
+    <input id="mr-weight-kg" type="text"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+      disabled />
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">BLOOD PRESSURE</label>
+    <input id="mr-blood-pressure" type="text"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+      disabled />
+  </div>
+</div>
 
       <div class="space-y-4">
         <div>
@@ -442,19 +464,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Treatment Notes</label>
-            <textarea id="tr-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="5" placeholder="Write what was done / findings..."></textarea>
-
-            <label class="text-xs font-semibold text-gray-600 mt-3 block">Treatment Details</label>
-            <textarea id="tr-details" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="5" placeholder="Detailed procedure, materials used, etc..."></textarea>
-
-            <div class="mt-3 flex justify-end gap-2">
-              <button type="button" class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="goToFinishStep(1)">Back</button>
-              <button type="button" id="tr-save-btn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]" onclick="saveTreatmentRecordStep()" disabled style="opacity:.5">Save Treatment</button>
-            </div>
-          </div>
-
           <div class="border p-4 rounded-xl bg-gray-50">
             <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <div>
@@ -487,6 +496,9 @@
               </div>
             </div>
 
+            <div id="tooth-legend"
+     class="bg-white border rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+</div>
             <div id="toothchart-grid" class="bg-white p-4 rounded-xl border shadow-inner"></div>
 
             <div class="mt-4 p-3 bg-white rounded-lg border text-sm">
@@ -513,63 +525,163 @@
 </div>
             </div>
           </div>
+
+                    <div>
+            <label class="text-xs font-semibold text-gray-600">Treatment Notes</label>
+            <textarea id="tr-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#03555E] focus:outline-none" rows="5" placeholder="Write what was done / findings..."></textarea>
+
+            <label class="hidden">Treatment Details</label>
+            <textarea id="tr-details" class="hidden" rows="5" placeholder="Detailed procedure, materials used, etc..."></textarea>
+
+            <div class="mt-3 flex justify-end gap-2">
+              <button type="button" class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="goToFinishStep(1)">Back</button>
+              <button type="button" id="tr-save-btn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]" onclick="saveTreatmentRecordStep()" disabled style="opacity:.5">Save Treatment</button>
+            </div>
+          </div>
         </div>
       </div>
       <!-- Attachments -->
     </div>
-<div id="finish-step-3" class="finish-step hidden space-y-3">
-      <div class="border rounded-lg p-4">
-        <p class="font-semibold mb-3">Pricing</p>
+<div id="finish-step-3" class="finish-step hidden">
+  <h3 class="font-semibold text-lg mb-4">Pricing</h3>
 
-        <div class="border rounded-lg p-3 bg-gray-50">
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Base service price (₱)</label>
-          <input id="finish-base-price" type="number" min="0" step="0.01"
-            class="w-full border rounded-lg px-3 py-2 text-sm bg-white"
-            placeholder="e.g. 1500" disabled />
-        </div>
+  <!-- NORMAL PRICING UI -->
+  <div id="pricing-form" class="space-y-4">
 
-        <div class="border rounded-lg p-3 mt-3">
-          <div class="flex items-center justify-between mb-2">
-            <p class="font-semibold">Add-ons</p>
-            <button type="button"
-              class="text-xs px-3 py-1 rounded-lg bg-[#03555E] text-white hover:bg-[#024449]"
-              onclick="addAddonRow()" disabled id="addons-add-btn"
-            >+ Add add-on</button>
-          </div>
+  <div class="border rounded-xl p-4 bg-white">
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div>
+        <p class="font-semibold text-gray-900">Main service performed</p>
+        <p class="text-xs text-gray-500">Use Change only if dentist evaluation required a different service.</p>
+      </div>
 
-          <div id="finish-addons" class="space-y-2" style="opacity:.5"></div>
-        </div>
+      <div class="flex gap-2">
+        <button id="btn-service-change" type="button"
+          class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+          onclick="startMainServiceChange()">Change</button>
 
-        <div class="flex items-center justify-between border-t pt-3 mt-3">
-          <span class="font-semibold">Total</span>
-          <span id="finish-total" class="text-lg font-bold text-[#03555E]">₱0</span>
-        </div>
-
-        <div id="finish-error" class="hidden text-red-600 text-xs font-semibold mt-2"></div>
-
-        <div class="mt-4 flex justify-between gap-3 flex-wrap">
-          <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="goToFinishStep(2)">
-            Back
-          </button>
-          <div class="flex gap-3">
-            <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeFinishModal()">
-              Cancel
-            </button>
-            <button id="finish-confirm-btn"
-              class="px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
-              onclick="confirmFinishAppointment()" disabled style="opacity:.5"
-            >
-              Save Price & Finish
-            </button>
-          </div>
-        </div>
+        <button id="btn-service-cancel" type="button"
+          class="hidden px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+          onclick="cancelMainServiceChange()">Cancel</button>
       </div>
     </div>
+
+    <div class="mt-3">
+      <p class="text-sm text-gray-700">
+        Current: <span id="finish-current-service" class="font-semibold">—</span>
+      </p>
+
+      <div id="finish-main-service-wrap" class="hidden mt-3">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Select new service</label>
+        <select id="finish-main-service" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+          <option value="">Select service…</option>
+        </select>
+
+        <input id="finish-main-service-other"
+          class="hidden mt-2 w-full border rounded-lg px-3 py-2 text-sm"
+          placeholder="Type the service (not in the list)..." />
+      </div>
+    </div>
+
+    <!-- Base price under main service -->
+    <div class="mt-4 border-t pt-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Main service price (₱)
+      </label>
+      <input
+        id="finish-base-price"
+        type="number"
+        class="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+        placeholder="e.g. 1500"
+      />
+      <p class="text-xs text-gray-500 mt-1">This is the price for the main service performed.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: Extra services -->
+  <div class="border rounded-xl p-4 bg-white">
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <div>
+        <p class="font-semibold text-gray-900">Extra services performed</p>
+        <p class="text-xs text-gray-500">Additional procedures done during the visit (each with its own price).</p>
+      </div>
+
+      <button type="button"
+        class="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm hover:bg-black"
+        onclick="addExtraServiceRow()">
+        + Add extra service
+      </button>
+    </div>
+
+    <div id="extra-services-wrap" class="mt-3 space-y-2"></div>
+  </div>
+
+  <!-- SECTION: Add-ons -->
+  <div class="border rounded-xl p-4 bg-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-gray-900">Add-ons</p>
+        <p class="text-xs text-gray-500">Small extras (materials, optional items) added to the main service.</p>
+      </div>
+
+      <button id="addons-add-btn" type="button"
+        class="px-3 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
+        onclick="addAddonRow()">
+        + Add add-on
+      </button>
+    </div>
+
+    <div class="mt-3 border-t pt-3">
+      <div id="finish-addons" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- TOTAL -->
+  <div class="border rounded-xl p-4 bg-gray-50 flex items-center justify-between">
+    <p class="font-semibold text-gray-900">Total</p>
+    <p id="finish-total" class="font-bold text-[#03555E] text-lg">₱0</p>
+  </div>
+
+    <!-- Error -->
+    <p id="finish-error" class="text-sm text-red-600 hidden"></p>
+
+    <!-- Footer buttons -->
+    <div class="flex items-center justify-between pt-2">
+      <button
+        class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="goToFinishStep(2)">
+        Back
+      </button>
+
+      <div class="flex gap-3">
+        <button
+          class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+          onclick="closeFinishModal()">
+          Cancel
+        </button>
+        <button
+          id="createBracesPlanBtn"
+          type="button"
+          class="hidden px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm font-medium hover:bg-[#024449]">
+          + Create Braces Treatment Plan
+        </button>
+          <button
+            id="finish-confirm-btn"
+            class="finish-confirm-btn px-4 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
+            onclick="confirmFinishAppointment(this)">
+            Save Price &amp; Finish
+          </button>
+      </div>
+    </div>
+  </div>
+
+</div>
 
   </div>
 </div>
    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/feedback.js"></script>
     <script>
         // --- Supabase client (replace with your values) ---
         const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co"; // <- replace
@@ -577,6 +689,8 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentFilter = 'upcoming'; // Default to upcoming or today for initial load
+        let dentistRealtimeHooksInstalled = false;
+        let dentistRealtimeRunning = false;
 
         // =================================================================================
         // *** START OF USER-PROTECTED BLOCK (checkAuth) ***
@@ -638,14 +752,18 @@
                     <div class="skeleton h-5 w-1/3 mx-auto"></div>
                 </div>
             `;
-            if (rowEl) rowEl.innerHTML = loadingHTML;
+           if (rowEl) {
+              rowEl.style.opacity = "0.5";
+              rowEl.style.pointerEvents = "none";
+            }
 
             // --- Update appointment in Supabase ---
             const { error } = await supabaseClient
                 .from('Appointment')
                 .update({ Status: 'Finished' })
                 .eq('AppointmentID', appointmentId)
-                .eq('DentistID', dentistId);
+                .eq('DentistID', dentistId)
+
 
             if (error) {
                 console.error("Error updating appointment status:", error);
@@ -889,15 +1007,15 @@ function toothButtonClasses(status) {
     },
 
     "Crowns": {
-      base: "bg-purple-100 border-purple-500 ring-2 ring-purple-300",
-      number: "text-purple-900",
-      dot: "bg-purple-600"
-    },
-
-    "Complete Denture": {
       base: "bg-indigo-100 border-indigo-500 ring-2 ring-indigo-300",
       number: "text-indigo-900",
       dot: "bg-indigo-600"
+    },
+
+    "Complete Denture": {
+      base: "bg-violet-100 border-violet-500 ring-2 ring-violet-300",
+      number: "text-violet-900",
+      dot: "bg-violet-600"
     }
   };
 
@@ -923,6 +1041,222 @@ function handleToothClick(number) {
   renderToothChart();
   updateToothSummary();
 }
+
+function renderToothLegend() {
+  const legend = document.getElementById("tooth-legend");
+  if (!legend) return;
+
+  const statuses = [
+    "Cavity",
+    "OK/Pasta",
+    "Root Fragments",
+    "Impacted",
+    "Missing",
+    "Amalgam",
+    "Composite",
+    "Complete Denture",
+    "Crowns",
+  ];
+
+  // Use text/border colors consistent with toothButtonClasses() mapping
+  const chips = {
+    "Cavity":           { bg: "bg-red-50",     text: "text-red-800",     dot: "bg-red-600",     ring: "ring-red-200" },
+    "OK/Pasta":         { bg: "bg-green-50",   text: "text-green-800",   dot: "bg-green-600",   ring: "ring-green-200" },
+    "Root Fragments":   { bg: "bg-amber-50",   text: "text-amber-900",   dot: "bg-amber-700",   ring: "ring-amber-200" },
+    "Impacted":         { bg: "bg-orange-50",  text: "text-orange-800",  dot: "bg-orange-600",  ring: "ring-orange-200" },
+    "Missing":          { bg: "bg-gray-50",    text: "text-gray-800",    dot: "bg-gray-500",    ring: "ring-gray-200" },
+    "Amalgam":          { bg: "bg-slate-100",   text: "text-slate-800",   dot: "bg-slate-700",   ring: "ring-slate-200" },
+    "Composite":        { bg: "bg-cyan-50",    text: "text-cyan-800",    dot: "bg-cyan-600",    ring: "ring-cyan-200" },
+    "Complete Denture": { bg: "bg-violet-50",  text: "text-violet-800",  dot: "bg-violet-600",  ring: "ring-violet-200" },
+    "Crowns":           { bg: "bg-indigo-50",  text: "text-indigo-800",  dot: "bg-indigo-600",  ring: "ring-indigo-200" },
+  };
+
+  legend.className =
+    "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4";
+
+  legend.innerHTML = statuses.map((s) => {
+    const m = chips[s];
+    return `
+      <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 ${m.bg}
+                  shadow-sm ring-1 ${m.ring}">
+        <span class="w-2.5 h-2.5 rounded-full ${m.dot}"></span>
+        <span class="text-[11px] font-semibold ${m.text} leading-none">${s}</span>
+      </div>
+    `;
+  }).join("") + `
+    <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 bg-white
+                shadow-sm ring-1 ring-gray-100">
+      <span class="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white"></span>
+      <span class="text-[11px] font-semibold text-gray-700 leading-none">Clear</span>
+    </div>
+  `;
+}
+
+const MAIN_SERVICES = [
+  {
+    id: 1,
+    name: "Dental Cleaning",
+    category: "Cleaning",
+    durationMinutes: 45,
+    basePrice: 1200,
+  },
+  {
+    id: 2,
+    name: "Tooth Extraction",
+    category: "Extraction",
+    durationMinutes: 60,
+    basePrice: 1500,
+  },
+  {
+    id: 3,
+    name: "Tooth Filling (Pasta)",
+    category: "Restoration",
+    durationMinutes: 60,
+    basePrice: 1500,
+  },
+  {
+    id: 4,
+    name: "Root Canal Treatment",
+    category: "Root Canal",
+    durationMinutes: 90,
+    basePrice: 7000,
+  },
+  {
+    id: 5,
+    name: "Teeth Whitening",
+    category: "Whitening",
+    durationMinutes: 60,
+    basePrice: 5500,
+  },
+  {
+    id: 6,
+    name: "Crowns / Bridges / Veneers",
+    category: "Crowns & Veneers",
+    durationMinutes: 90,
+    basePrice: 5000,
+  },
+  {
+    id: 7,
+    name: "Dentures",
+    category: "Denture",
+    durationMinutes: 120,
+    basePrice: 10000,
+  },
+  {
+    id: 8,
+    name: "Braces Consultation",
+    category: "Orthodontics",
+    durationMinutes: 30,
+    basePrice: 2500,
+  }
+];
+
+// 🔹 derive plain service names for selects
+const SERVICE_CATALOG = MAIN_SERVICES.map(s => s.name);
+
+
+function populateServiceSelect(selectEl, selectedValue = "") {
+  if (!selectEl) return;
+
+  const otherVal = "__OTHER__";
+  selectEl.innerHTML =
+    `<option value="">Select service…</option>` +
+    SERVICE_CATALOG.map(s => {
+      const sel = (s === selectedValue) ? "selected" : "";
+      return `<option ${sel} value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
+    }).join("") +
+    `<option value="${otherVal}">Other (not listed)…</option>`;
+}
+
+
+function addExtraServiceRow(prefill = { name: "", price: "" }) {
+  const wrap = document.getElementById("extra-services-wrap");
+  if (!wrap) return;
+
+  const rowId = crypto.randomUUID();
+
+  const html = document.createElement("div");
+  html.className = "flex gap-2 items-center";
+  html.dataset.rowId = rowId;
+
+html.innerHTML = `
+  <div class="flex-1 space-y-2">
+    <select class="extra-service-name w-full border rounded-lg px-3 py-2 text-sm bg-white">
+      <option value="">Select service…</option>
+      ${SERVICE_CATALOG.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("")}
+      <option value="__OTHER__">Other (not listed)…</option>
+    </select>
+
+    <input class="extra-service-other hidden w-full border rounded-lg px-3 py-2 text-sm"
+      placeholder="Type the service (not in the list)..." />
+  </div>
+
+  <input class="extra-service-price w-1/3 border rounded-lg px-3 py-2 text-sm"
+    type="number" min="0" step="0.01" placeholder="Price">
+
+  <button type="button"
+    class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+    onclick="removeExtraServiceRow('${rowId}')">
+    Remove
+  </button>
+`;
+
+
+  wrap.appendChild(html);
+
+const nameSel = html.querySelector(".extra-service-name");
+const priceIn = html.querySelector(".extra-service-price");
+const otherIn = html.querySelector(".extra-service-other");
+
+if (priceIn) {
+  priceIn.dataset.manual = "0";
+  priceIn.addEventListener("input", () => {
+    priceIn.dataset.manual = "1";
+  });
+}
+  
+if (nameSel && priceIn) {
+  nameSel.addEventListener("change", () => {
+    // If switching service, and price wasn't manually edited, follow the starting price
+    if (priceIn.dataset.manual !== "1") {
+      const svc = MAIN_SERVICES.find(s => s.name === nameSel.value);
+      if (svc) priceIn.value = svc.basePrice;
+      else priceIn.value = ""; // if blank / Other
+    }
+    computeFinishTotal();
+  });
+}
+
+  if (nameSel) nameSel.value = prefill.name || "";
+  if (priceIn) priceIn.value = prefill.price ?? "";
+
+
+if (nameSel && otherIn) {
+  nameSel.addEventListener("change", () => {
+    priceIn.dataset.manual = "0";
+    const isOther = nameSel.value === "__OTHER__";
+    otherIn.classList.toggle("hidden", !isOther);
+    if (!isOther) otherIn.value = "";
+    computeFinishTotal();
+  });
+}
+
+  html.querySelectorAll("select,input").forEach(el =>
+  el.addEventListener("input", computeFinishTotal)
+);
+computeFinishTotal();
+}
+
+function removeExtraServiceRow(rowId) {
+  const wrap = document.getElementById("extra-services-wrap");
+  if (!wrap) return;
+  const row = wrap.querySelector(`[data-row-id="${rowId}"]`);
+  if (row) row.remove();
+  computeFinishTotal(); // ✅ add this
+}
+
+window.addExtraServiceRow = addExtraServiceRow;
+window.removeExtraServiceRow = removeExtraServiceRow;
 
 
 function renderQuadrant(numbers, isUpperArch) {
@@ -1061,6 +1395,7 @@ if (sel) {
   host.appendChild(bottom);
 
   updateToothSummary();
+  renderToothLegend();
 }
 // -------------------------------------------------------------------------------------------
 
@@ -1072,6 +1407,7 @@ function peso(amount) {
 function computeFinishTotal() {
   const base = Number(document.getElementById('finish-base-price')?.value || 0);
 
+  // add-ons
   const addonRows = Array.from(document.querySelectorAll('.addon-row'));
   const addons = addonRows.map(row => {
     const name = row.querySelector('.addon-name')?.value?.trim() || '';
@@ -1080,11 +1416,29 @@ function computeFinishTotal() {
   }).filter(a => a.name || a.price > 0);
 
   const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-  const total = base + addonsTotal;
+
+  // extra services
+  const extraRows = Array.from(document.querySelectorAll('#extra-services-wrap > div'));
+  const extraServices = extraRows.map(row => {
+    const sel = row.querySelector('.extra-service-name');
+    const other = row.querySelector('.extra-service-other');
+
+    let name = (sel?.value || '').trim();
+    if (name === "__OTHER__") name = (other?.value || '').trim();
+
+    const price = Number(row.querySelector('.extra-service-price')?.value || 0);
+    return { kind: "service", name, price };
+  }).filter(x => x.name || x.price > 0);
+
+
+  const extraTotal = extraServices.reduce((sum, x) => sum + (Number(x.price) || 0), 0);
+
+  const total = base + addonsTotal + extraTotal;
 
   document.getElementById('finish-total').textContent = peso(total);
-  return { base, addons, total };
+  return { base, addons, extraServices, total };
 }
+
 
 function addAddonRow(prefill = { name: '', price: '' }) {
   const wrap = document.getElementById('finish-addons');
@@ -1122,23 +1476,30 @@ function addAddonRow(prefill = { name: '', price: '' }) {
 async function openFinishModal(appointmentId, filter) {
   finishContext.appointmentId = appointmentId;
   finishContext.filter = filter;
+  
 
+  showLoading("Opening appointment…", "Please wait");
+  try{
   const dentistId = localStorage.getItem('userId');
   if (!dentistId) return;
 
   // Load appointment
   const { data: appt, error: apptErr } = await supabaseClient
     .from('Appointment')
-    .select('AppointmentID, Service, ServiceType, UserAccountID, DentistID, AddOns')
+    .select('AppointmentID, Service, ServiceType, UserAccountID, DentistID, AddOns, TotalAmount, TreatmentPlanID')
     .eq('AppointmentID', appointmentId)
-    .eq('DentistID', dentistId)
     .maybeSingle();
 
   if (apptErr || !appt) {
     console.error(apptErr);
-    showToast('Failed to load appointment.');
+    showMessage('Failed to load appointment.');
     return;
   }
+
+  if (appt.DentistID !== dentistId) {
+  showMessage("This appointment is assigned to a different dentist.", "error");
+  return;
+}
 
   // Load patient name
   let patientName = 'Unknown';
@@ -1151,11 +1512,58 @@ async function openFinishModal(appointmentId, filter) {
     if (patient) patientName = `${patient.FirstName || ''} ${patient.LastName || ''}`.trim() || 'Unknown';
   }
 
+const patientEl = document.getElementById("finish-patient");
+if (patientEl) patientEl.textContent = patientName || "—";
+
+const svcTopEl = document.getElementById("finish-service");
+if (svcTopEl) svcTopEl.textContent = (appt.Service || appt.ServiceType || "—");
+
+
 finishContext.appointment = appt;
 finishContext.patientName = patientName;
+await maybeShowCreateBracesPlanBtn(appt);
 
-document.getElementById('finish-patient').textContent = patientName;
-document.getElementById('finish-service').textContent = appt.Service || appt.ServiceType || '—';
+// --- CURRENT SERVICE (for Change button UI) ---
+const currentSvc = (appt.Service || appt.ServiceType || "—").trim();
+const currentEl = document.getElementById("finish-current-service");
+if (currentEl) currentEl.textContent = currentSvc;
+
+// Populate dropdown but keep it hidden until "Change" is clicked
+populateServiceSelect(document.getElementById("finish-main-service"), currentSvc);
+document.getElementById("finish-main-service-wrap")?.classList.add("hidden");
+document.getElementById("btn-service-change")?.classList.remove("hidden");
+document.getElementById("btn-service-cancel")?.classList.add("hidden");
+
+
+const mainSel = document.getElementById("finish-main-service");
+const mainOther = document.getElementById("finish-main-service-other");
+
+if (mainSel && mainOther) {
+mainSel.onchange = () => {
+  const isOther = mainSel.value === "__OTHER__";
+  mainOther.classList.toggle("hidden", !isOther);
+  if (!isOther) mainOther.value = "";
+
+  const svc = MAIN_SERVICES.find(s => s.name === mainSel.value);
+  if (svc) {
+    document.getElementById("finish-base-price").value = svc.basePrice;
+    computeFinishTotal();
+  }
+};
+
+}
+
+
+// Clear extra services UI
+const extraWrap = document.getElementById("extra-services-wrap");
+if (extraWrap) extraWrap.innerHTML = "";
+
+// Re-hydrate extra services from AddOns (kind:"service")
+let existing = safeParseAddons(appt?.AddOns);
+existing
+  .filter(x => x && x.kind === "service")
+  .forEach(x => addExtraServiceRow({ name: x.name || "", price: x.price ?? "" }));
+
 
 // reset fields FIRST
 document.getElementById('finish-base-price').value = '';
@@ -1167,6 +1575,15 @@ console.log("AddOns from DB:", appt.AddOns, "TotalAmount:", appt.TotalAmount);
 // THEN hydrate from Appointment table
 hydratePricingFromAppointment(appt);
   
+
+
+
+const pricingForm = document.getElementById("pricing-form");
+const installInfo = document.getElementById("pricing-install-info");
+
+// default show pricing
+if (pricingForm) pricingForm.classList.remove("hidden");
+if (installInfo) installInfo.classList.add("hidden");
 
   // Optional: start with one row
   // addAddonRow();
@@ -1183,7 +1600,9 @@ hydratePricingFromAppointment(appt);
 renderMedicalConditionsReadOnly();
 await loadExistingStepsForAppointment();
   computeFinishTotal();
-}
+}finally{
+  hideLoading()
+}}
 
 function closeFinishModal() {
   const modal = document.getElementById('finish-modal');
@@ -1192,21 +1611,106 @@ function closeFinishModal() {
   finishContext = { appointmentId: null, filter: null, appointment: null, patientName: null };
 }
 
-async function confirmFinishAppointment() {
+function getOrthoProcKind(appt) {
+  const id = Number(appt?.ServiceType);
+  if (id === 701) return "INSTALL";
+  if (id === 702) return "ADJUST";
+  return null;
+}
+
+function startMainServiceChange() {
+  const wrap = document.getElementById("finish-main-service-wrap");
+  if (!wrap) return;
+
+  wrap.classList.remove("hidden");
+
+  document.getElementById("btn-service-change")?.classList.add("hidden");
+  document.getElementById("btn-service-cancel")?.classList.remove("hidden");
+}
+
+function cancelMainServiceChange() {
+  const wrap = document.getElementById("finish-main-service-wrap");
+  if (!wrap) return;
+
+  // reset dropdown back to current service
+  const currentSvc = (finishContext.appointment?.Service || finishContext.appointment?.ServiceType || "").trim();
+  const sel = document.getElementById("finish-main-service");
+  if (sel) sel.value = currentSvc;
+
+  // ensure we are not stuck on "__OTHER__"
+if (sel && sel.value === "__OTHER__") sel.value = currentSvc;
+document.getElementById("finish-main-service-other")?.classList.add("hidden");
+
+  wrap.classList.add("hidden");
+
+  document.getElementById("btn-service-change")?.classList.remove("hidden");
+  document.getElementById("btn-service-cancel")?.classList.add("hidden");
+  document.getElementById("finish-main-service-other")?.classList.add("hidden");
+const other = document.getElementById("finish-main-service-other");
+if (other) other.value = "";
+
+}
+
+
+
+async function confirmFinishAppointment(clickedBtn) {
   const errBox = document.getElementById('finish-error');
-  const btn = document.getElementById('finish-confirm-btn');
+  const btn = clickedBtn || document.querySelector('.finish-confirm-btn');
+  if (!btn) {
+    console.warn("Finish button not found.");
+    return;
+  }
+
 
   const dentistId = localStorage.getItem('userId');
   if (!dentistId || !finishContext.appointmentId) return;
 
   const { base, addons, total } = computeFinishTotal();
 
-  if (total <= 0) {
-    errBox.textContent = 'Please set a valid price before finishing.';
-    errBox.classList.remove('hidden');
-    return;
-  }
+  // --- MAIN SERVICE CHANGE ---
+const currentMain = (finishContext.appointment?.Service || finishContext.appointment?.ServiceType || "").trim();
 
+const sel = document.getElementById("finish-main-service");
+const other = document.getElementById("finish-main-service-other");
+
+let chosenMain = (sel?.value || "").trim();
+
+if (chosenMain === "__OTHER__") {
+  chosenMain = (other?.value || "").trim();
+}
+
+const finalMainService = chosenMain || currentMain;
+
+// --- EXTRA SERVICES ---
+const extraRows = Array.from(document.querySelectorAll('#extra-services-wrap > div'));
+
+const extraServices = extraRows.map(row => {
+  const sel = row.querySelector('.extra-service-name');
+  const other = row.querySelector('.extra-service-other');
+
+  let name = (sel?.value || '').trim();
+  if (name === "__OTHER__") name = (other?.value || '').trim();
+
+  const price = Number(row.querySelector('.extra-service-price')?.value || 0);
+
+  return { kind: "service", name, price };
+}).filter(x => x.name || x.price > 0);
+
+// Merge with existing AddOns: keep normal addons, replace service extras
+const mergedAddOns = [
+  ...(addons || []).map(a => ({ kind: "addon", name: a.name, price: a.price })), // tag them
+  ...extraServices
+];
+
+
+    const kind = getOrthoProcKind(finishContext.appointment);
+
+    // Allow 0 only for braces installation
+    if (total <= 0 && kind !== "INSTALL") {
+      errBox.textContent = 'Please set a valid price before finishing.';
+      errBox.classList.remove('hidden');
+      return;
+    }
   const breakdown = {
     baseServicePrice: base,
     addons,
@@ -1222,11 +1726,14 @@ async function confirmFinishAppointment() {
   // IMPORTANT:
   // Requires Appointment.TotalAmount column.
   // PriceBreakdown is optional (remove if you don't have it).
+  showLoading("Finishing appointment…", "Please wait");
+  try{
 const { data: updatedRows, error } = await supabaseClient
   .from('Appointment')
   .update({
+    Service: finalMainService,
     TotalAmount: total,
-    AddOns: addons,
+    AddOns: mergedAddOns,
     Status: 'Finished',
   })
   .eq('AppointmentID', finishContext.appointmentId)
@@ -1240,28 +1747,65 @@ const { data: updatedRows, error } = await supabaseClient
     console.warn(msg);
     errBox.textContent = msg;
     errBox.classList.remove('hidden');
-    showToast(msg, 'error');
-    btn.disabled = false;
-    btn.textContent = old;
+    showMessage(msg, 'error');
     return;
   }
 
-  btn.disabled = false;
-  btn.textContent = old;
-
   if (error) {
     console.error(error);
-    errBox.textContent = 'Failed to save price / finish. Please try again.';
+    showMessage("Failed to finish appointment.", "error");
+    errBox.textContent = "Failed to finish appointment.";
     errBox.classList.remove('hidden');
     return;
   }
 
-  showToast('Appointment finished and price saved.', 'success');
-  closeFinishModal();
+showMessage("Appointment finished and price saved.", "success");
 
-  // Refresh list
-  const searchQuery = document.getElementById('searchAppointments').value;
-  await loadDentistAppointments(finishContext.filter || 'today', searchQuery);
+// ✅ cache before closeFinishModal() resets finishContext
+const appt = finishContext.appointment;
+const planId = appt?.TreatmentPlanID;
+const serviceTypeId = Number(appt?.ServiceType);
+const refreshFilter = finishContext.filter || "today";
+
+// ✅ Auto-activate braces plan when Installation (701) is finished
+try {
+  const isInstall701 = serviceTypeId === 701;
+
+  if (planId && isInstall701) {
+    const { data: planRow, error: planErr } = await supabaseClient
+      .from("TreatmentPlan")
+      .select("Status")
+      .eq("TreatmentPlanID", planId)
+      .maybeSingle();
+
+    if (!planErr && planRow) {
+      const st = String(planRow.Status || "").toUpperCase();
+      if (st === "PROPOSED") {
+        const { error: actErr } = await supabaseClient
+          .from("TreatmentPlan")
+          .update({ Status: "ACTIVE" })
+          .eq("TreatmentPlanID", planId);
+
+        if (actErr) console.error("Activate plan error:", actErr);
+      }
+    }
+  }
+} catch (e) {
+  console.error("Plan activation block failed:", e);
+}
+
+closeFinishModal();
+
+// Refresh list using the cached filter
+const searchQuery = document.getElementById('searchAppointments').value;
+await loadDentistAppointments(refreshFilter, searchQuery);
+
+
+}finally {
+  hideLoading();
+  btn.disabled = false;
+  btn.textContent = old;
+  }
 }
 
 function setStepStatus(id, ok, textOk = 'Done') {
@@ -1327,6 +1871,9 @@ if (mr) {
   document.getElementById('mr-family-prob').value = mr.FamilyMedicationProblems ?? '';
   document.getElementById('mr-concerns').value = mr.OtherMedicalConcerns ?? '';
   document.getElementById('mr-alerts').value = mr.MedicalAlert ?? '';
+  document.getElementById('mr-height-cm').value = mr.HeightCm ?? '';
+  document.getElementById('mr-weight-kg').value = mr.WeightKg ?? '';
+  document.getElementById('mr-blood-pressure').value = mr.BloodPressure ?? '';
 
   // fill conditions JSON
   const condObj = mr.MedicalConditions || {};
@@ -1334,6 +1881,12 @@ if (mr) {
     .forEach(cb => {
       cb.checked = !!condObj[cb.dataset.condKey];
     });
+}
+
+else {
+  document.getElementById('mr-height-cm').value = '';
+  document.getElementById('mr-weight-kg').value = '';
+  document.getElementById('mr-blood-pressure').value = '';
 }
 
   // TreatmentRecord exists?
@@ -1438,7 +1991,7 @@ const payload = {
 
   if (res.error) {
     console.error(res.error);
-    showToast('Failed to save Medical Record.');
+    showMessage('Failed to save Medical Record.');
     return;
   }
 
@@ -1453,6 +2006,7 @@ async function saveTreatmentRecordStep() {
 
   const btn = document.getElementById('tr-save-btn');
   const oldText = btn?.textContent || 'Save Treatment';
+  const details = document.getElementById('tr-details')?.value || '';
 
   const restoreBtn = () => {
     if (!btn) return;
@@ -1466,14 +2020,12 @@ async function saveTreatmentRecordStep() {
     btn.style.opacity = '.7';
     btn.textContent = 'Saving...';
   }
-
+  showLoading("Saving treatment record…", "Please wait");
   try {
     const notes = document.getElementById('tr-notes').value || '';
-    const details = document.getElementById('tr-details').value || '';
-    const hasContent = notes.trim() || details.trim();
 
-    if (!hasContent) {
-      showToast('Please enter Treatment Notes or Treatment Details.', 'error');
+    if (!notes.trim()) {
+      showMessage('Treatment Notes are required.', 'error');
       return;
     }
 
@@ -1498,14 +2050,13 @@ async function saveTreatmentRecordStep() {
         .insert({
           TreatmentRecordID: crypto.randomUUID(),
           AppointmentID: appointmentId,
-          TreatmentNotes: notes,
-          TreatmentDetails: details,
+          TreatmentNotes: notes
         });
     }
 
     if (res.error) {
       console.error(res.error);
-      showToast('Failed to save Treatment Record.', 'error');
+      showMessage('Failed to save Treatment Record.', 'error');
       return;
     }
 
@@ -1518,7 +2069,7 @@ async function saveTreatmentRecordStep() {
 
     if (trErr || !trRow?.TreatmentRecordID) {
       console.error(trErr);
-      showToast('Saved treatment, but failed to resolve TreatmentRecordID for ToothChart.', 'error');
+      showMessage('Saved treatment, but failed to resolve TreatmentRecordID for ToothChart.', 'error');
       return;
     }
 
@@ -1532,7 +2083,7 @@ async function saveTreatmentRecordStep() {
 
     if (tcErr) {
       console.error(tcErr);
-      showToast('Failed to save ToothChart.', 'error');
+      showMessage('Failed to save ToothChart.', 'error');
       return;
     }
 
@@ -1553,8 +2104,9 @@ async function saveTreatmentRecordStep() {
     finishSteps.treatmentSaved = true;
     refreshFinishLocks();
 
-    showToast('Treatment record saved successfully.', 'success');
+    showMessage('Treatment record saved successfully.', 'success');
   } finally {
+    hideLoading();
     // ALWAYS restore the button, even if something returns early
     restoreBtn();
   }
@@ -1563,34 +2115,6 @@ async function saveTreatmentRecordStep() {
 
 let toastTimer = null;
 
-function showToast(message, type = 'info') {
-  const toast = document.getElementById('toast');
-  const title = document.getElementById('toast-title');
-  const msg = document.getElementById('toast-message');
-  const icon = document.getElementById('toast-icon');
-
-  const styles = {
-    success: { icon: '✅', border: 'border-green-200', bg: 'bg-green-50' },
-    error:   { icon: '❌', border: 'border-red-200', bg: 'bg-red-50' },
-    info:    { icon: 'ℹ️', border: 'border-gray-200', bg: 'bg-white' }
-  };
-
-  const s = styles[type] || styles.info;
-
-  toast.className = `fixed bottom-6 right-6 z-50 max-w-sm rounded-xl border shadow-lg ${s.border} ${s.bg}`;
-  icon.textContent = s.icon;
-  title.textContent =
-    type === 'success' ? 'Success' :
-    type === 'error' ? 'Error' : 'Info';
-  msg.textContent = message;
-
-  toast.classList.remove('hidden');
-
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.classList.add('hidden');
-  }, 3000);
-}
 function queueTreatmentFiles(fileList) {
   pendingTreatmentFiles = Array.from(fileList || []);
   renderTreatmentFilesList();
@@ -1602,19 +2126,26 @@ function renderTreatmentFilesList() {
 
   const items = [];
 
-  // Existing uploaded files
-  (uploadedTreatmentFiles || []).forEach(f => {
-    items.push(`
-      <div class="flex items-center justify-between gap-3 border rounded-lg p-3 bg-white">
-        <div class="min-w-0">
-          <div class="font-semibold text-sm truncate">${escapeHtml(f.filename || "File")}</div>
-          <div class="text-xs text-gray-500 truncate">${escapeHtml(f.mimetype || "")}</div>
+    // Existing uploaded files
+    (uploadedTreatmentFiles || []).forEach(f => {
+      items.push(`
+        <div class="flex items-center justify-between gap-3 border rounded-lg p-3 bg-white">
+          <div class="min-w-0">
+            <div class="font-semibold text-sm truncate">${escapeHtml(f.filename || "File")}</div>
+            <div class="text-xs text-gray-500 truncate">${escapeHtml(f.mimetype || "")}</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+              onclick="openTreatmentAttachment('${f.filepath}')">Open</button>
+
+            <button class="px-3 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-sm font-medium"
+              onclick="deleteTreatmentAttachment('${f.filepath}')">Delete</button>
+          </div>
         </div>
-        <button class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
-          onclick="openTreatmentAttachment('${f.filepath}')">Open</button>
-      </div>
-    `);
-  });
+      `);
+    });
+
 
   // Pending (not yet uploaded)
   pendingTreatmentFiles.forEach((file, idx) => {
@@ -1668,7 +2199,7 @@ async function uploadPendingTreatmentFiles(treatmentRecordId, appointmentId) {
 
     if (upErr) {
       console.error("Upload failed:", upErr);
-      showToast(`Failed to upload: ${file.name}`, "error");
+      showMessage(`Failed to upload: ${file.name}`, "error");
       continue;
     }
 
@@ -1689,7 +2220,7 @@ const row = {
 
     if (insErr) {
       console.error("DB insert failed:", insErr);
-      showToast(`Uploaded but failed to save record: ${file.name}`, "error");
+      showMessage(`Uploaded but failed to save record: ${file.name}`, "error");
     }
   }
 
@@ -1706,10 +2237,231 @@ async function openTreatmentAttachment(filePath) {
     .getPublicUrl(filePath);
 
   const url = data?.publicUrl;
-  if (!url) return showToast("Failed to open file.", "error");
+  if (!url) return showMessage("Failed to open file.", "error");
   window.open(url, "_blank");
 }
 
+async function deleteTreatmentAttachment(filePath) {
+  if (!filePath) return;
+
+  const ok = confirm("Delete this file? This cannot be undone.");
+  if (!ok) return;
+
+  showLoading("Deleting file…", "Please wait");
+  try {
+    // 1) Delete DB row first (or storage first; either is fine)
+    const { error: dbErr } = await supabaseClient
+      .from("treatmentattachment")
+      .delete()
+      .eq("filepath", filePath);
+
+    if (dbErr) {
+      console.error("DB delete error:", dbErr);
+      showMessage("Failed to delete file record.", "error");
+      return;
+    }
+
+    // 2) Delete from storage
+    const { error: stErr } = await supabaseClient
+      .storage
+      .from("treatment-files")
+      .remove([filePath]);
+
+    if (stErr) {
+      console.error("Storage remove error:", stErr);
+      showMessage("Deleted record, but failed to remove file from storage.", "error");
+      // continue anyway
+    }
+
+    // 3) Update UI list without reloading everything
+    uploadedTreatmentFiles = (uploadedTreatmentFiles || []).filter(f => f.filepath !== filePath);
+    renderTreatmentFilesList();
+
+    showMessage("File deleted.", "success");
+  } finally {
+    hideLoading();
+  }
+}
+
+
+async function maybeShowCreateBracesPlanBtn(appointment) {
+  const btn = document.getElementById("createBracesPlanBtn");
+  if (!btn) return;
+
+  const serviceName = String(appointment?.Service || appointment?.ServiceType || "");
+  const s = serviceName.toLowerCase();
+  const isOrtho = s.includes("orthodontic") || s.includes("braces");
+  if (!isOrtho) {
+    btn.classList.add("hidden");
+    return;
+  }
+
+  const userAccountId = appointment.UserAccountID;
+  const dentistId = appointment.DentistID;
+
+  const { data: existing } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("TreatmentPlanID")
+    .eq("UserAccountID", userAccountId)
+    .eq("PlanType", "BRACES")
+    .in("Status", ["PROPOSED", "ACTIVE"])
+    .maybeSingle();
+
+  if (existing) {
+    btn.classList.add("hidden");
+    return;
+  }
+
+  btn.classList.remove("hidden");
+  btn.disabled = false;
+
+  // ✅ show the pre-treatment UI instead of inserting immediately
+  btn.onclick = () => {
+    openPretreatModal({
+      appointment,
+      userAccountId,
+      dentistId
+    });
+  };
+}
+
+
+let pretreatItems = [];
+let pretreatContext = null; // store appointment/user/dentist for saving
+
+function openPretreatModal(ctx) {
+  pretreatContext = ctx;
+  pretreatItems = [];
+  document.getElementById("pretreatList").innerHTML = "";
+
+  // You can hardcode common “pre-treatment” services here,
+  // or reuse the same list you use in booking.
+  const options = [
+    { id: 2, name: "Tooth Extraction" },
+    { id: 3, name: "Tooth Filling (Pasta)" },
+    { id: 1, name: "Dental Cleaning" },
+  ];
+
+  const sel = document.getElementById("pretreatService");
+  sel.innerHTML = options.map(o => `<option value="${o.id}">${o.name}</option>`).join("");
+
+  document.getElementById("pretreatTooth").value = "";
+  document.getElementById("pretreatNotes").value = "";
+
+  const modal = document.getElementById("pretreatModal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+}
+
+function closePretreatModal() {
+  const modal = document.getElementById("pretreatModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+function addPretreatItem() {
+  const sel = document.getElementById("pretreatService");
+  const serviceId = parseInt(sel.value, 10);
+  const serviceName = sel.options[sel.selectedIndex]?.text || "Service";
+
+  const tooth = (document.getElementById("pretreatTooth").value || "").trim();
+  const notes = (document.getElementById("pretreatNotes").value || "").trim();
+
+  pretreatItems.push({ serviceId, serviceName, tooth, notes });
+  renderPretreatItems();
+
+  document.getElementById("pretreatTooth").value = "";
+  document.getElementById("pretreatNotes").value = "";
+}
+
+function removePretreatItem(idx) {
+  pretreatItems.splice(idx, 1);
+  renderPretreatItems();
+}
+
+function renderPretreatItems() {
+  const wrap = document.getElementById("pretreatList");
+  if (!pretreatItems.length) {
+    wrap.innerHTML = `<div class="text-sm text-gray-500">No requirements added.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = pretreatItems.map((it, idx) => `
+    <div class="border rounded-lg p-3 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="font-semibold text-gray-900">${it.serviceName}</div>
+        ${it.tooth ? `<div class="text-xs text-gray-500">Tooth: ${it.tooth}</div>` : ""}
+        ${it.notes ? `<div class="text-xs text-gray-500">Note: ${it.notes}</div>` : ""}
+      </div>
+      <button class="px-3 py-1 rounded-lg border text-sm" onclick="removePretreatItem(${idx})">Remove</button>
+    </div>
+  `).join("");
+}
+
+async function saveBracesPlanWithPretreat() {
+  const btn = document.getElementById("pretreatSaveBtn");
+  if (!pretreatContext) return;
+
+  btn.disabled = true;
+  showLoading("Creating braces plan…", "Please wait");
+
+  try {
+    const { appointment, userAccountId, dentistId } = pretreatContext;
+
+    // 1) Create plan (same values you already insert)
+    const { data: created, error: e1 } = await supabaseClient
+      .from("TreatmentPlan")
+      .insert([{
+        UserAccountID: userAccountId,
+        DentistID: dentistId,
+        PlanType: "BRACES",
+        Status: "PROPOSED",
+        SourceAppointmentID: appointment.AppointmentID
+      }])
+      .select("TreatmentPlanID")
+      .maybeSingle();
+
+    if (e1 || !created?.TreatmentPlanID) {
+      showMessage("Failed to create braces plan.", "error");
+      return;
+    }
+
+    const planId = created.TreatmentPlanID;
+
+    // 2) Insert pre-treatment requirements
+    if (pretreatItems.length) {
+      const rows = pretreatItems.map(it => ({
+        treatmentplanid: planId,
+        serviceid: it.serviceId || null,
+        servicename: it.serviceName,
+        toothnumbers: it.tooth || null,
+        notes: it.notes || null,
+        status: "PENDING"
+      }));
+      console.log("pretreatItems:", pretreatItems);
+      const { error: e2 } = await supabaseClient
+        .from("treatmentplanpretreatment")
+        .insert(rows);
+
+      if (e2) {
+        // Plan is created already; requirements insert failed
+        console.error(e2);
+        showMessage("Plan created, but failed to save pre-treatment list.", "error");
+      }
+    }
+
+    showMessage("Braces treatment plan created with pre-treatment requirements.", "success");
+    closePretreatModal();
+
+    // hide the original button so it matches your existing behavior
+    const createBtn = document.getElementById("createBracesPlanBtn");
+    if (createBtn) createBtn.classList.add("hidden");
+
+  } finally {
+    hideLoading();
+    btn.disabled = false;
+  }
+}
 
 
 
@@ -1742,28 +2494,30 @@ async function openTreatmentAttachment(filePath) {
                     .eq('DentistID', dentistId)
                     .order('AppointmentSchedule', { ascending: false });
             } else {
-                // Fetching all relevant active appointments for 'today' and 'upcoming'
-                // This will include Approved, Pending, Requested to allow 'Mark Finished' on today's list
+                // ✅ Only show approved/rescheduled for today + upcoming
                 query = supabaseClient
-                    .from('Appointment')
-                    .select('*')
-                    .not('Status', 'eq', 'Finished') // Exclude Finished appointments
-                    .eq('DentistID', dentistId)
-                    .order('AppointmentSchedule', { ascending: true });
+                  .from('Appointment')
+                  .select('*')
+                  .in('Status', ['Approved', 'Rescheduled'])
+                  .eq('DentistID', dentistId)
+                  .order('AppointmentSchedule', { ascending: true });
 
                 if (filter === 'today') {
-                    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-                    const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
-                    query = query.gte('AppointmentSchedule', startOfDay.toISOString())
-                                 .lte('AppointmentSchedule', endOfDay.toISOString());
+                  const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+                  const endOfDay   = new Date(); endOfDay.setHours(23,59,59,999);
+
+                  query = query
+                    .gte('AppointmentSchedule', startOfDay.toISOString())
+                    .lte('AppointmentSchedule', endOfDay.toISOString());
+
                 } else if (filter === 'upcoming') {
-                    // Start from the next day's beginning for 'Upcoming' to avoid overlap with 'Today'
-                    const startOfTomorrow = new Date(now); 
-                    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
-                    startOfTomorrow.setHours(0,0,0,0);
-                    query = query.gte('AppointmentSchedule', startOfTomorrow.toISOString());
+                  const startOfTomorrow = new Date();
+                  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+                  startOfTomorrow.setHours(0,0,0,0);
+
+                  query = query.gte('AppointmentSchedule', startOfTomorrow.toISOString());
                 }
-            }
+              }
 
             // Show loading state
             const appointmentsList = document.getElementById("appointmentsList");
@@ -1807,7 +2561,7 @@ async function openTreatmentAttachment(filePath) {
         }
 
         async function openConsentsListFromFinish() {
-  if (!finishContext?.appointmentId) return showToast('Missing appointment.', 'error');
+  if (!finishContext?.appointmentId) return showMessage('Missing appointment.', 'error');
 
   // Reuse your secretary-side openConsentsList logic, but use finishContext.appointmentId
   const appointmentId = finishContext.appointmentId;
@@ -1827,13 +2581,13 @@ async function openTreatmentAttachment(filePath) {
 
   if (error) {
     console.error(error);
-    return showToast('Failed to load consents.', 'error');
+    return showMessage('Failed to load consents.', 'error');
   }
 
   const wrap = document.getElementById("consentsListContainer");
 if (!wrap) {
   console.error("Missing #consentsListContainer in HTML.");
-  return showToast("Consents UI is missing in the page.", "error");
+  return showMessage("Consents UI is missing in the page.", "error");
 }
 
   if (!data || data.length === 0) {
@@ -1891,7 +2645,7 @@ async function loadConsentById(consentId) {
 
   if (error || !data) {
     console.error("loadConsentById error:", error);
-    return showToast("Failed to open consent.", "error");
+    return showMessage("Failed to open consent.", "error");
   }
 
   // Fill consent modal with existing record
@@ -2255,11 +3009,22 @@ function hydratePricingFromAppointment(appt) {
   if (wrap) wrap.innerHTML = '';
 
   const addons = safeParseAddons(appt?.AddOns);
+  addons
+  .filter(a => !a?.kind || a.kind === "addon")
+  .forEach(a => addAddonRow({ name: a?.name || '', price: a?.price ?? '' }));
 
-  // Only render existing add-ons; base price stays whatever the dentist types.
-  addons.forEach(a => addAddonRow({ name: a?.name || '', price: a?.price ?? '' }));
+  // ✅ If TotalAmount exists, use it as the base price (since you're not breaking it into base+addons)
+  const totalAmount = Number(appt?.TotalAmount || 0);
+  const addonsOnly = (addons || []).filter(a => !a?.kind || a.kind === "addon");
+  const addonsTotal = sumAddonPrices(addonsOnly);
 
-  // Do NOT touch base price here because you don't store it in Appointment now.
+  const baseInput = document.getElementById('finish-base-price');
+  if (baseInput) {
+    // Base = TotalAmount - addonsTotal (never below 0)
+    const computedBase = Math.max(totalAmount - addonsTotal, 0);
+    baseInput.value = computedBase ? String(computedBase) : '';
+  }
+
   computeFinishTotal();
 }
 
@@ -2270,6 +3035,8 @@ function hydratePricingFromAppointment(appt) {
 
         // --- Initialization and Event Handling ---
         async function initializeAppointments() {
+
+          
             const userData = await checkAuth(false);
             const dentistId = userData ? userData.UserAccountID : null;
             const searchInput = document.getElementById('searchAppointments');
@@ -2282,6 +3049,15 @@ function hydratePricingFromAppointment(appt) {
                 return;
             }
             
+              startDentistAppointmentsRealtime();
+
+          // install hooks once
+          if (!dentistRealtimeHooksInstalled) {
+            dentistRealtimeHooksInstalled = true;
+            window.addEventListener("beforeunload", () => stopDentistAppointmentsRealtime());
+          }
+
+
             currentFilter = initialFilter;
             
             // 1. Load initial data
@@ -2405,23 +3181,55 @@ async function logout() {
 
 window.addEventListener('load', initializeAppointments);
 
-        // Shell notifications (bell)
-        window.addEventListener('load', async function loadNotificationsOnLoad(){
-          try { await loadNotifications(); } catch (e) { console.warn(e); }
-        });
-    </script>
+let dentistApptChannel = null;
+let dentistReloadQueued = false;
 
-<!-- Toast Message -->
-<div id="toast"
-  class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-xl border bg-white shadow-lg">
-  <div id="toast-inner" class="flex items-start gap-3 p-4">
-    <div id="toast-icon" class="mt-0.5">ℹ️</div>
-    <div>
-      <p id="toast-title" class="text-sm font-semibold text-gray-900">Message</p>
-      <p id="toast-message" class="text-sm text-gray-600"></p>
-    </div>
-  </div>
-</div>
+function queueDentistReload() {
+  if (dentistReloadQueued) return;
+  dentistReloadQueued = true;
+
+  setTimeout(() => {
+    dentistReloadQueued = false;
+    loadDentistAppointments(currentFilter, document.getElementById('searchAppointments')?.value || '');
+  }, 300);
+}
+
+function startDentistAppointmentsRealtime() {
+  // Always stop previous channel first (safe even if null)
+  stopDentistAppointmentsRealtime();
+
+  // Now mark as running
+  dentistRealtimeRunning = true;
+
+  dentistApptChannel = supabaseClient
+    .channel("dentist-appointments")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "Appointment" },
+      () => {
+        if (!document.querySelector("#finish-modal.flex")) queueDentistReload();
+      }
+    )
+    .subscribe((status) => {
+      console.log("Dentist appointments realtime:", status);
+
+      // If Supabase closes it, allow restart later
+      if (status === "CLOSED") dentistRealtimeRunning = false;
+    });
+}
+
+function stopDentistAppointmentsRealtime() {
+  if (dentistApptChannel) {
+    supabaseClient.removeChannel(dentistApptChannel);
+    dentistApptChannel = null;
+  }
+  dentistRealtimeRunning = false;
+}
+        // Shell notifications (bell)
+window.addEventListener('load', async function loadNotificationsOnLoad(){
+  try { await loadNotifications(); } catch (e) { console.warn(e); }
+        });
+</script>
 
 <div id="consentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
   <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
@@ -2536,7 +3344,54 @@ window.addEventListener('load', initializeAppointments);
       <button onclick="closeConsentsList()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">Close</button>
     </div>
   </div>
+  </div>
 
+<!-- Pre-Treatment Requirements Modal -->
+<div id="pretreatModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl w-full max-w-2xl p-5">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h3 class="text-lg font-bold text-gray-900">Braces Plan: Pre-Treatment Requirements</h3>
+        <p class="text-sm text-gray-600">Add services the patient must complete before braces installation.</p>
+      </div>
+      <button class="px-3 py-1 rounded-lg border" onclick="closePretreatModal()">✕</button>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Service</label>
+        <select id="pretreatService" class="w-full border rounded-lg p-2">
+          <!-- populate via JS -->
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">Tooth # (optional)</label>
+        <input id="pretreatTooth" class="w-full border rounded-lg p-2" placeholder="e.g. 18, 28">
+      </div>
+
+      <div class="md:col-span-3">
+        <label class="text-xs text-gray-500">Notes (optional)</label>
+        <input id="pretreatNotes" class="w-full border rounded-lg p-2" placeholder="e.g. remove impacted tooth before install">
+      </div>
+
+      <div class="md:col-span-3 flex justify-end">
+        <button class="px-4 py-2 rounded-lg border" onclick="addPretreatItem()">+ Add requirement</button>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <div class="text-xs text-gray-500 mb-2">Requirements</div>
+      <div id="pretreatList" class="space-y-2"></div>
+    </div>
+
+    <div class="mt-5 flex items-center justify-end gap-2">
+      <button class="px-4 py-2 rounded-lg border" onclick="closePretreatModal()">Cancel</button>
+      <button id="pretreatSaveBtn" class="px-4 py-2 rounded-lg bg-[#03555E] text-white" onclick="saveBracesPlanWithPretreat()">
+        Create Plan
+      </button>
+    </div>
+  </div>
+</div>
 
 
 

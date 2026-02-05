@@ -87,6 +87,7 @@
 .upper-arch .tooth-button-inner {
     transform: scaleY(-1);
 }
+#edit-toggle-button { display: none !important; }
 
     </style>
 </head>
@@ -120,7 +121,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar (match Dashboard) -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -130,6 +131,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -142,9 +146,6 @@
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -175,12 +176,8 @@
   <button id="menuClose" class="hidden" aria-hidden="true"></button>
 
 
-    <!-- Toast / message box -->
-    <div id="messageBox"
-        class="hidden fixed bottom-6 right-6 p-4 rounded text-white font-medium shadow-lg z-50 transition-all duration-300">
-    </div>
-
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="/feedback.js"></script>
     <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
@@ -220,7 +217,8 @@
     isEditing: false,
     patient: null,
     medicalRecord: {},
-    appointments: []   // 🔹 appointment history for this patient
+    appointments: [],
+    historyFilter: "all"   
 };
 
 // ===== Appointment Record modal state (Dentist) =====
@@ -305,6 +303,97 @@ function safeStatusMeta(s) {
         renderApp();
     }
 
+function setHistoryFilter(status) {
+  setState({ historyFilter: status });
+}
+
+function highlightHistoryFilter(active) {
+  document.querySelectorAll(".hist-filter-btn").forEach(btn => {
+    const s = btn.getAttribute("data-status");
+    const on = (s === active);
+
+    btn.classList.toggle("bg-[#03555E]", on);
+    btn.classList.toggle("text-white", on);
+    btn.classList.toggle("border-[#03555E]", on);
+
+    btn.classList.toggle("bg-white", !on);
+    btn.classList.toggle("text-gray-700", !on);
+    btn.classList.toggle("border-gray-300", !on);
+  });
+}
+
+const PH_LOCATIONS = {
+  "Metro Manila": [
+    "Caloocan City","Las Piñas City","Makati City","Malabon City","Mandaluyong City",
+    "Manila","Marikina City","Muntinlupa City","Navotas City","Parañaque City",
+    "Pasay City","Pasig City","Pateros","Quezon City","San Juan City",
+    "Taguig City","Valenzuela City"
+  ],
+  "Cavite": [
+    "Bacoor","Cavite City","Dasmariñas","General Mariano Alvarez","General Trias",
+    "Imus","Indang","Kawit","Naic","Noveleta","Rosario","Silang","Tagaytay",
+    "Tanza","Trece Martires"
+  ],
+  "Laguna": [
+    "Alaminos","Bay","Biñan","Cabuyao","Calamba","Los Baños",
+    "San Pablo","San Pedro","Santa Rosa"
+  ],
+  "Bulacan": [
+    "Angat","Balagtas","Baliwag","Bocaue","Bulakan","Calumpit",
+    "Guiguinto","Hagonoy","Malolos","Marilao","Meycauayan",
+    "Norzagaray","Obando","Paombong","Plaridel","San Jose del Monte"
+  ]
+};
+
+function initAddressDropdowns() {
+  const provinceSelect = document.getElementById("addrProvince");
+  const citySelect = document.getElementById("addrCity");
+  if (!provinceSelect || !citySelect) return;
+
+  // reset + populate provinces
+  provinceSelect.innerHTML = `<option value="">Select Province</option>`;
+  Object.keys(PH_LOCATIONS).forEach(province => {
+    const opt = document.createElement("option");
+    opt.value = province;
+    opt.textContent = province;
+    provinceSelect.appendChild(opt);
+  });
+
+  // province -> cities
+  provinceSelect.onchange = () => {
+    citySelect.innerHTML = `<option value="">Select City / Municipality</option>`;
+    (PH_LOCATIONS[provinceSelect.value] || []).forEach(city => {
+      const opt = document.createElement("option");
+      opt.value = city;
+      opt.textContent = city;
+      citySelect.appendChild(opt);
+    });
+  };
+}
+
+function fillAddressFieldsFromSavedAddress() {
+  if (!state.patient) return;
+
+  const parts = parseAddressParts(state.patient.Address || "");
+
+  const street = document.getElementById("addrStreet");
+  const brgy = document.getElementById("addrBarangay");
+  const prov = document.getElementById("addrProvince");
+  const city = document.getElementById("addrCity");
+  const zip = document.getElementById("addrZip");
+
+  if (street) street.value = parts.street || "";
+  if (brgy) brgy.value = parts.barangay || "";
+  if (zip) zip.value = parts.zip || "";
+
+  if (prov) {
+    prov.value = parts.province || "";
+    prov.dispatchEvent(new Event("change")); // populate cities
+  }
+  if (city) city.value = parts.city || "";
+}
+
+
     // --- Fetch data ---
     async function fetchPatientData() {
         const userId = getUserIdFromUrl();
@@ -317,7 +406,8 @@ function safeStatusMeta(s) {
                 </div>`;
             return;
         }
-
+        showLoading("Loading patient data…", "Please wait");
+        try{
         const { data: patientData, error: patientError } = await supabaseClient
             .from('UserAccount')
             .select('*')
@@ -358,7 +448,14 @@ function safeStatusMeta(s) {
             medicalRecord: {},
             appointments: appointmentData || []   // 🔹 save in state
         });
+        setTimeout(() => {
+  initAddressDropdowns();
+  fillAddressFieldsFromSavedAddress();
+}, 0);
+    }finally{
+      hideLoading();
     }
+  }
 
     // --- Field render helpers ---
     function renderInputField(label, name, value = '', type = 'text', span = 1) {
@@ -417,7 +514,8 @@ async function savePatient() {
   });
 
   const patientID = state.patient.UserAccountID;
-
+  showLoading("Saving patient…", "Please wait");
+  try{
   // 1) Update UserAccount ONLY
   const { error: patientError } = await supabaseClient
     .from('UserAccount')
@@ -456,6 +554,9 @@ async function savePatient() {
   });
 
   showMessage("Patient information saved successfully!", "success");
+}finally{
+    hideLoading();
+  }
 }
     
 // --- Open appointment history (VIEW ONLY modal) ---
@@ -507,6 +608,9 @@ async function openAppointmentRecord(appointmentId) {
     const { data: mr } = await supabaseClient
     .from('MedicalRecord')
     .select(`
+        HeightCm,
+        WeightKg,
+        BloodPressure,
         EmergencyContactName,
         EmergencyContactNumber,
         PreviousHospitalizations,
@@ -601,15 +705,6 @@ async function openAppointmentRecord(appointmentId) {
       <h3 class="text-sm font-semibold text-gray-900">Treatment Record</h3>
       <p class="text-xs text-gray-500 mt-0.5">Notes, tooth chart, and files</p>
     </div>
-
-    <div id="appt-edit-actions" class="flex gap-2">
-      <button type="button"
-        class="px-3 py-2 rounded-lg bg-[#03555E] text-white hover:bg-[#024449] text-sm font-medium"
-        onclick="enterApptEditMode()"
-      >
-        Edit Treatment
-      </button>
-    </div>
   </div>
 
   <div class="p-5 bg-white space-y-4">
@@ -663,7 +758,7 @@ function renderApptTreatmentUI() {
           <p class="text-xs font-semibold text-gray-600">Treatment Notes</p>
           <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">${_apptModal.treatmentNotes || "—"}</p>
         </div>
-        <div class="p-4 rounded-xl border bg-gray-50">
+        <div class="hidden">
           <p class="text-xs font-semibold text-gray-600">Treatment Details</p>
           <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">${_apptModal.treatmentDetails || "—"}</p>
         </div>
@@ -677,7 +772,7 @@ function renderApptTreatmentUI() {
           <textarea id="appt-notes" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
             rows="4">${_apptModal.treatmentNotes || ""}</textarea>
         </div>
-        <div>
+        <div class="hidden">
           <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">TREATMENT DETAILS</label>
           <textarea id="appt-details" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
             rows="4">${_apptModal.treatmentDetails || ""}</textarea>
@@ -959,9 +1054,11 @@ function cancelApptEditMode() {
 }
 
 async function saveApptTreatment() {
-  try {
-    const apptId = _apptModal.appointmentId;
+      const apptId = _apptModal.appointmentId;
     if (!apptId) return;
+
+  showLoading("Saving treatment record…", "Please wait");
+  try {
 
     // read edited fields
     const notesEl = document.getElementById("appt-notes");
@@ -1049,6 +1146,7 @@ async function saveApptTreatment() {
     const { error: attErr } = await supabaseClient
     .from("treatmentattachment")
     .insert({
+        attachmentid: crypto.randomUUID(),
         treatmentrecordid: trId,        // ✅
         appointmentid: apptId,          // ✅
         filepath: path,                 // ✅
@@ -1088,13 +1186,15 @@ async function saveApptTreatment() {
   } catch (err) {
     console.error(err);
     showMessage("Failed to save treatment record.", "error");
+  }finally{
+    hideLoading();
   }
 }
 
 
 function renderMedicalView(mr, appointmentId) {
   if (!mr) {
-    return `<p class="text-sm text-gray-500">No medical intake was recorded for this appointment.</p>`;
+    return `<p class="text-sm text-gray-500">No assessment Form was recorded for this appointment.</p>`;
   }
 
   let cond = mr.MedicalConditions || {};
@@ -1106,7 +1206,7 @@ function renderMedicalView(mr, appointmentId) {
     <div class="border p-4 rounded-xl bg-white shadow-sm">
       <div class="flex items-start justify-between gap-3 mb-4">
         <div>
-          <label class="block text-sm font-bold text-gray-700">Medical Intake</label>
+          <label class="block text-sm font-bold text-gray-700">Assessment Form</label>
           <p class="text-xs text-gray-500 mt-0.5">Saved by secretary • View only</p>
         </div>
 
@@ -1123,8 +1223,36 @@ function renderMedicalView(mr, appointmentId) {
 
       <div class="grid md:grid-cols-2 gap-8">
 
+        
+
         <!-- LEFT COLUMN -->
         <div class="space-y-4">
+          <!-- VITAL SIGNS -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div>
+      <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+        HEIGHT (CM)
+      </label>
+      <input value="${safe(mr.HeightCm)}" disabled
+        class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+        WEIGHT (KG)
+      </label>
+      <input value="${safe(mr.WeightKg)}" disabled
+        class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1 whitespace-nowrap h-5 leading-5">
+        BLOOD PRESSURE
+      </label>
+      <input value="${safe(mr.BloodPressure)}" disabled
+        class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+    </div>
+  </div>
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">EMERGENCY CONTACT NAME</label>
@@ -1232,22 +1360,6 @@ function renderTreatmentView(tr) {
     `;
 }
 
-// --- Toast / message ---
-    function showMessage(message, type = "error") {
-        const box = document.getElementById("messageBox");
-        if (!box) return;
-
-        box.textContent = message;
-        box.classList.remove("hidden", "bg-red-500", "bg-green-500", "opacity-0");
-
-        box.classList.add(type === "success" ? "bg-green-500" : "bg-red-500", "opacity-100");
-
-        setTimeout(() => {
-            box.classList.add("opacity-0");
-            setTimeout(() => box.classList.add("hidden"), 300);
-        }, 4000);
-    }
-
     // --- Header ---
     function renderHeader() {
     // Shell header is already provided by the Dashboard layout.
@@ -1347,7 +1459,20 @@ function renderMainContent() {
 
     const p = patient;
     const m = mr;
+    const apptList = (state.appointments || []).filter(a => {
+      const f = (state.historyFilter || "all").toLowerCase();
+      const s = String(a.Status || "").toLowerCase().trim();
 
+      if (f === "all") return true;
+
+      // Requests = Pending/Requested
+      if (f === "requests") return (s === "reschedulerequested" || s === "cancelrequested" || s === "request");
+
+      // No Show (supports common variants)
+      if (f === "noshow") return (s === "no show" || s === "noshow" || s === "no_show" || s === "no-show");
+
+      return s === f;
+    });
     return `
     <main class="flex-grow">
         <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 space-y-6">
@@ -1360,7 +1485,7 @@ function renderMainContent() {
             </a>
           </div>
             <!-- ✅ ONE form wrapping both personal + medical sections -->
-            <form id="patient-form" onsubmit="event.preventDefault(); handleEditToggle();">
+            <form id="patient-form" onsubmit="event.preventDefault();">
                 <!-- Top row: summary + personal info -->
                 <div class="grid gap-6 mb-6">
 <!-- Personal info card -->
@@ -1370,32 +1495,6 @@ function renderMainContent() {
                                 <h2 class="text-base sm:text-lg font-semibold text-gray-900">Personal Information</h2>
                                 <p class="text-xs text-gray-500 mt-1">Basic demographics and contact details</p>
                             </div>
-                            <button
-                                type="submit"
-                                id="edit-toggle-button"
-                                class="border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 h-9 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
-                            >
-                                ${
-                                    state.isEditing
-                                    ? `
-                                    <!-- Save icon -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path d="M5 5h14v14H5z" />
-                                        <path d="M9 5v4h6V5" />
-                                        <path d="M9 15h6" />
-                                    </svg>
-                                    Save Changes
-                                    `
-                                    : `
-                                    <!-- Edit icon -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L13 14l-4 1 1-4Z" />
-                                    </svg>
-                                    Edit Record
-                                    `
-                                }
-                            </button>
                         </div>
                         <div class="p-6 pt-4">
                             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1423,20 +1522,21 @@ function renderMainContent() {
                                             class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
                                         </div>
 
-                                        <div>
-                                        <input id="addrCity" name="addrCity" type="text" placeholder="City / Municipality"
-                                            value="${escapeHtml(parseAddressParts(p.Address).city)}"
-                                            ${!state.isEditing ? "disabled" : ""}
-                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
-                                        </div>
+                                            <div>
+                                              <select id="addrCity" name="addrCity"
+                                                ${!state.isEditing ? "disabled" : ""}
+                                                class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}">
+                                                <option value="">Select City / Municipality</option>
+                                              </select>
+                                            </div>
 
-                                        <div>
-                                        <input id="addrProvince" name="addrProvince" type="text" placeholder="Province"
-                                            value="${escapeHtml(parseAddressParts(p.Address).province)}"
-                                            ${!state.isEditing ? "disabled" : ""}
-                                            class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}" />
-                                        </div>
-
+                                            <div>
+                                              <select id="addrProvince" name="addrProvince"
+                                                ${!state.isEditing ? "disabled" : ""}
+                                                class="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/50 transition-shadow ${!state.isEditing ? "input-disabled" : ""}">
+                                                <option value="">Select Province</option>
+                                              </select>
+                                            </div>
                                         <div>
                                         <input id="addrZip" name="addrZip" type="text" inputmode="numeric" placeholder="ZIP (optional)"
                                             value="${escapeHtml(parseAddressParts(p.Address).zip)}"
@@ -1457,12 +1557,34 @@ function renderMainContent() {
                             <p class="text-xs text-gray-500 mt-1">All appointments linked to this patient account</p>
                         </div>
                     </div>
+                    <div class="px-6 pb-4 flex flex-wrap gap-2">
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="all" onclick="setHistoryFilter('all')">All</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="requests" onclick="setHistoryFilter('requests')">Requests</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="approved" onclick="setHistoryFilter('approved')">Approved</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="rescheduled" onclick="setHistoryFilter('rescheduled')">Rescheduled</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="finished" onclick="setHistoryFilter('finished')">Finished</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="noshow" onclick="setHistoryFilter('noshow')">No Show</button>
+
+                      <button type="button" class="hist-filter-btn px-3 py-1.5 rounded-full border text-xs font-semibold"
+                              data-status="cancelled" onclick="setHistoryFilter('cancelled')">Cancelled</button>
+                    </div>
+
                     <div class="p-6 pt-4 space-y-3">
                         ${
-                            state.appointments.length === 0
-                                ? `<p class="text-sm text-gray-500">No appointment history found for this patient.</p>`
-                                : state.appointments
-                                    .map(a => {
+                            apptList.length === 0
+                                ? `<p class="text-sm text-gray-500">No appointments found for this filter.</p>`
+                                : apptList.map(a => {
                                         const dentist = a.Dentist
                                             ? `Dr. ${a.Dentist.FirstName || ''} ${a.Dentist.LastName || ''}`.trim()
                                             : 'N/A';
@@ -1495,25 +1617,21 @@ function renderMainContent() {
 }
 
     // --- Render app ---
-    function renderApp() {
-        const appContainer = document.getElementById('app-container');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        if (loadingSpinner && state.patient) loadingSpinner.classList.add('hidden');
+function renderApp() {
+  const appContainer = document.getElementById('app-container');
+  const loadingSpinner = document.getElementById('loading-spinner');
+  if (loadingSpinner && state.patient) loadingSpinner.classList.add('hidden');
 
-        if (!state.patient) return;
+  if (!state.patient) return;
 
-        appContainer.innerHTML = `
-            ${renderMainContent()}
-        `;
-      if (window.lucide) {
-              } else {
-            setTimeout(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, 100);
-        }
+  appContainer.innerHTML = `${renderMainContent()}`;
 
-
-    }
+  setTimeout(() => {
+    initAddressDropdowns();
+    fillAddressFieldsFromSavedAddress();
+    highlightHistoryFilter(state.historyFilter || "all");
+  }, 0);
+}
 
     window.patientPad = window.patientPad || null;
 window.staffPad = window.staffPad || null;
@@ -1768,6 +1886,8 @@ function closeConsentModal() {
 }
 
 async function loadConsentById(consentId) {
+  showLoading("Opening consent…", "Please wait");
+  try{
   const { data, error } = await supabaseClient
     .from("AppointmentConsent")
     .select("*")
@@ -1822,12 +1942,16 @@ async function loadConsentById(consentId) {
     const staffUrl = await getSignedUrlCached("consent-signatures", data.StaffSignaturePath);
     if (staffUrl) await window.staffPad?.loadFromUrl(staffUrl);
   });
+}finally{
+    hideLoading();
+  }
 }
 
 // 🔹 OPEN CONSENTS LIST FOR AN APPOINTMENT (Dentist View)
 window.openConsentsListForAppointment = async function (appointmentId) {
   if (!appointmentId) return;
-
+  showLoading("Loading consents…", "Please wait");
+  try{
   const container = document.getElementById("consentsListContainer");
   if (!container) return;
 
@@ -1918,6 +2042,7 @@ window.openConsentsListForAppointment = async function (appointmentId) {
       `;
     })
     .join("");
+}finally{hideLoading();}
 };
 
 

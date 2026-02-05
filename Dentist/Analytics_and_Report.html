@@ -94,7 +94,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -104,6 +104,9 @@
         </a>
         <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
         </a>
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Records</span>
@@ -117,10 +120,6 @@
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
-        </a>
-
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
@@ -181,17 +180,6 @@
     <button class="px-3 py-1.5 rounded-lg bg-primary text-white text-xs hover:bg-primary-dark" onclick="generateDentistRawReport()">
       Generate Raw Report PDF
     </button>
-
-    <button
-      class="px-3 py-1.5 rounded-lg border text-xs text-gray-700 hover:bg-gray-50"
-      onclick="exportRevenueCSV()">
-      Export Revenue CSV
-    </button>
-    <button
-      class="px-3 py-1.5 rounded-lg border text-xs text-gray-700 hover:bg-gray-50"
-      onclick="exportAppointmentsCSV()">
-      Export Appointments CSV
-    </button>
   </div>
 </div>
 
@@ -236,6 +224,19 @@
                         Appointments Trend
                     </h3>
                 </div>
+
+                <div class="flex items-center gap-2">
+                  <label class="text-xs text-gray-500">View</label>
+                  <select id="apptTrendGranularity"
+                          class="border rounded-lg px-2 py-1 text-xs"
+                          onchange="renderAppointmentsChart()">
+                    <option value="auto" selected>Auto</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+
                 <div id="appointments-chart" class="p-6 pt-0 chart-container">
                     <!-- Chart will be injected here -->
                 </div>
@@ -264,8 +265,6 @@
             </div>
         </div>
         <br>
-        <div class="rounded-xl border bg-white shadow-lg p-6 mt-6">
-</div>
 
 <!-- Appointment Heatmap -->
 <div class="rounded-xl border bg-white shadow-lg p-6 mt-6">
@@ -417,7 +416,7 @@ function getServiceNameById(id) {
 }
 
 // filters
-let currentDateRange = 'today';
+let currentDateRange = 'daily';
 let customStartDate = null;
 let customEndDate = null;
 
@@ -427,6 +426,9 @@ let rawBilling = [];
 let loggedDentistId = null;
 let currentDentistName = "";
 
+let apptTrendBuckets = [];       // [{ key, label, total, completed, rows: [] }]
+let apptDrilldownBucket = null;  // selected month bucket
+let apptDrilldownRows = [];      // filtered rows for table
 
 // compare metrics
 let compareMetrics = {
@@ -547,6 +549,24 @@ if (storedFirstName && storedRole) {
     return `${yyyy}-${mm}`; // e.g. "2025-12"
   }
 
+  function monthBoundsFromKey(monthKey) {
+  if (!monthKey) return { start: null, end: null };
+
+  const [yyyy, mm] = monthKey.split("-");
+  const year = Number(yyyy);
+  const monthIndex = Number(mm) - 1;
+
+  if (isNaN(year) || isNaN(monthIndex)) {
+    return { start: null, end: null };
+  }
+
+  const start = new Date(year, monthIndex, 1);
+  const end = new Date(year, monthIndex + 1, 1);
+
+  return { start, end };
+}
+
+
   function monthLabelFromKey(key) {
     const [yyyy, mm] = key.split('-');
     const monthIndex = Number(mm) - 1;
@@ -593,6 +613,7 @@ function updateMetricCards() {
   
 function getCurrentRangeBounds() {
   const now = new Date();
+  
 
   // No filter → return everything
   if (currentDateRange === 'all') {
@@ -724,6 +745,157 @@ async function generateDentistRawReport() {
     cursorY += 5;
   }
 
+function addExcelTable(doc, headers, rows, opts = {}) {
+  const {
+    marginX = 14,
+    pageWidth = doc.internal.pageSize.getWidth(),
+    pageHeight = doc.internal.pageSize.getHeight(),
+    startYRef,           // pass an object like { y: cursorY } so we can update it
+    colWidths = null,    // optional array
+    fontSize = 8.5,
+    headerFill = [243, 244, 246],
+    gridColor = 210,
+    zebra = true,
+    rowH = 6,
+    headerH = 7,
+    padX = 2,
+
+    // ✅ NEW: wrapping options
+    wrapCols = [],       // e.g. [3] to wrap the "Service" column
+    maxWrapLines = 3,    // limit so rows don't become huge
+    lineGap = 3.6        // line spacing for wrapped text
+  } = opts;
+
+  if (!startYRef || typeof startYRef.y !== "number") {
+    throw new Error("addExcelTable: pass startYRef: { y: cursorY }");
+  }
+
+  const availableWidth = pageWidth - marginX * 2;
+
+  // Build widths
+  let widths = Array.isArray(colWidths) && colWidths.length === headers.length
+    ? colWidths.slice()
+    : Array(headers.length).fill(availableWidth / headers.length);
+
+  // Normalize widths to fit availableWidth exactly
+  const sumW = widths.reduce((a, b) => a + b, 0);
+  if (sumW > 0 && Math.abs(sumW - availableWidth) > 0.5) {
+    const scale = availableWidth / sumW;
+    widths = widths.map(w => w * scale);
+  }
+
+  const addPageIfNeeded = (needH) => {
+    if (startYRef.y + needH > pageHeight - 14) {
+      doc.addPage();
+      startYRef.y = 14;
+    }
+  };
+
+  const drawRowGrid = (yTop, height) => {
+    doc.setDrawColor(gridColor);
+    doc.setLineWidth(0.2);
+
+    // horizontals
+    doc.line(marginX, yTop, marginX + availableWidth, yTop);
+    doc.line(marginX, yTop + height, marginX + availableWidth, yTop + height);
+
+    // verticals
+    let x = marginX;
+    doc.line(x, yTop, x, yTop + height);
+    for (let i = 0; i < widths.length; i++) {
+      x += widths[i];
+      doc.line(x, yTop, x, yTop + height);
+    }
+  };
+
+  const fitText = (text, maxWidth) => {
+    let t = text == null ? "" : String(text);
+    if (doc.getTextWidth(t) <= maxWidth) return t;
+    while (t.length && doc.getTextWidth(t + "…") > maxWidth) {
+      t = t.slice(0, -1);
+    }
+    return (t.length ? t : "") + "…";
+  };
+
+  const wrapTextLines = (text, maxWidth) => {
+    const raw = String(text ?? "");
+    // jsPDF helper gives a nice line wrap
+    const lines = doc.splitTextToSize(raw, maxWidth);
+    return lines.slice(0, maxWrapLines);
+  };
+
+  // Header row
+  addPageIfNeeded(headerH + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(55, 65, 81);
+
+  doc.setFillColor(...headerFill);
+  doc.rect(marginX, startYRef.y, availableWidth, headerH, "F");
+  drawRowGrid(startYRef.y, headerH);
+
+  let x = marginX;
+  headers.forEach((h, i) => {
+    doc.text(fitText(h, widths[i] - padX * 2), x + padX, startYRef.y + 4.8);
+    x += widths[i];
+  });
+
+  startYRef.y += headerH;
+
+  // Body rows
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(31, 41, 55);
+
+  rows.forEach((row, idx) => {
+    // ✅ compute dynamic row height if wrapping columns are used
+    let neededLines = 1;
+    if (wrapCols.length) {
+      row.forEach((cell, i) => {
+        if (!wrapCols.includes(i)) return;
+        const maxWidth = widths[i] - padX * 2;
+        const lines = wrapTextLines(cell, maxWidth);
+        neededLines = Math.max(neededLines, lines.length || 1);
+      });
+    }
+
+    const dynRowH = wrapCols.length
+      ? Math.max(rowH, 3 + neededLines * lineGap)
+      : rowH;
+
+    addPageIfNeeded(dynRowH + 2);
+
+    // subtle zebra like Excel (optional)
+    if (zebra && idx % 2 === 1) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(marginX, startYRef.y, availableWidth, dynRowH, "F");
+    }
+
+    drawRowGrid(startYRef.y, dynRowH);
+
+    let x = marginX;
+    row.forEach((cell, i) => {
+      const maxWidth = widths[i] - padX * 2;
+
+      if (wrapCols.includes(i)) {
+        const lines = wrapTextLines(cell, maxWidth);
+        lines.forEach((ln, li) => {
+          doc.text(String(ln), x + padX, startYRef.y + 4.8 + li * lineGap);
+        });
+      } else {
+        doc.text(fitText(cell, maxWidth), x + padX, startYRef.y + 4.8);
+      }
+
+      x += widths[i];
+    });
+
+    startYRef.y += dynRowH;
+  });
+
+  startYRef.y += 6; // spacing after table
+}
+
+
  function addSimpleTable(headers, rows, colWidths = null) {
   const availableWidth = pageWidth - marginX * 2;
   const widths =
@@ -837,11 +1009,19 @@ if (apptRows.length === 0) {
     doc.text('No appointments for this filter.', marginX, cursorY + 3);
     cursorY += 10;
   } else {
-    addSimpleTable(
-  ['Date/Time', 'Patient', 'Service', 'Status'],
-  apptRows,
-  [35, 40, 70, 25] // mm widths
-);
+    const yRefSys1 = { y: cursorY };
+    addExcelTable(doc,
+      ['Date/Time', 'Patient', 'Service', 'Status'],
+      apptRows,
+      {
+        startYRef: yRefSys1,
+        marginX,
+        colWidths: [32, 26, 24, 46, 14],
+        wrapCols: [2,3], 
+        maxWrapLines: 3
+      }
+    );
+    cursorY = yRefSys1.y;
   }
 
   // SECTION: Billing (no IDs)
@@ -873,7 +1053,19 @@ if (billRows.length === 0) {
     doc.text('No billing data for this filter.', marginX, cursorY + 3);
     cursorY += 10;
   } else {
-    addSimpleTable(['Date', 'Patient', 'Type', 'Method', 'Status', 'Amount'], billRows);
+      const yRefSys2 = { y: cursorY };
+    addExcelTable(doc,
+      ['Date', 'Patient', 'Type', 'Method', 'Status', 'Amount'],
+      billRows,
+      {
+        startYRef: yRefSys2,
+        marginX,
+        colWidths: [32, 42, 28, 22, 18, 26],
+        wrapCols: [2], 
+        maxWrapLines: 7
+      }
+    );
+    cursorY = yRefSys2.y; 
   }
 
   // FOOTER (page numbers)
@@ -996,6 +1188,27 @@ if (loggedDentistId) {
   }
 
   rawAppointments = data || [];
+
+  // build monthly buckets WITH rows for drilldown
+  const buckets = {};
+  (rawAppointments || []).forEach(row => {
+    if (!row.AppointmentSchedule) return;
+    const d = new Date(row.AppointmentSchedule);
+    if (isNaN(d)) return;
+
+    const key = monthKeyFromDate(d);           // "YYYY-MM"
+    const label = monthLabelFromKey(key);      // "Jan 2026"
+
+    if (!buckets[key]) buckets[key] = { key, label, total: 0, completed: 0, rows: [] };
+
+    buckets[key].total += 1;
+    const status = String(row.Status || "").toLowerCase();
+    if (status === "finished" || status === "completed") buckets[key].completed += 1;
+
+    buckets[key].rows.push(row);
+  });
+
+  apptTrendBuckets = Object.keys(buckets).sort().map(k => buckets[k]);
 
   metrics.totalAppointments = rawAppointments.length;
   metrics.completedAppointments = rawAppointments.filter(a => {
@@ -1320,17 +1533,21 @@ async function loadRevenueAnalytics() {
   }
 
   // 2) Load Billing rows only for those appointments
-  let query = supabaseClient
-    .from('Billing')
-    .select('BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued')
-    .eq('PaymentStatus', 'PAID')
-    .in('AppointmentID', allowedIds);
+let query = supabaseClient
+  .from('Billing')
+  .select(`
+    BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued,
+    Appointment!inner(DentistID)
+  `)
+  .in('PaymentStatus', ['PAID', 'DOWNPAYMENT']);
 
-  if (start && end) {
-    query = query
-      .gte('DateIssued', start)
-      .lt('DateIssued', end);
-  }
+if (start && end) {
+  query = query.gte('DateIssued', start).lt('DateIssued', end);
+}
+
+if (loggedDentistId) {
+  query = query.eq('Appointment.DentistID', loggedDentistId);
+}
 
   const { data, error } = await query;
 
@@ -1359,11 +1576,15 @@ async function loadRevenueAnalytics() {
     grouped[key] += Number(row.Amount || 0);
   });
 
-  const keys = Object.keys(grouped).sort();
-  revenueData = keys.map(key => ({
-    month: monthLabelFromKey(key),
+const keys = Object.keys(grouped).sort();
+revenueData = keys.map(key => {
+  const yyyy = key.split("-")[0];
+  return {
+    key,                          // "YYYY-MM" (used for drilldown)
+    label: `${monthLabelFromKey(key)} ${yyyy}`, // shown under bar
     revenue: grouped[key],
-  }));
+  };
+});
 
   // 3) Compare vs previous period
   compareMetrics.revenueDeltaPct = null;
@@ -1388,7 +1609,7 @@ async function loadRevenueAnalytics() {
         let prevBillsQuery = supabaseClient
           .from('Billing')
           .select('Amount, PaymentStatus, DateIssued')
-          .eq('PaymentStatus', 'PAID')
+          .in('PaymentStatus', ['PAID', 'DOWNPAYMENT'])
           .in('AppointmentID', prevIds)
           .gte('DateIssued', prevStart)
           .lt('DateIssued', prevEnd);
@@ -1415,6 +1636,7 @@ async function loadRevenueAnalytics() {
 
   updateMetricCards();
   renderRevenueChart();
+  renderRevenueChart(revenueData);
 }
 
 
@@ -1558,94 +1780,236 @@ async function loadServiceAnalytics() {
     `;
   }
 
-  function renderAppointmentsChart() {
-    const container = document.getElementById('appointments-chart');
-    if (!container) return;
+// group helpers (monthly only = simplest, matches your current chart)
+function buildAppointmentTrendBuckets(granularity) {
+  const grouped = {}; // key -> { key, label, total, completed, rows: [] }
 
-    const data = appointmentData;
-    if (!data || data.length === 0) {
-      container.innerHTML = `
-        <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
-          No appointment data available yet.
-        </div>
-      `;
-      return;
+  (rawAppointments || []).forEach(a => {
+    if (!a.AppointmentSchedule) return;
+    const d = new Date(a.AppointmentSchedule);
+    if (isNaN(d)) return;
+
+    let key, label;
+
+    if (granularity === "daily") {
+      key = dayKeyFromDate(d);
+      label = labelFromDayKey(key);
+    } else if (granularity === "weekly") {
+      key = weekKeyFromDate(d);
+      label = labelFromWeekKey(key);
+    } else {
+      const mk = monthKeyFromDate(d); // "YYYY-MM" (you already have this helper)
+      key = mk;
+      label = labelFromMonthKey(mk);
     }
 
-    const chartHeight = 300;
-    const maxVal = Math.max(...data.map(d => d.appointments)) || 1;
-    const chartWidth = 100;
-    const numPoints = data.length;
+    if (!grouped[key]) grouped[key] = { key, label, total: 0, completed: 0, rows: [] };
 
-    const normalize = (value) => 100 - (value / maxVal) * 90;
+    grouped[key].total += 1;
+    const s = (a.Status || "").toLowerCase();
+    if (s === "finished" || s === "completed") grouped[key].completed += 1;
 
-    // ✅ Avoid division by zero when there's only 1 point
-    const denom = Math.max(numPoints - 1, 1);
+    grouped[key].rows.push(a);
+  });
 
-    const pointsAppointments = data.map((d, i) =>
-    `${(i / denom) * chartWidth},${normalize(d.appointments)}`
-    ).join(' ');
+  return Object.values(grouped).sort((a, b) => (a.key > b.key ? 1 : -1));
+}
 
-    const pointsCompleted = data.map((d, i) =>
-    `${(i / denom) * chartWidth},${normalize(d.completed)}`
-    ).join(' ');
 
-    const svgContent = `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
-        class="absolute top-0 right-0 h-[90%] w-[calc(100%-2.5rem)]">
-        <line x1="0" y1="${normalize(maxVal / 2)}"
-            x2="100" y2="${normalize(maxVal / 2)}"
-            stroke="#eee" stroke-dasharray="3,3" />
-        <polyline fill="none" stroke="${PRIMARY_COLOR}" stroke-width="2"
-                points="${pointsAppointments}" />
-        <polyline fill="none" stroke="${SECONDARY_COLOR}" stroke-width="2"
-                points="${pointsCompleted}" />
-        ${data.map((d, i) => `
-        <circle cx="${(i / denom) * chartWidth}"
-                cy="${normalize(d.appointments)}"
-                r="1.5" fill="${PRIMARY_COLOR}" />
-        <circle cx="${(i / denom) * chartWidth}"
-                cy="${normalize(d.completed)}"
-                r="1.5" fill="${SECONDARY_COLOR}" />
-        `).join('')}
-    </svg>
-    `;
+async function openApptDrilldownByKey(key) {
+  const bucket = (apptTrendBuckets || []).find(b => b.key === key);
+  if (!bucket) return;
+  await openApptDrilldown(bucket);
+}
 
-    const xAxisLabels = data.map(d => `<span class="min-w-[10px] text-center">${d.month}</span>`).join('');
+async function openApptDrilldown(bucket) {
+  apptDrilldownBucket = bucket;
+  apptDrilldownRows = bucket?.rows ? bucket.rows.slice() : [];
 
-    const yAxisLabels = [
-      { value: maxVal, top: '0%' },
-      { value: Math.floor(maxVal / 2), top: '50%' },
-      { value: 0, top: '90%' },
-    ].map(y => `
-      <span style="top: ${y.top};" class="absolute left-0 transform -translate-y-1/2 text-xs text-gray-500">${y.value}</span>
-    `).join('');
+  // hydrate patient names for the table
+  const patientIds = apptDrilldownRows.map(r => r.UserAccountID).filter(Boolean);
+  await hydrateUserNames(patientIds);
 
-    const legend = `
-      <div class="absolute top-0 right-0 p-2 flex gap-4 text-xs font-medium">
-        <div class="flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full" style="background-color: ${PRIMARY_COLOR};"></span>Appointments
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full" style="background-color: ${SECONDARY_COLOR};"></span>Completed
-        </div>
-      </div>
-    `;
-
-    container.innerHTML = `
-      <div class="relative h-[${chartHeight}px] w-full pt-4 pl-10">
-        ${legend}
-        <div class="absolute inset-0 left-10 border-l border-b border-gray-200"></div>
-        ${svgContent}
-        <div class="absolute bottom-0 left-10 w-[calc(100%-2.5rem)] flex justify-between text-xs text-gray-600 px-1">
-          ${xAxisLabels}
-        </div>
-        <div class="absolute inset-0 h-[90%] flex flex-col justify-between">
-          ${yAxisLabels}
-        </div>
-      </div>
-    `;
+  const subtitle = document.getElementById("apptDrilldownSubtitle");
+  if (subtitle) {
+    subtitle.textContent = `${bucket.label} • Total: ${bucket.total} • Completed: ${bucket.completed}`;
   }
+
+  // reset search
+  const s = document.getElementById("apptDrilldownSearch");
+  if (s) s.value = "";
+
+  renderApptDrilldownTable();
+
+  document.getElementById("apptDrilldownModal")?.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeApptDrilldown() {
+  document.getElementById("apptDrilldownModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function renderApptDrilldownTable() {
+  const tbody = document.getElementById("apptDrilldownTbody");
+  if (!tbody) return;
+
+  const q = (document.getElementById("apptDrilldownSearch")?.value || "")
+    .trim()
+    .toLowerCase();
+
+  let rows = (apptDrilldownRows || []).slice();
+
+  if (q) {
+    rows = rows.filter(a => {
+      const dt = a.AppointmentSchedule ? new Date(a.AppointmentSchedule).toLocaleString("en-PH") : "";
+      const patient = getUserName(a.UserAccountID) || "";
+      const service = String(a.Service || "");
+      const status = String(a.Status || "");
+      return `${dt} ${patient} ${service} ${status}`.toLowerCase().includes(q);
+    });
+  }
+
+  // newest first
+  rows.sort((a, b) => {
+    const da = new Date(a?.AppointmentSchedule || 0).getTime() || 0;
+    const db = new Date(b?.AppointmentSchedule || 0).getTime() || 0;
+    return db - da;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No matching appointments.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(a => {
+    const dt = a.AppointmentSchedule
+      ? new Date(a.AppointmentSchedule).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })
+      : "—";
+
+    const patient = getUserName(a.UserAccountID) || "—";
+
+    return `
+      <tr class="border-t hover:bg-gray-50">
+        <td class="p-3 whitespace-nowrap">${dt}</td>
+        <td class="p-3">${patient}</td>
+        <td class="p-3">${a.Service || "—"}</td>
+        <td class="p-3">${a.Status || "—"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+
+function exportApptDrilldownCSV() {
+  if (!apptDrilldownBucket) return alert("No month selected.");
+  if (!apptDrilldownRows.length) return alert("No rows to export.");
+
+  let csv = "DateTime,Patient,Service,Status\n";
+  apptDrilldownRows.forEach(a => {
+    const dt = a.AppointmentSchedule ? new Date(a.AppointmentSchedule).toLocaleString("en-PH") : "";
+    const patient = getUserName(a.UserAccountID) || "";
+    csv += `"${dt}","${String(patient).replaceAll('"','""')}","${String(a.Service||"").replaceAll('"','""')}","${String(a.Status||"").replaceAll('"','""')}"\n`;
+  });
+
+  downloadCSV(`appointments_${apptDrilldownBucket.key}.csv`, csv);
+}
+
+
+
+function renderAppointmentsChart() {
+  const sel = document.getElementById("apptTrendGranularity");
+let gran = sel?.value || "auto";
+if (gran === "auto") gran = getTrendGranularityAuto();
+
+apptTrendBuckets = buildAppointmentTrendBuckets(gran);
+  const container = document.getElementById('appointments-chart');
+  if (!container) return;
+
+  const data = apptTrendBuckets || [];
+  if (!data.length) {
+    container.innerHTML = `
+      <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+        No appointment data available yet.
+      </div>
+    `;
+    return;
+  }
+
+  const chartHeight = 300;
+  const maxVal = Math.max(...data.map(b => b.total), 1);
+  const normalize = (value) => 100 - (value / maxVal) * 90;
+
+  const denom = Math.max(data.length - 1, 1);
+
+  const pointsTotal = data
+    .map((b, i) => `${(i / denom) * 100},${normalize(b.total)}`)
+    .join(" ");
+
+  const pointsCompleted = data
+    .map((b, i) => `${(i / denom) * 100},${normalize(b.completed)}`)
+    .join(" ");
+
+  const xAxisLabels = data
+    .map((b) => `<span class="min-w-[10px] text-center">${b.label}</span>`)
+    .join("");
+
+  const yAxisLabels = [
+    { value: maxVal, top: "0%" },
+    { value: Math.floor(maxVal / 2), top: "50%" },
+    { value: 0, top: "90%" },
+  ]
+    .map(
+      (y) =>
+        `<span style="top:${y.top};" class="absolute left-0 -translate-y-1/2 text-xs text-gray-500">${y.value}</span>`
+    )
+    .join("");
+
+  container.innerHTML = `
+    <div class="relative h-[${chartHeight}px] w-full pt-4 pl-10">
+      <div class="absolute inset-0 left-10 border-l border-b border-gray-200"></div>
+
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+           class="absolute top-0 right-0 h-[90%] w-[calc(100%-2.5rem)]">
+        <line x1="0" y1="${normalize(maxVal / 2)}" x2="100" y2="${normalize(maxVal / 2)}"
+              stroke="#eee" stroke-dasharray="3,3"></line>
+
+        <polyline fill="none" stroke="${PRIMARY_COLOR}" stroke-width="2" points="${pointsTotal}"></polyline>
+        <polyline fill="none" stroke="${SECONDARY_COLOR}" stroke-width="2" points="${pointsCompleted}"></polyline>
+
+        ${data.map((b, i) => {
+          const x = (i / denom) * 100;
+          return `
+            <circle data-appt-key="${b.key}"
+                    cx="${x}" cy="${normalize(b.total)}"
+                    r="2" fill="${PRIMARY_COLOR}" style="cursor:pointer"></circle>
+
+            <circle data-appt-key="${b.key}"
+                    cx="${x}" cy="${normalize(b.completed)}"
+                    r="2" fill="${SECONDARY_COLOR}" style="cursor:pointer"></circle>
+          `;
+        }).join("")}
+      </svg>
+
+      <div class="absolute bottom-0 left-10 w-[calc(100%-2.5rem)] flex justify-between text-xs text-gray-600 px-1">
+        ${xAxisLabels}
+      </div>
+
+      <!-- IMPORTANT: don't block clicks -->
+      <div class="absolute inset-0 h-[90%] flex flex-col justify-between pointer-events-none">
+        ${yAxisLabels}
+      </div>
+    </div>
+  `;
+
+  // attach click handlers (drilldown)
+  container.querySelectorAll('[data-appt-key]').forEach(el => {
+    el.addEventListener('click', () => openApptDrilldownByKey(el.dataset.apptKey));
+  });
+}
+
+
+
 
   function renderServiceChart() {
     const container = document.getElementById('service-chart');
@@ -1886,16 +2250,12 @@ function formatPdfCurrency(amount) {
     const patientsServedSet = new Set(finishedAppointments.map(a => a.UserAccountID));
     const patientsServed = patientsServedSet.size;
 
-    const completionRate = metrics.totalAppointments
-      ? Math.round((metrics.completedAppointments / metrics.totalAppointments) * 100)
-      : 0;
-
     const avg = metrics.paidTransactionsCount
       ? metrics.totalRevenue / metrics.paidTransactionsCount
       : 0;
 
     // 3-column layout inside the summary box
-    const col = boxWidth / 3;
+    const col = boxWidth / 2;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(107, 114, 128);
@@ -1907,25 +2267,15 @@ function formatPdfCurrency(amount) {
     doc.setTextColor(17, 24, 39);
     doc.text(String(metrics.totalAppointments || 0), marginX + 4, cursorY + 6);
 
-    // middle column
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 114, 128);
-    doc.text('Completion Rate', marginX + col + 4, cursorY);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74);
-    doc.text(`${completionRate}%`, marginX + col + 4, cursorY + 6);
-
     // right column
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(107, 114, 128);
-    doc.text('Total Revenue', marginX + col * 2 + 4, cursorY);
+    doc.text('Total Revenue', marginX + col + 4, cursorY);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(37, 99, 235);
-    doc.text(formatPdfCurrency(metrics.totalRevenue || 0), marginX + col * 2 + 4, cursorY + 6);
+    doc.text(formatPdfCurrency(metrics.totalRevenue || 0), marginX + col + 4, cursorY + 6);
 
     cursorY = boxTop + boxHeight + 10;
 
@@ -2155,6 +2505,288 @@ function getCurrentDentistLabel() {
   return currentDentistName || 'Dentist';
 }
 
+function dayKeyFromDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function weekKeyFromDate(d) {
+  const tmp = new Date(d);
+  tmp.setHours(0,0,0,0);
+  const day = (tmp.getDay() + 6) % 7; // Monday-based
+  tmp.setDate(tmp.getDate() - day);
+  const yyyy = tmp.getFullYear();
+  const mm = String(tmp.getMonth() + 1).padStart(2, "0");
+  const dd = String(tmp.getDate()).padStart(2, "0");
+  return `${yyyy}-W-${mm}-${dd}`;
+}
+
+function labelFromDayKey(key) {
+  const [y,m,d] = key.split("-");
+  return new Date(Number(y), Number(m)-1, Number(d))
+    .toLocaleDateString("en-PH", { month:"short", day:"2-digit" });
+}
+
+function labelFromWeekKey(key) {
+  // key format: "YYYY-W-MM-DD"
+  const [yyyyStr, md] = String(key || "").split("-W-");
+  if (!yyyyStr || !md) return "Week of —";
+
+  const yyyy = Number(yyyyStr);
+  const [mm, dd] = md.split("-");
+
+  const m = Number(mm) - 1;
+  const d = Number(dd);
+
+  const dt = new Date(yyyy, m, d);
+  if (isNaN(dt.getTime())) return "Week of —";
+
+  return `Week of ${dt.toLocaleDateString("en-PH", { month: "short", day: "2-digit" })}`;
+}
+
+
+function labelFromMonthKey(key) {
+  const [y] = key.split("-");
+  return `${monthLabelFromKey(key)} ${y}`;
+}
+
+function getTrendGranularityAuto() {
+  // same spirit as secretary: choose best view based on selected date range
+  // (adjust names if your dateRange values differ)
+  if (currentDateRange === "daily" || currentDateRange === "today" || currentDateRange === "7d") return "daily";
+  if (currentDateRange === "weekly" || currentDateRange === "30d" || currentDateRange === "90d") return "weekly";
+  return "monthly";
+}
+
+  function renderRevenueChart() {
+    const container = document.getElementById('revenue-chart');
+    if (!container) return;
+
+    const data = revenueData;
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+        <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+          No revenue data available yet.
+        </div>
+      `;
+      return;
+    }
+
+    const maxRevenue = Math.max(...data.map(d => d.revenue));
+    const chartHeight = 300;
+
+    const barsHtml = data.map(d => {
+    const heightPercent = maxRevenue ? (d.revenue / maxRevenue) * 90 : 0;
+    const formattedRevenue = formatCurrency(d.revenue);
+
+    return `
+        <div class="flex flex-col items-center w-full h-full justify-end">
+          <div
+            role="button"
+            tabindex="0"
+            onclick="openRevenueDrilldown('${d.key}')"
+            onkeypress="if(event.key==='Enter') openRevenueDrilldown('${d.key}')"
+            style="height: ${heightPercent}%; background-color: ${PRIMARY_COLOR};"
+            class="w-4 sm:w-8 rounded-t-md transition-all duration-500 shadow-md hover:opacity-80 relative group cursor-pointer"
+            title="Click to drill down"
+          >
+            <span class="absolute -top-6 text-xs text-gray-700 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            ${formattedRevenue}
+            </span>
+        </div>
+        <span class="text-[11px] text-gray-600 mt-2">${d.label}</span>
+        </div>
+    `;
+    }).join('');
+
+    const yAxisLabels = [
+    {
+        value: maxRevenue,
+        label: formatCurrency(maxRevenue),
+        top: 0
+    },
+    {
+        value: maxRevenue / 2,
+        label: formatCurrency(maxRevenue / 2),
+        top: '50%'
+    },
+    {
+        value: 0,
+        label: formatCurrency(0),
+        top: '90%'
+    },
+    ].map(y => `
+    <span style="top: ${y.top};"
+            class="absolute left-0 transform -translate-y-1/2 text-xs text-gray-500">
+        ${y.label}
+    </span>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="relative h-[${chartHeight}px] w-full pt-4 pl-10">
+        <div class="absolute inset-0 left-10 border-l border-b border-gray-200">
+          <div class="absolute top-[50%] w-full border-t border-dashed border-gray-200 transform -translate-y-1/2"></div>
+        </div>
+
+        <div class="flex justify-around items-end h-[90%] w-full pl-2">
+          ${barsHtml}
+        </div>
+
+        <div class="absolute inset-0 h-[90%] flex flex-col justify-between pointer-events-none">
+          ${yAxisLabels}
+        </div>
+      </div>
+    `;
+  }
+
+  async function openRevenueDrilldown(monthKey) {
+  revenueDrilldownMonthKey = monthKey;
+
+  const { start, end } = monthBoundsFromKey(monthKey);
+  if (!start || !end) return;
+
+  // build query: PAID billing for that month
+let q = supabaseClient
+  .from('Billing')
+  .select(`
+    BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued,
+    Appointment!inner(DentistID)
+  `)
+  .in('PaymentStatus', ['PAID', 'DOWNPAYMENT'])
+  .gte('DateIssued', start.toISOString())
+  .lt('DateIssued', end.toISOString());
+
+if (loggedDentistId) {
+  q = q.eq('Appointment.DentistID', loggedDentistId);
+}
+
+  // if dentist filter is applied, filter billing by allowed appointment IDs
+if (loggedDentistId) {
+  const { data: apptsForDentist, error: apptErr } = await supabaseClient
+    .from('Appointment')
+    .select('AppointmentID')
+    .eq('DentistID', loggedDentistId)
+    .gte('AppointmentSchedule', start.toISOString())
+    .lt('AppointmentSchedule', end.toISOString());
+
+  if (apptErr) {
+    console.error('Drilldown: error loading dentist appointments', apptErr);
+    return;
+  }
+
+  const allowedIds = (apptsForDentist || []).map(a => a.AppointmentID);
+  if (!allowedIds.length) {
+    revenueDrilldownRows = [];
+  } else {
+    q = q.in('AppointmentID', allowedIds);
+  }
+}
+
+  const { data, error } = await q;
+  if (error) {
+    console.error('Drilldown: error loading billing', error);
+    alert('Failed to load drilldown data. Check console.');
+    return;
+  }
+
+  revenueDrilldownRows = data || [];
+  await hydrateUserNames(revenueDrilldownRows.map(r => r.UserAccountID));
+
+  // subtitle
+  const subtitle = document.getElementById("revenueDrilldownSubtitle");
+  const monthLabel = `${monthLabelFromKey(monthKey)} ${monthKey.split("-")[0]}`;
+  subtitle.textContent = `Month: ${monthLabel} • Dentist scope: ${getCurrentDentistLabel()} • Range filter: ${getCurrentDateRangeLabel()}`;
+
+  // clear search
+  const searchEl = document.getElementById("revenueDrilldownSearch");
+  if (searchEl) searchEl.value = "";
+
+  renderRevenueDrilldownTable();
+
+  document.getElementById("revenueDrilldownModal")?.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function closeRevenueDrilldown() {
+  document.getElementById("revenueDrilldownModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+let revenueDrilldownMonthKey = null;
+let revenueDrilldownRows = [];
+
+function renderRevenueDrilldownTable() {
+  const tbody = document.getElementById("revenueDrilldownTbody");
+  if (!tbody) return;
+
+  const q = (document.getElementById("revenueDrilldownSearch")?.value || "")
+    .trim()
+    .toLowerCase();
+
+  let rows = (revenueDrilldownRows || []).slice();
+
+  if (q) {
+    rows = rows.filter(r => {
+      const dt = r.DateIssued ? new Date(r.DateIssued).toLocaleString("en-PH") : "";
+      const patient = getUserName(r.UserAccountID) || "";
+      const type = String(r.PaymentType || "");
+      const method = String(r.PaymentMethod || "");
+      const amount = String(r.Amount || "");
+      return `${dt} ${patient} ${type} ${method} ${amount}`.toLowerCase().includes(q);
+    });
+  }
+
+  // newest first
+  rows.sort((a, b) => {
+    const da = new Date(a?.DateIssued || 0).getTime() || 0;
+    const db = new Date(b?.DateIssued || 0).getTime() || 0;
+    return db - da;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No matching billing rows.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const dt = r.DateIssued
+      ? new Date(r.DateIssued).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })
+      : "—";
+
+    const patient = getUserName(r.UserAccountID) || "—";
+
+    return `
+      <tr class="border-t hover:bg-gray-50">
+        <td class="p-3 whitespace-nowrap">${dt}</td>
+        <td class="p-3">${patient}</td>
+        <td class="p-3">${r.PaymentType || "—"}</td>
+        <td class="p-3">${r.PaymentMethod || "—"}</td>
+        <td class="p-3 whitespace-nowrap">${formatCurrency(r.Amount)}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function exportRevenueDrilldownCSV() {
+  if (!revenueDrilldownMonthKey) return alert("No month selected.");
+  if (!revenueDrilldownRows.length) return alert("No rows to export.");
+
+  let csv = "DateIssued,Patient,PaymentType,PaymentMethod,Amount\n";
+  revenueDrilldownRows.forEach(r => {
+    const dt = r.DateIssued ? new Date(r.DateIssued).toLocaleString("en-PH") : "";
+    const patient = getUserName(r.UserAccountID) || "";
+    const type = String(r.PaymentType || "");
+    const method = String(r.PaymentMethod || "");
+    const amt = Number(r.Amount || 0);
+
+    csv += `"${dt}","${String(patient).replaceAll('"','""')}","${type.replaceAll('"','""')}","${method.replaceAll('"','""')}","${amt}"\n`;
+  });
+
+  downloadCSV(`revenue_${revenueDrilldownMonthKey}.csv`, csv);
+}
+
+
   // --- INIT ---
 
  // --- INIT ---
@@ -2181,6 +2813,99 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 </script>
+<div id="apptDrilldownModal" class="fixed inset-0 z-[999] hidden">
+  <div class="absolute inset-0 bg-black/40"></div>
+
+  <div class="relative mx-auto mt-16 w-[95%] max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="p-4 border-b flex items-start justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800">Appointment Trend – Details</h3>
+        <p id="apptDrilldownSubtitle" class="text-xs text-gray-500 mt-1">—</p>
+      </div>
+
+      <button class="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50" onclick="closeApptDrilldown()">Close</button>
+    </div>
+
+    <div class="p-4 flex flex-col gap-3">
+      <div class="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <input id="apptDrilldownSearch" type="text"
+          class="w-full sm:w-80 border rounded-lg px-3 py-2 text-sm"
+          placeholder="Search service / status / patient..."
+          oninput="renderApptDrilldownTable()"
+        />
+        <button class="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50" onclick="exportApptDrilldownCSV()">
+          Export CSV
+        </button>
+      </div>
+
+      <div class="border rounded-xl overflow-hidden">
+        <div class="max-h-[420px] overflow-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600 sticky top-0">
+              <tr>
+                <th class="text-left p-3">Date</th>
+                <th class="text-left p-3">Patient</th>
+                <th class="text-left p-3">Service</th>
+                <th class="text-left p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="apptDrilldownTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500">Tip: click a point on the line to open this table for that month.</p>
+    </div>
+  </div>
+</div>
+
+<div id="revenueDrilldownModal" class="fixed inset-0 z-[999] hidden">
+  <div class="absolute inset-0 bg-black/40"></div>
+
+  <div class="relative mx-auto mt-16 w-[95%] max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="p-4 border-b flex items-start justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800">Revenue Trend – Details</h3>
+        <p id="revenueDrilldownSubtitle" class="text-xs text-gray-500 mt-1">—</p>
+      </div>
+
+      <button class="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50" onclick="closeRevenueDrilldown()">Close</button>
+    </div>
+
+    <div class="p-4 flex flex-col gap-3">
+      <div class="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <input id="revenueDrilldownSearch" type="text"
+          class="w-full sm:w-80 border rounded-lg px-3 py-2 text-sm"
+          placeholder="Search patient / method / type..."
+          oninput="renderRevenueDrilldownTable()"
+        />
+        <button class="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50" onclick="exportRevenueDrilldownCSV()">
+          Export CSV
+        </button>
+      </div>
+
+      <div class="border rounded-xl overflow-hidden">
+        <div class="max-h-[420px] overflow-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600 sticky top-0">
+              <tr>
+                <th class="text-left p-3">Date</th>
+                <th class="text-left p-3">Patient</th>
+                <th class="text-left p-3">Type</th>
+                <th class="text-left p-3">Method</th>
+                <th class="text-left p-3">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="revenueDrilldownTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500">Tip: click a revenue bar to open this table for that month.</p>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>
