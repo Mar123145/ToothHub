@@ -128,6 +128,7 @@
     function setTab(tab) {
         currentTab = tab;
 
+        const btnBraces = document.getElementById("tab-braces");
         const btnToIssue = document.getElementById('tab-to-issue');
         const btnIssued = document.getElementById('tab-issued');
         const hint = document.getElementById('tab-hint');
@@ -140,10 +141,17 @@
             btnToIssue.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white";
             btnIssued.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
             hint.textContent = "To Issue: finished appointments with dentist-set price that don't have a bill yet.";
-        } else {
+
+        } else if (tab === 'braces') {
+            btnBraces.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white";
+            btnToIssue.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
+            btnIssued.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
+            hint.textContent = "Braces plans awaiting ₱15,000 downpayment.";
+
+        } else { // issued
             btnIssued.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white";
             btnToIssue.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50";
-            hint.textContent = "Issued Bills: bills created by the secretary.";
+            hint.textContent = "Issued Bills.";
         }
 
         // status filter only makes sense for issued bills; disable for To Issue
@@ -203,6 +211,12 @@
         return `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 0 })}`;
     }
 
+    function formatCurrency2(amount) {
+    const n = Number(amount || 0);
+    return `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+
     function peso(amount) { return formatCurrency(amount); }
 
     function getStatusBadge(status) {
@@ -236,6 +250,30 @@
             </span>
         `;
     }
+const _profileUrlCache = new Map(); // path -> signedUrl OR "__MISSING__"
+
+async function getProfileSignedUrl(path) {
+  if (!path) return "";
+
+  const cached = _profileUrlCache.get(path);
+  if (cached) return cached === "__MISSING__" ? "" : cached;
+
+  const { data, error } = await supabaseClient
+    .storage
+    .from("Logo")
+    .createSignedUrl(path, 60 * 60);
+
+  if (error || !data?.signedUrl) {
+    _profileUrlCache.set(path, "__MISSING__");
+
+    return "";
+  }
+
+  _profileUrlCache.set(path, data.signedUrl);
+  return data.signedUrl;
+}
+
+
 
     function formatDateTime(value) {
         if (!value) return '-';
@@ -251,6 +289,150 @@
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function closeApptModal() {
+  const modal = document.getElementById("appt-modal");
+  modal?.classList.add("hidden");
+  modal?.classList.remove("flex");
+  const content = document.getElementById("appt-modal-content");
+  if (content) content.innerHTML = "";
+}
+
+function openApptModal(billingId) {
+  const row = issuedBills.find(b => String(b.BillingID) === String(billingId));
+  if (!row) return;
+
+  const appt = row.Appointment || {};
+  const user = appt.UserAccount || {};
+
+  const patientName =
+    `${user.FirstName || ""} ${user.LastName || ""}`.trim() || "Unknown";
+    const ref = row.paymentreference || "-";
+
+  const txn = appt.TransactionID || appt.AppointmentID || "-";
+  const service = appt.Service || "-";
+  const schedule = formatDateTime(appt.AppointmentSchedule);
+  const dentist =
+  appt.Dentist
+    ? `${appt.Dentist.FirstName || ""} ${appt.Dentist.LastName || ""}`.trim()
+    : "—";
+  let typeLabel = String(row.PaymentType || "-").toUpperCase();
+  if (typeLabel === "DOWNPAYMENT" || typeLabel === "APPOINTMENT_FEE") typeLabel = "APPOINTMENT FEE";
+
+  const status = String(row.PaymentStatus || "-").toUpperCase();
+  const method = String(row.PaymentMethod || "-").toUpperCase();
+  const issuedAt = formatDateTime(row.DateIssued);
+  const amount = Number(row.Amount || 0);
+
+  const { addons, extraServices } = splitAddOns(appt.AddOns);
+
+  const extraHtml = extraServices.length
+    ? `
+      <div class="rounded-xl border p-4">
+        <div class="font-semibold text-gray-900 mb-2">Additional Services</div>
+        <div class="space-y-2">
+          ${extraServices.map(a => `
+            <div class="flex items-center justify-between text-sm">
+              <span>${escapeHtml(a?.name || "Service")}</span>
+              <span class="font-semibold">${formatCurrency2(a?.price || 0)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `
+    : `
+      <div class="rounded-xl border p-4">
+        <div class="font-semibold text-gray-900 mb-1">Additional Services</div>
+        <div class="text-sm text-gray-500">None</div>
+      </div>
+    `;
+
+  const addonsHtml = addons.length
+    ? `
+      <div class="rounded-xl border p-4">
+        <div class="font-semibold text-gray-900 mb-2">Add-ons</div>
+        <div class="space-y-2">
+          ${addons.map(a => `
+            <div class="flex items-center justify-between text-sm">
+              <span>${escapeHtml(a?.name || "Add-on")}</span>
+              <span class="font-semibold">${formatCurrency2(a?.price || 0)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `
+    : `
+      <div class="rounded-xl border p-4">
+        <div class="font-semibold text-gray-900 mb-1">Add-ons</div>
+        <div class="text-sm text-gray-500">No add-ons</div>
+      </div>
+    `;
+
+
+  const content = document.getElementById("appt-modal-content");
+  if (!content) return;
+
+  content.innerHTML = `
+    <div class="rounded-xl border bg-gray-50 p-4 space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Patient</div>
+        <div class="font-semibold text-gray-900">${escapeHtml(patientName)}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Transaction No.</div>
+        <div class="font-mono text-sm text-gray-900">${escapeHtml(txn)}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Service</div>
+        <div class="font-medium text-gray-800">${escapeHtml(service)}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Schedule</div>
+        <div class="text-gray-700">${escapeHtml(schedule)}</div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Dentist</div>
+        <div class="text-gray-700 font-medium">${escapeHtml(dentist)}</div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border p-4 space-y-2">
+      <div class="font-semibold text-gray-900 mb-1">Linked Payment</div>
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600">Type</span>
+        <span class="font-semibold">${escapeHtml(typeLabel)}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600">Amount</span>
+        <span class="font-semibold">${formatCurrency2(amount)}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600">Method</span>
+        <span class="font-semibold">${escapeHtml(method)}</span>
+      </div>
+      ${method === "GCASH" ? `
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600">GCash Ref</span>
+          <span class="font-semibold">${escapeHtml(ref)}</span>
+        </div>
+      ` : ""}
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600">Status</span>
+        <span class="font-semibold">${escapeHtml(status)}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600">Issued</span>
+        <span class="font-semibold">${escapeHtml(issuedAt)}</span>
+      </div>
+    </div>
+    ${extraHtml}
+    ${addonsHtml}
+  `;
+
+  const modal = document.getElementById("appt-modal");
+  modal?.classList.remove("hidden");
+  modal?.classList.add("flex");
 }
 
 
@@ -337,14 +519,16 @@
                 PaymentType,
                 PaymentMethod,
                 PaymentStatus,
+                paymentreference,
                 DateIssued,
-                Appointment:AppointmentID (
+                  Appointment:AppointmentID (
                     AppointmentID,
                     TransactionID,
                     AppointmentSchedule,
                     Service,
                     AddOns,
-                    UserAccount:UserAccountID ( UserAccountID, FirstName, LastName, Email, ContactNumber )
+                    Dentist:DentistID( FirstName, LastName ),
+                    UserAccount:UserAccountID ( UserAccountID, FirstName, LastName, Email, ContactNumber, ProfileImagePath )
                 )
             `)
             .order('DateIssued', { ascending: false });
@@ -364,9 +548,15 @@ function renderPatientCell(p) {
   const email = p?.email || "-";
   const contact = p?.contact || "-";
   const txn = p?.transactionId || "-";
+  const profilePath = p?.profilePath || "";
+  const patientId = p?.patientId || "";
+
+  // Give each tooltip a unique image id so we can set src later
+  const imgId = `pp_${Math.random().toString(36).slice(2)}`;
 
   return `
-    <div class="relative group inline-block">
+    <div class="relative group inline-block"
+         onmouseenter="hydrateTooltipProfileImg('${escapeHtml(profilePath)}','${imgId}','${escapeHtml(patientId)}')">
       <span class="font-medium text-gray-900">${escapeHtml(name)}</span>
 
       <div
@@ -375,6 +565,18 @@ function renderPatientCell(p) {
                w-72 bg-gray-900 text-white text-xs
                rounded-lg p-3 shadow-xl z-50"
       >
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
+            <img id="${imgId}" class="w-full h-full object-cover hidden" alt="Profile" />
+            <span class="text-[10px] text-white/70" data-fallback="1">N/A</span>
+          </div>
+
+          <div class="min-w-0">
+            <div class="text-gray-300 text-[11px]">Patient</div>
+            <div class="font-semibold text-sm leading-tight break-words">${escapeHtml(name)}</div>
+          </div>
+        </div>
+
         <div class="mb-2">
           <div class="text-gray-400">Email</div>
           <div class="font-semibold break-all">${escapeHtml(email)}</div>
@@ -393,6 +595,21 @@ function renderPatientCell(p) {
     </div>
   `;
 }
+async function hydrateTooltipProfileImg(profilePath, imgId) {
+  if (!profilePath || !profilePath.trim()) return;
+
+  const img = document.getElementById(imgId);
+  if (!img) return;
+  if (img.dataset.loaded === "1") return;
+  img.dataset.loaded = "1"; // ✅ set early to avoid repeat spam
+
+  const url = await getProfileSignedUrl(profilePath);
+  if (!url) return;
+
+  img.src = url;
+  img.classList.remove("hidden");
+  img.parentElement?.querySelector('[data-fallback="1"]')?.classList.add("hidden");
+}
 
 function safeParseAddons(raw) {
   if (!raw) return [];
@@ -404,6 +621,15 @@ function safeParseAddons(raw) {
     return [];
   }
 }
+
+function splitAddOns(raw) {
+  const all = safeParseAddons(raw);
+  return {
+    addons: all.filter(a => !a?.kind || a.kind === "addon"),
+    extraServices: all.filter(a => a?.kind === "service"),
+  };
+}
+
 
     async function loadToIssue() {
         // Get billing appointment IDs to exclude
@@ -432,7 +658,7 @@ function safeParseAddons(raw) {
                 Status,
                 TotalAmount,
                 AddOns,
-                UserAccount:UserAccountID ( FirstName, LastName )
+                UserAccount:UserAccountID ( FirstName, LastName, ProfileImagePath )
               `)
             .eq('Status', 'Finished')
             .gt('TotalAmount', 0)
@@ -446,11 +672,6 @@ function safeParseAddons(raw) {
         }
 
         toIssue = (appts || []).filter(a => !billedIds.has(a.AppointmentID));
-    }
-
-    async function refreshAll() {
-        await Promise.all([loadIssuedBills(), loadToIssue()]);
-        renderTable();
     }
 
     // --- ACTION: ISSUE BILL ---
@@ -480,9 +701,13 @@ function openIssueModal(context) {
   const { appt, patientName, total } = context;
 
   // Compute addons AFTER we have appt + total
-  const addons = safeParseAddons(appt.AddOns);
+  const { addons, extraServices } = splitAddOns(appt.AddOns);
+
   const addonsTotal = addons.reduce((s, a) => s + Number(a?.price || 0), 0);
-  const base = Math.max(0, Number(total || 0) - addonsTotal);
+  const extraTotal  = extraServices.reduce((s, a) => s + Number(a?.price || 0), 0);
+
+  const base = Math.max(0, Number(total || 0) - addonsTotal - extraTotal);
+
   const addonsNames = addons
   .map(a => (a?.name || "").trim())
   .filter(Boolean)
@@ -506,6 +731,23 @@ const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-
     `
     : `<div class="text-sm text-gray-500 mt-2">No add-ons</div>`;
 
+    const extraHtml = extraServices.length
+  ? `
+    <div class="rounded-xl border p-4 bg-gray-50 mt-3">
+      <div class="font-semibold text-gray-900 mb-2">Additional Services</div>
+      <div class="space-y-2">
+        ${extraServices.map(a => `
+          <div class="flex items-center justify-between text-sm">
+            <span>${escapeHtml(a?.name || "Service")}</span>
+            <span class="font-semibold">${peso(a?.price || 0)}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `
+  : `<div class="text-sm text-gray-500 mt-2">No additional services</div>`;
+
+
   const content = document.getElementById("issue-modal-content");
   content.innerHTML = `
     <div class="rounded-xl border bg-gray-50 p-4 space-y-2">
@@ -525,6 +767,18 @@ const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-
 
     <div class="rounded-xl border p-4">
       <div class="font-semibold text-gray-900 mb-2">Payment Method</div>
+
+      <div id="gcash-ref-wrap" class="hidden mt-3">
+        <label class="block text-xs text-gray-500 mb-1">
+          GCash Reference Number
+        </label>
+        <input
+          id="gcash-ref"
+          type="text"
+          placeholder="Enter GCash reference number"
+          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
 
       <label class="block text-xs text-gray-500 mb-1">Select method</label>
       <select
@@ -552,31 +806,64 @@ const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-
       If unchecked, the bill will be issued as UNPAID.
     </p>
 
-    <div class="rounded-xl border p-4">
-      <div class="flex items-center justify-between mb-2">
-        <div class="font-semibold text-gray-900">Billing Summary</div>
-      </div>
+<div class="rounded-xl border p-4">
+  <div class="font-semibold text-gray-900 mb-3">Breakdown</div>
 
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600">Base Service</span>
-          <span class="font-semibold">${peso(base)}</span>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600">${addonsLabel}</span>
-          <span class="font-semibold">${peso(addonsTotal)}</span>
-        </div>
-
-        <div class="flex items-center justify-between border-t pt-2 mt-2">
-          <span class="font-semibold text-gray-900">TOTAL</span>
-          <span class="font-extrabold text-lg">${peso(total)}</span>
-        </div>
-      </div>
+  <!-- Base service -->
+  <div class="mb-3">
+    <div class="text-xs text-gray-500">Base service</div>
+    <div class="flex items-center justify-between">
+      <div class="text-sm font-medium text-gray-900">${escapeHtml(appt.Service || "-")}</div>
+      <div class="text-sm font-semibold">${peso(base)}</div>
     </div>
+  </div>
 
+  <!-- Additional services -->
+  <div class="mb-3">
+    <div class="text-xs text-gray-500 mb-1">Additional services</div>
+    ${
+      extraServices.length
+        ? extraServices.map(s => `
+            <div class="flex items-center justify-between text-sm py-1">
+              <div class="text-gray-900">${escapeHtml((s?.name || "").trim() || "Service")}</div>
+              <div class="font-semibold">${peso(s?.price || 0)}</div>
+            </div>
+          `).join("")
+        : `<div class="text-sm text-gray-500">None</div>`
+    }
+  </div>
 
+  <!-- Add-ons -->
+  <div class="mb-3">
+    <div class="text-xs text-gray-500 mb-1">Add-ons</div>
+    ${
+      addons.length
+        ? addons.map(a => `
+            <div class="flex items-center justify-between text-sm py-1">
+              <div class="text-gray-900">${escapeHtml((a?.name || "").trim() || "Add-on")}</div>
+              <div class="font-semibold">${peso(a?.price || 0)}</div>
+            </div>
+          `).join("")
+        : `<div class="text-sm text-gray-500">None</div>`
+    }
+  </div>
+
+  <!-- Total -->
+  <div class="flex items-center justify-between border-t pt-3 mt-3">
+    <div class="font-semibold text-gray-900">TOTAL</div>
+    <div class="font-extrabold text-lg">${peso(total)}</div>
+  </div>
+</div>
   `;
+
+    const methodSel = document.getElementById("issue-payment-method");
+const gcashWrap = document.getElementById("gcash-ref-wrap");
+
+if (methodSel && gcashWrap) {
+  methodSel.onchange = () => {
+    gcashWrap.classList.toggle("hidden", methodSel.value !== "GCASH");
+  };
+}
 
   const modal = document.getElementById("issue-modal");
   modal.classList.remove("hidden");
@@ -585,6 +872,38 @@ const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-
   if (typeof lucide !== "undefined") lucide.createIcons();
 }
 
+async function loadBracesDownpayments() {
+  const { data: plans, error: planErr } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("TreatmentPlanID, UserAccountID, DownpaymentAmount, Status, DownpaymentStatus, CreatedAt, SourceAppointmentID")
+    .eq("PlanType", "BRACES")
+    .eq("DownpaymentStatus", "UNPAID")
+    .order("CreatedAt", { ascending: false });
+
+  if (planErr) {
+    console.error(planErr);
+    bracesPlans = [];
+    return;
+  }
+
+  const userIds = [...new Set((plans || []).map(p => p.UserAccountID).filter(Boolean))];
+
+  let usersById = {};
+  if (userIds.length) {
+    const { data: users, error: userErr } = await supabaseClient
+      .from("UserAccount")
+      .select("UserAccountID, FirstName, LastName, ProfileImagePath")
+      .in("UserAccountID", userIds);
+
+    if (userErr) console.error(userErr);
+    else usersById = Object.fromEntries((users || []).map(u => [u.UserAccountID, u]));
+  }
+
+  bracesPlans = (plans || []).map(p => ({
+    ...p,
+    UserAccount: usersById[p.UserAccountID] || null
+  }));
+}
 
 
 function closeIssueModal() {
@@ -608,6 +927,7 @@ function printReceipt(billingId) {
 
   const patientName =
     ((user.FirstName || "") + " " + (user.LastName || "")).trim() || "Unknown";
+    const ref = row.paymentreference || "";
 
   // Use Appointment.TransactionID as the receipt number
   const txnNo = appt.TransactionID || appt.AppointmentID || row.BillingID || "-";
@@ -624,30 +944,53 @@ function printReceipt(billingId) {
   const schedule = formatDateTime(appt.AppointmentSchedule);
   
 // ✅ ADD-ONS (insert here)
-const addons = safeParseAddons(appt.AddOns);
+const { addons, extraServices } = splitAddOns(appt.AddOns);
+
 const addonsTotal = addons.reduce((s, a) => s + Number(a?.price || 0), 0);
+const extraTotal  = extraServices.reduce((s, a) => s + Number(a?.price || 0), 0);
+
 
 const addonsLines = addons.length
   ? addons.map(a => `
       <div class="trow">
         <div>Add-on: ${escapeHtml(a?.name || "Add-on")}</div>
-        <div><b>${peso(a?.price || 0)}</b></div>
+        <div><b>${formatCurrency2(a?.price || 0)}</b></div>
       </div>
     `).join("")
   : "";
+
+const extraLines = extraServices.length
+  ? extraServices.map(a => `
+      <div class="trow">
+        <div>Additional Service: ${escapeHtml(a?.name || "Service")}</div>
+        <div><b>${formatCurrency2(a?.price || 0)}</b></div>
+      </div>
+    `).join("")
+  : "";
+
+const extraTotalLine = extraServices.length
+  ? `
+    <div class="trow">
+      <div><b>Additional Services Total</b></div>
+      <div><b>${formatCurrency2(extraTotal)}</b></div>
+    </div>
+  `
+  : "";
+
 
 const addonsTotalLine = addons.length
   ? `
     <div class="trow">
       <div><b>Add-ons Total</b></div>
-      <div><b>${peso(addonsTotal)}</b></div>
+      <div><b>${formatCurrency2(addonsTotal)}</b></div>
     </div>
   `
   : "";
 
 
   // Optional: clinic details (edit these)
-  const clinicName = "ToothHub Dental Clinic";
+  const clinicName = "Happy Tooth Dae Dental Clinic";
+  const clinicLogoUrl = "/Image/logo.png"; // <-- uses same path as your site header
   const clinicAddr = "Unit C Lot 1, Maligaya Park Homes, Block 38 Sampaguita, Novaliches, Quezon City, 1118 Metro Manila";
   const clinicPhone = "Contact: 09154693574";
 
@@ -681,13 +1024,16 @@ const addonsTotalLine = addons.length
     '<div class="wrap">' +
       '<div class="card">' +
         '<div class="header">' +
-          '<div class="brand">' +
-            '<h1>' + escapeHtml(clinicName) + '</h1>' +
-            '<div class="sub">' +
-              escapeHtml(clinicAddr) + '<br />' +
-              escapeHtml(clinicPhone) +
+            '<div class="brand" style="display:flex;gap:12px;align-items:center">' +
+              '<img src="' + escapeHtml(clinicLogoUrl) + '" alt="Logo" style="width:44px;height:44px;object-fit:contain;border-radius:10px;border:1px solid #eef0f4" />' +
+              '<div>' +
+                '<h1 style="margin:0;font-size:18px;letter-spacing:.2px">' + escapeHtml(clinicName) + '</h1>' +
+                '<div class="sub">' +
+                  escapeHtml(clinicAddr) + '<br />' +
+                  escapeHtml(clinicPhone) +
+                '</div>' +
+              '</div>' +
             '</div>' +
-          '</div>' +
           '<div class="doc">' +
             '<div class="title">Official Receipt</div>' +
             '<div class="no">' + escapeHtml(String(txnNo)) + '</div>' +
@@ -704,6 +1050,10 @@ const addonsTotalLine = addons.length
               '<div class="label">Payment Details</div>' +
               '<div class="value">' +
                 '<div><b>Method:</b> ' + escapeHtml(method) + '</div>' +
+                (method === "GCASH" && ref
+                  ? '<div><b>GCash Ref:</b> ' + escapeHtml(ref) + '</div>'
+                  : ''
+                ) +
                 '<div><b>Status:</b> PAID</div>' +
                 '<div><b>Date:</b> ' + escapeHtml(issuedAt) + '</div>' +
               '</div>' +
@@ -717,17 +1067,19 @@ const addonsTotalLine = addons.length
               '</div>' +
               '<div class="trow">' +
                 '<div>' + escapeHtml(typeLabel) + ' • ' + escapeHtml(service) + '</div>' +
-                '<div><b>₱' + amount.toLocaleString("en-PH") + '</b></div>' +
+                '<div><b>' + formatCurrency2(amount) + '</b></div>'+
               '</div>' +
+              extraLines +
+              extraTotalLine +
               addonsLines +
               addonsTotalLine +
-            '</div>' +
+              '</div>' +
 
           '<div class="totals">' +
             '<div class="totline"><div class="label" style="text-transform:none;letter-spacing:0;color:#667085">Appointment Schedule</div>' +
             '<div>' + escapeHtml(schedule) + '</div></div>' +
             '<div class="totline"><div class="label" style="text-transform:none;letter-spacing:0;color:#667085">Total Paid</div>' +
-            '<div><strong>₱' + amount.toLocaleString("en-PH") + '</strong></div></div>' +
+            '<div><strong>' + formatCurrency2(amount) + '</strong></div>'
           '</div>' +
         '</div>' +
 
@@ -752,11 +1104,11 @@ const addonsTotalLine = addons.length
 
 async function confirmIssueBill() {
   if (!issueContext) return;
-
+  const isBraces = issueContext?.mode === "braces";
   const btn = document.getElementById("issue-confirm-btn");
   btn.disabled = true;
   btn.classList.add("opacity-70", "cursor-not-allowed");
-
+showLoading("Issuing bill…", "Please wait");
   try {
     const { appt, total } = issueContext;
 
@@ -765,25 +1117,53 @@ async function confirmIssueBill() {
     const methodEl = document.getElementById("issue-payment-method");
     const paymentMethod = (methodEl?.value || "").trim();
 
-    if (!paymentMethod) {
+      if (!paymentMethod) {
       showMessage("Please select a payment method (Cash, GCash, or Card).", "error");
+      btn.disabled = false;
+      btn.classList.remove("opacity-70", "cursor-not-allowed");
       return;
     }
+
+    let gcashRef = null;
+
+if (paymentMethod === "GCASH") {
+  const refEl = document.getElementById("gcash-ref");
+  gcashRef = (refEl?.value || "").trim();
+
+  if (!gcashRef) {
+    showMessage("Please enter the GCash reference number.", "error");
+    btn.disabled = false;
+    btn.classList.remove("opacity-70", "cursor-not-allowed");
+    return;
+  }
+}
+
 
     const paidEl = document.getElementById("issue-mark-paid");
     const isPaidNow = !!paidEl?.checked;
 
+    if (isBraces && !appt?.AppointmentID) {
+      showMessage(
+        "This braces plan has no SourceAppointmentID. Create the braces plan from the consultation appointment (it must save AppointmentID).",
+        "error"
+      );
+      btn.disabled = false;
+      btn.classList.remove("opacity-70", "cursor-not-allowed");
+      return;
+    }
+
     const { error } = await supabaseClient
       .from("Billing")
-      .insert({
-        AppointmentID: appt.AppointmentID,
-        UserAccountID: appt.UserAccountID,
-        PaymentType: "BILL",
-        Amount: billAmount,
-        PaymentStatus: isPaidNow ? "PAID" : "UNPAID",  // ✅ NOW DYNAMIC
-        PaymentMethod: paymentMethod,
-        DateIssued: new Date().toISOString()
-      });
+    .insert({
+      AppointmentID: appt.AppointmentID,
+      UserAccountID: appt.UserAccountID,
+      PaymentType: "BILL",
+      Amount: billAmount,
+      PaymentStatus: isPaidNow ? "PAID" : "UNPAID",
+      PaymentMethod: paymentMethod,
+      paymentreference: gcashRef,
+      DateIssued: new Date().toISOString()
+    });
 
     if (error) {
       console.error(error);
@@ -798,36 +1178,23 @@ async function confirmIssueBill() {
     console.error(e);
     showMessage("Unexpected error while issuing bill.", "error");
   } finally {
+    hideLoading();
     btn.disabled = false;
     btn.classList.remove("opacity-70", "cursor-not-allowed");
   }
 }
 
-function showMessage(message, type = "info") {
-  const container = document.getElementById("toast-container");
-  if (!container) {
-    alert(message);
-    return;
+async function refreshAll() {
+  showLoading("Refreshing billing…", "Please wait");
+  try {
+    await Promise.all([
+      loadIssuedBills(),
+      loadToIssue(),
+    ]);
+    renderTable();
+  } finally {
+    hideLoading();
   }
-
-  const color =
-    type === "success" ? "bg-green-600" :
-    type === "error" ? "bg-red-600" :
-    "bg-gray-800";
-
-  const el = document.createElement("div");
-  el.className = `${color} text-white text-sm px-4 py-3 rounded-xl shadow-lg flex items-start gap-3`;
-  el.innerHTML = `
-    <div class="font-semibold">${type.toUpperCase()}</div>
-    <div class="flex-1">${message}</div>
-    <button class="opacity-80 hover:opacity-100" aria-label="Close">✕</button>
-  `;
-
-  el.querySelector("button").onclick = () => el.remove();
-  container.appendChild(el);
-
-  // auto remove after 3 seconds
-  setTimeout(() => { el.remove(); }, 3000);
 }
 
 
@@ -835,6 +1202,45 @@ function showMessage(message, type = "info") {
     function renderTable() {
         const tableBody = document.getElementById('transactions-table-body');
         const term = (currentSearchTerm || "").toLowerCase();
+
+        if (currentTab === "braces") {
+          renderSummaryStats({
+            totalRevenue: 0,
+            completedTransactionsCount: bracesPlans.length,
+            pendingAmount: bracesPlans.reduce((s, p) => s + Number(p.DownpaymentAmount || 0), 0)
+          }, "toIssue");
+
+          if (!bracesPlans.length) {
+            tableBody.innerHTML =
+              '<tr><td colspan="7" class="text-center text-gray-500 py-8">No braces downpayments pending.</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = bracesPlans.map(p => {
+            const patientName =
+              `${p.UserAccount?.FirstName || ""} ${p.UserAccount?.LastName || ""}`.trim() || "Unknown";
+
+            return `
+              <tr class="border-b hover:bg-gray-50">
+                <td class="py-3 px-4 font-medium">${patientName}</td>
+                <td class="py-3 px-4">Braces Treatment Plan</td>
+                <td class="py-3 px-4 font-semibold">${formatCurrency(p.DownpaymentAmount)}</td>
+                <td class="py-3 px-4 text-sm text-gray-600">${formatDateTime(p.CreatedAt)}</td>
+                <td class="py-3 px-4">${getMethodBadge(null)}</td>
+                <td class="py-3 px-4">${getStatusBadge("unpaid")}</td>
+                <td class="py-3 px-4 text-right">
+                  <button
+                    class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-dark"
+                    onclick="openBracesDownpaymentModal('${p.TreatmentPlanID}')"  
+                  >
+                    Mark Paid
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join("");
+          return;
+        }
 
         if (currentTab === 'toIssue') {
             let rows = toIssue.slice();
@@ -896,6 +1302,12 @@ let rows = issuedBills.map(row => {
   const appt = row.Appointment || {};
   const user = appt.UserAccount || null;
   const apptWhen = appt.AppointmentSchedule ? formatDateTime(appt.AppointmentSchedule) : "-";
+  const { extraServices } = splitAddOns(appt.AddOns);
+  const extraCount = extraServices.length;
+
+  const extraServiceNames = extraServices
+    .map(s => (s?.name || "").trim())
+    .filter(n => n.length > 0);
 
   const patientName = user
     ? `${user.FirstName || ''} ${user.LastName || ''}`.trim() || 'Unknown'
@@ -909,6 +1321,8 @@ let rows = issuedBills.map(row => {
 const email = user?.Email || "-";
 const contactNumber = user?.ContactNumber || "-";
 const transactionId = appt?.TransactionID || "-";
+const profilePath = user?.ProfileImagePath || "";
+console.log("Patient:", patientName, "path:", profilePath);
 
   return {
     BillingID: row.BillingID,
@@ -924,11 +1338,16 @@ const transactionId = appt?.TransactionID || "-";
     paymentType: (row.PaymentType || '').toUpperCase() || '-',
     amount: Number(row.Amount || 0),
     method: row.PaymentMethod,
+    extraCount,
+    extraServiceNames,
 
     // ✅ ADD THESE FIELDS (used by tooltip)
   patientEmail: email,
   patientContact: contactNumber,
-  transactionId: transactionId
+  transactionId: transactionId,
+  patientProfilePath: profilePath,
+  patientId: user?.UserAccountID || row.UserAccountID || ""
+  
   };
 });
 
@@ -960,22 +1379,28 @@ const transactionId = appt?.TransactionID || "-";
         }
 
 tableBody.innerHTML = rows.map(r => {
-  const receiptBtn =
-    r.status === "paid"
-      ? '<div class="mt-2">' +
-        '<button class="text-xs px-3 py-1 rounded-lg border text-gray-700 hover:bg-gray-50" ' +
+const actionsRow =
+  '<div class="mt-2 flex items-center gap-2">' +
+    (r.status === "paid"
+      ? '<button class="text-xs px-3 py-1 rounded-lg border text-gray-700 hover:bg-gray-50" ' +
         'onclick="printReceipt(\'' + r.BillingID + '\')">' +
-        'Print Receipt</button></div>'
-      : "";
-
+        'Print Receipt</button>'
+      : ''
+    ) +
+    '<button class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-dark" ' +
+    'onclick="openApptModal(\'' + r.BillingID + '\')">' +
+    'View Appointment</button>' +
+  '</div>';
   return `
     <tr class="border-b hover:bg-gray-50 transition-colors">
       <td class="py-3 px-4">
- ${renderPatientCell({
+${renderPatientCell({
   name: r.patient,
   email: r.patientEmail,
   contact: r.patientContact,
-  transactionId: r.transactionId
+  transactionId: r.transactionId,
+  profilePath: r.patientProfilePath,
+  patientId: r.patientId
 })}
 </td>
 
@@ -998,13 +1423,22 @@ tableBody.innerHTML = rows.map(r => {
               <span class="font-semibold">${r.service}</span>
             </div>
 
+          ${r.extraServiceNames?.length ? `
+            <div class="mb-2">
+              <span class="text-gray-400">Additional Services</span><br>
+              <span class="font-semibold">
+                ${r.extraServiceNames.map(n => escapeHtml(n)).join("<br>")}
+              </span>
+            </div>
+          ` : ""}
+
             <div>
               <span class="text-gray-400">Schedule</span><br>
               ${r.apptWhen}
             </div>
           </div>
 
-          ${receiptBtn}
+          ${actionsRow}
         </div>
       </td>
 
@@ -1021,6 +1455,29 @@ tableBody.innerHTML = rows.map(r => {
         console.log("SCRIPT REACHED HERE");
     }
 
+function openBracesDownpaymentModal(planId) {
+  const plan = bracesPlans.find(p => p.TreatmentPlanID === planId);
+  if (!plan) return;
+
+  const patientName =
+    `${plan.UserAccount?.FirstName || ""} ${plan.UserAccount?.LastName || ""}`.trim() || "Unknown";
+
+  const amount = Number(plan.DownpaymentAmount || 15000);
+
+  // Reuse modal by passing an "appt-like" object
+  openIssueModal({
+    mode: "braces",
+    appt: {
+      AppointmentID: plan.SourceAppointmentID, // required to avoid Billing 400
+      UserAccountID: plan.UserAccountID,
+      Service: "Braces Downpayment (Treatment Plan)",
+      AppointmentSchedule: plan.CreatedAt
+    },
+    plan,
+    patientName,
+    total: amount
+  });
+}
 
 
     function getTypeBadge(type) {

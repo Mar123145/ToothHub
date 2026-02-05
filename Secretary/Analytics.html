@@ -97,7 +97,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar (same sizing as patient) -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -114,17 +114,17 @@
         <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
         </a>
+          <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
         <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
         </a>
-        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -211,20 +211,6 @@
       </select>
     </div>
   </div>
-
-  <!-- Export buttons -->
-  <div class="flex gap-2">
-    <button
-      class="px-3 py-1.5 rounded-lg border text-xs text-gray-700 hover:bg-gray-50"
-      onclick="exportRevenueCSV()">
-      Export Revenue CSV
-    </button>
-    <button
-      class="px-3 py-1.5 rounded-lg border text-xs text-gray-700 hover:bg-gray-50"
-      onclick="exportAppointmentsCSV()">
-      Export Appointments CSV
-    </button>
-  </div>
 </div>
 
         <!-- Key Metrics -->
@@ -266,6 +252,17 @@
                         <i data-lucide="trending-up" class="w-5 h-5 text-primary"></i>
                         Appointments Trend
                     </h3>
+                      <div class="flex items-center gap-2">
+                        <label class="text-xs text-gray-500">View</label>
+                        <select id="apptTrendGranularity"
+                          class="border rounded-lg px-2 py-1 text-xs"
+                          onchange="renderAppointmentsChart()">
+                          <option value="auto" selected>Auto</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                        </select>
+                      </div>
                 </div>
                 <div id="appointments-chart" class="p-6 pt-0 chart-container">
                     <!-- Chart will be injected here -->
@@ -335,6 +332,112 @@
 </div>
       </div>
     </main>
+
+<!-- Revenue Drilldown Modal -->
+<div id="revenueDrilldownModal" class="fixed inset-0 z-[999] hidden">
+  <div class="absolute inset-0 bg-black/40" onclick="closeRevenueDrilldown()"></div>
+
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden border">
+      <!-- Header -->
+      <div class="flex items-start justify-between gap-4 p-5 border-b bg-gray-50">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Revenue Drill-down</h3>
+          <p id="revenueDrilldownSubtitle" class="text-xs text-gray-500 mt-1">—</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            id="revenueExportBtn"
+            class="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-gray-100"
+            onclick="exportRevenueDrilldownCSV()"
+            type="button"
+          >
+            Export CSV
+          </button>
+          <button
+            class="px-3 py-2 text-xs rounded-lg bg-primary text-white hover:bg-primary-dark"
+            onclick="closeRevenueDrilldown()"
+            type="button"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="p-4 border-b flex flex-col md:flex-row md:items-center gap-3">
+        <div class="flex-1">
+          <label class="block text-[11px] text-gray-500 mb-1">Search (patient / method / type)</label>
+          <input
+            id="revenueDrilldownSearch"
+            type="text"
+            class="w-full border rounded-lg px-3 py-2 text-sm"
+            placeholder="Search…"
+            oninput="renderRevenueDrilldownTable()"
+          />
+        </div>
+
+        <div class="w-full md:w-56">
+          <label class="block text-[11px] text-gray-500 mb-1">Sort</label>
+          <select
+            id="revenueDrilldownSort"
+            class="w-full border rounded-lg px-3 py-2 text-sm"
+            onchange="renderRevenueDrilldownTable()"
+          >
+            <option value="date_desc">Date (newest)</option>
+            <option value="date_asc">Date (oldest)</option>
+            <option value="amt_desc">Amount (high → low)</option>
+            <option value="amt_asc">Amount (low → high)</option>
+            <option value="patient_asc">Patient (A → Z)</option>
+            <option value="patient_desc">Patient (Z → A)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 border-b">
+        <div class="rounded-xl border bg-white p-4">
+          <div class="text-[11px] text-gray-500">Transactions</div>
+          <div id="revDD_txnCount" class="text-xl font-bold text-gray-900">0</div>
+        </div>
+        <div class="rounded-xl border bg-white p-4">
+          <div class="text-[11px] text-gray-500">Total</div>
+          <div id="revDD_total" class="text-xl font-bold text-gray-900">₱0.00</div>
+        </div>
+        <div class="rounded-xl border bg-white p-4">
+          <div class="text-[11px] text-gray-500">Average</div>
+          <div id="revDD_avg" class="text-xl font-bold text-gray-900">₱0.00</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="p-4 overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left py-2 px-3 font-semibold">Date</th>
+              <th class="text-left py-2 px-3 font-semibold">Patient</th>
+              <th class="text-left py-2 px-3 font-semibold">Type</th>
+              <th class="text-left py-2 px-3 font-semibold">Method</th>
+              <th class="text-left py-2 px-3 font-semibold">Status</th>
+              <th class="text-right py-2 px-3 font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="revenueDrilldownBody" class="divide-y divide-gray-100">
+            <tr><td colspan="6" class="py-6 text-center text-gray-400">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer hint -->
+      <div class="px-5 pb-5 text-[11px] text-gray-400">
+        Tip: Click any bar in <b>Revenue Trend</b> to drill down into the exact paid transactions.
+      </div>
+    </div>
+  </div>
+</div>
+
 
   </div>
 
@@ -534,6 +637,8 @@ let compareMetrics = {
     return `${yyyy}-${mm}`; // e.g. "2025-12"
   }
 
+  
+
   function monthLabelFromKey(key) {
     const [yyyy, mm] = key.split('-');
     const monthIndex = Number(mm) - 1;
@@ -602,6 +707,7 @@ function getUserName(id) {
   
 function getCurrentRangeBounds() {
   const now = new Date();
+  const range = String(currentDateRange || "").toLowerCase();
 
   // No filter
   if (currentDateRange === 'all') {
@@ -1424,10 +1530,15 @@ function getServiceNameById(id) {
   });
 
   const keys = Object.keys(grouped).sort();
-  revenueData = keys.map(key => ({
-    month: monthLabelFromKey(key),
-    revenue: grouped[key],
-  }));
+  revenueData = keys.map(key => {
+    const [yyyy, mm] = key.split("-");
+    const label = `${monthLabelFromKey(key)} ${yyyy}`; // e.g., "Jan 2026"
+    return {
+      key,      // IMPORTANT: "YYYY-MM" for drilldown
+      label,    // visible axis label
+      revenue: grouped[key],
+    };
+  });
 
   // compare mode: revenue vs previous period
   compareMetrics.revenueDeltaPct = null;
@@ -1506,15 +1617,20 @@ function getServiceNameById(id) {
 
     return `
         <div class="flex flex-col items-center w-full h-full justify-end">
-        <div
+          <div
+            role="button"
+            tabindex="0"
+            onclick="openRevenueDrilldown('${d.key}')"
+            onkeypress="if(event.key==='Enter') openRevenueDrilldown('${d.key}')"
             style="height: ${heightPercent}%; background-color: ${PRIMARY_COLOR};"
-            class="w-4 sm:w-8 rounded-t-md transition-all duration-500 shadow-md hover:opacity-80 relative group"
-        >
+            class="w-4 sm:w-8 rounded-t-md transition-all duration-500 shadow-md hover:opacity-80 relative group cursor-pointer"
+            title="Click to drill down"
+          >
             <span class="absolute -top-6 text-xs text-gray-700 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             ${formattedRevenue}
             </span>
         </div>
-        <span class="text-xs text-gray-600 mt-2">${d.month}</span>
+        <span class="text-[11px] text-gray-600 mt-2">${d.label}</span>
         </div>
     `;
     }).join('');
@@ -1552,101 +1668,239 @@ function getServiceNameById(id) {
           ${barsHtml}
         </div>
 
-        <div class="absolute inset-0 h-[90%] flex flex-col justify-between">
+        <div class="absolute inset-0 h-[90%] flex flex-col justify-between pointer-events-none">
           ${yAxisLabels}
         </div>
       </div>
     `;
   }
 
-  function renderAppointmentsChart() {
-    const container = document.getElementById('appointments-chart');
-    if (!container) return;
+let apptDrilldownBucket = null;   // stores bucket object
+let apptDrilldownRows = [];
 
-    const data = appointmentData;
-    if (!data || data.length === 0) {
-      container.innerHTML = `
-        <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
-          No appointment data available yet.
-        </div>
-      `;
-      return;
-    }
+async function openApptDrilldown(bucket) {
+  apptDrilldownBucket = bucket;
+  apptDrilldownRows = bucket?.rows || [];
 
-    const chartHeight = 300;
-    const maxVal = Math.max(...data.map(d => d.appointments)) || 1;
-    const chartWidth = 100;
-    const numPoints = data.length;
+  // hydrate patient + dentist names
+  const ids = [
+    ...apptDrilldownRows.map(r => r.UserAccountID),
+    ...apptDrilldownRows.map(r => r.DentistID),
+  ];
 
-    const normalize = (value) => 100 - (value / maxVal) * 90;
+  await hydrateUserNames(ids); // ✅ wait for names
 
-    // ✅ Avoid division by zero when there's only 1 point
-    const denom = Math.max(numPoints - 1, 1);
+  document.getElementById("apptDrilldownSubtitle").textContent =
+    `${bucket.label} • Total: ${bucket.total} • Completed: ${bucket.completed} • Scope: ${getCurrentDentistLabel()} • Range: ${getCurrentDateRangeLabel()}`;
 
-    const pointsAppointments = data.map((d, i) =>
-    `${(i / denom) * chartWidth},${normalize(d.appointments)}`
-    ).join(' ');
+  const s = document.getElementById("apptDrilldownSearch");
+  if (s) s.value = "";
 
-    const pointsCompleted = data.map((d, i) =>
-    `${(i / denom) * chartWidth},${normalize(d.completed)}`
-    ).join(' ');
+  renderApptDrilldownTable();
 
-    const svgContent = `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
-        class="absolute top-0 right-0 h-[90%] w-[calc(100%-2.5rem)]">
-        <line x1="0" y1="${normalize(maxVal / 2)}"
-            x2="100" y2="${normalize(maxVal / 2)}"
-            stroke="#eee" stroke-dasharray="3,3" />
-        <polyline fill="none" stroke="${PRIMARY_COLOR}" stroke-width="2"
-                points="${pointsAppointments}" />
-        <polyline fill="none" stroke="${SECONDARY_COLOR}" stroke-width="2"
-                points="${pointsCompleted}" />
-        ${data.map((d, i) => `
-        <circle cx="${(i / denom) * chartWidth}"
-                cy="${normalize(d.appointments)}"
-                r="1.5" fill="${PRIMARY_COLOR}" />
-        <circle cx="${(i / denom) * chartWidth}"
-                cy="${normalize(d.completed)}"
-                r="1.5" fill="${SECONDARY_COLOR}" />
-        `).join('')}
-    </svg>
+  document.getElementById("apptDrilldownModal")?.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeApptDrilldown() {
+  document.getElementById("apptDrilldownModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function exportApptDrilldownCSV() {
+  if (!apptDrilldownBucket) return alert("No bucket selected.");
+  if (!apptDrilldownRows || apptDrilldownRows.length === 0) return alert("No rows to export.");
+
+  let csv = "DateTime,Patient,Dentist,Service,Status\n";
+  apptDrilldownRows.forEach(a => {
+    const dateStr = a.AppointmentSchedule ? new Date(a.AppointmentSchedule).toLocaleString("en-PH") : "";
+    const row = [
+      dateStr.replaceAll(",", " "),
+      (getUserName(a.UserAccountID) || "").replaceAll(",", " "),
+      (getUserName(a.DentistID) || "").replaceAll(",", " "),
+      String(a.Service || "").replaceAll(",", " "),
+      String(a.Status || "").replaceAll(",", " "),
+    ];
+    csv += row.join(",") + "\n";
+  });
+
+  downloadCSV(`appointments_${apptDrilldownBucket.key}.csv`, csv);
+}
+
+function renderApptDrilldownTable() {
+  const body = document.getElementById("apptDrilldownBody");
+  if (!body) return;
+
+  const search = (document.getElementById("apptDrilldownSearch")?.value || "").trim().toLowerCase();
+  const sort = document.getElementById("apptDrilldownSort")?.value || "date_desc";
+
+  let rows = (apptDrilldownRows || []).slice();
+
+  if (search) {
+    rows = rows.filter(a => {
+      const patient = (getUserName(a.UserAccountID) || "").toLowerCase();
+      const dentist = (getUserName(a.DentistID) || "").toLowerCase();
+      const service = String(a.Service || "").toLowerCase();
+      const status = String(a.Status || "").toLowerCase();
+      return patient.includes(search) || dentist.includes(search) || service.includes(search) || status.includes(search);
+    });
+  }
+
+  const dateVal = (x) => new Date(x?.AppointmentSchedule || 0).getTime() || 0;
+  const patientVal = (x) => (getUserName(x?.UserAccountID) || "").toLowerCase();
+
+  rows.sort((a,b) => {
+    if (sort === "date_asc") return dateVal(a) - dateVal(b);
+    if (sort === "date_desc") return dateVal(b) - dateVal(a);
+    if (sort === "patient_asc") return patientVal(a).localeCompare(patientVal(b));
+    if (sort === "patient_desc") return patientVal(b).localeCompare(patientVal(a));
+    return dateVal(b) - dateVal(a);
+  });
+
+  if (rows.length === 0) {
+    body.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400">No matching appointments.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(a => {
+    const dt = a.AppointmentSchedule ? new Date(a.AppointmentSchedule).toLocaleString("en-PH", { dateStyle:"medium", timeStyle:"short" }) : "—";
+    return `
+      <tr class="hover:bg-gray-50">
+        <td class="py-2 px-3 text-gray-700">${dt}</td>
+        <td class="py-2 px-3 text-gray-900 font-medium">${getUserName(a.UserAccountID) || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${getUserName(a.DentistID) || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${a.Service || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${a.Status || "—"}</td>
+      </tr>
     `;
+  }).join("");
+}
 
-    const xAxisLabels = data.map(d => `<span class="min-w-[10px] text-center">${d.month}</span>`).join('');
+function renderAppointmentsChart() {
+  const container = document.getElementById('appointments-chart');
+  if (!container) return;
 
-    const yAxisLabels = [
-      { value: maxVal, top: '0%' },
-      { value: Math.floor(maxVal / 2), top: '50%' },
-      { value: 0, top: '90%' },
-    ].map(y => `
-      <span style="top: ${y.top};" class="absolute left-0 transform -translate-y-1/2 text-xs text-gray-500">${y.value}</span>
-    `).join('');
+  const sel = document.getElementById("apptTrendGranularity");
+  let gran = sel?.value || "auto";
+  if (gran === "auto") gran = getTrendGranularityAuto();
 
-    const legend = `
-      <div class="absolute top-0 right-0 p-2 flex gap-4 text-xs font-medium">
-        <div class="flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full" style="background-color: ${PRIMARY_COLOR};"></span>Appointments
-        </div>
-        <div class="flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full" style="background-color: ${SECONDARY_COLOR};"></span>Completed
-        </div>
-      </div>
-    `;
+  const buckets = buildAppointmentTrendBuckets(gran);
 
+  if (!buckets.length) {
     container.innerHTML = `
-      <div class="relative h-[${chartHeight}px] w-full pt-4 pl-10">
-        ${legend}
-        <div class="absolute inset-0 left-10 border-l border-b border-gray-200"></div>
-        ${svgContent}
-        <div class="absolute bottom-0 left-10 w-[calc(100%-2.5rem)] flex justify-between text-xs text-gray-600 px-1">
-          ${xAxisLabels}
-        </div>
-        <div class="absolute inset-0 h-[90%] flex flex-col justify-between">
-          ${yAxisLabels}
-        </div>
+      <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+        No appointment data available yet.
       </div>
     `;
+    return;
   }
+
+  const chartHeight = 300;
+  const maxVal = Math.max(...buckets.map(b => b.total)) || 1;
+  const numPoints = buckets.length;
+
+  const normalize = (value) => 100 - (value / maxVal) * 90;
+  const denom = Math.max(numPoints - 1, 1);
+
+  const pointsTotal = buckets.map((b, i) => `${(i / denom) * 100},${normalize(b.total)}`).join(" ");
+  const pointsCompleted = buckets.map((b, i) => `${(i / denom) * 100},${normalize(b.completed)}`).join(" ");
+
+  const circles = buckets.map((b, i) => {
+    const cx = (i / denom) * 100;
+    const cyT = normalize(b.total);
+    const cyC = normalize(b.completed);
+    const completionRate = b.total ? Math.round((b.completed / b.total) * 100) : 0;
+
+    // click target is a bigger invisible circle
+    return `
+      <g>
+        <circle cx="${cx}" cy="${cyT}" r="1.5" fill="${PRIMARY_COLOR}"></circle>
+        <circle cx="${cx}" cy="${cyC}" r="1.5" fill="${SECONDARY_COLOR}"></circle>
+
+        <circle cx="${cx}" cy="${cyT}" r="6" fill="transparent" style="cursor:pointer"
+          onclick="openApptDrilldown(${encodeURIComponent(JSON.stringify({}))})"></circle>
+      </g>
+    `;
+  }).join("");
+
+  // NOTE: we can't inline JS objects in SVG safely, so we attach clicks after render.
+  const xLabels = buckets.map(b => `<span class="min-w-[10px] text-center">${b.label}</span>`).join('');
+  const yLabels = [
+    { value: maxVal, top: '0%' },
+    { value: Math.floor(maxVal / 2), top: '50%' },
+    { value: 0, top: '90%' },
+  ].map(y => `<span style="top:${y.top};" class="absolute left-0 -translate-y-1/2 text-xs text-gray-500">${y.value}</span>`).join('');
+
+  container.innerHTML = `
+    <div class="relative h-[${chartHeight}px] w-full pt-4 pl-10">
+      <div class="absolute inset-0 left-10 border-l border-b border-gray-200"></div>
+
+      <svg id="apptTrendSvg" viewBox="0 0 100 100" preserveAspectRatio="none"
+        class="absolute top-0 right-0 h-[90%] w-[calc(100%-2.5rem)]">
+        <line x1="0" y1="${normalize(maxVal/2)}" x2="100" y2="${normalize(maxVal/2)}" stroke="#eee" stroke-dasharray="3,3"></line>
+        <polyline fill="none" stroke="${PRIMARY_COLOR}" stroke-width="2" points="${pointsTotal}"></polyline>
+        <polyline fill="none" stroke="${SECONDARY_COLOR}" stroke-width="2" points="${pointsCompleted}"></polyline>
+        ${buckets.map((b,i)=> {
+          const cx=(i/denom)*100;
+          const cy=normalize(b.total);
+          return `
+            <g class="appt-point" data-index="${i}">
+              <circle cx="${cx}" cy="${cy}" r="2" fill="${PRIMARY_COLOR}"></circle>
+              <circle cx="${cx}" cy="${cy}" r="6" fill="transparent" style="cursor:pointer"></circle>
+            </g>
+          `;
+        }).join("")}
+      </svg>
+
+      <div class="absolute bottom-0 left-10 w-[calc(100%-2.5rem)] flex justify-between text-xs text-gray-600 px-1 overflow-hidden">
+        ${xLabels}
+      </div>
+
+      <div class="absolute inset-0 h-[90%] flex flex-col justify-between pointer-events-none">
+        ${yLabels}
+      </div>
+    </div>
+  `;
+
+  // Attach click + tooltip after render
+  const svg = document.getElementById("apptTrendSvg");
+  if (!svg) return;
+
+  svg.querySelectorAll(".appt-point").forEach(el => {
+    const idx = Number(el.getAttribute("data-index"));
+    const bucket = buckets[idx];
+
+    el.addEventListener("click", () => openApptDrilldown(bucket));
+    el.addEventListener("mouseenter", () => showApptTrendTooltip(bucket, el));
+    el.addEventListener("mouseleave", hideApptTrendTooltip);
+  });
+}
+function showApptTrendTooltip(bucket, el) {
+  hideApptTrendTooltip();
+
+  const rate = bucket.total ? Math.round((bucket.completed / bucket.total) * 100) : 0;
+
+  const tip = document.createElement("div");
+  tip.id = "apptTrendTooltip";
+  tip.className = "fixed z-[9999] bg-white border shadow-lg rounded-lg px-3 py-2 text-xs text-gray-700";
+
+  tip.innerHTML = `
+    <div class="font-semibold text-gray-900">${bucket.label}</div>
+    <div class="mt-1">Appointments: <b>${bucket.total}</b></div>
+    <div>Completed: <b>${bucket.completed}</b> (${rate}%)</div>
+    <div class="text-[11px] text-gray-500 mt-1">Click to drill down</div>
+  `;
+
+  document.body.appendChild(tip);
+
+  const rect = el.getBoundingClientRect();
+  tip.style.left = `${rect.left + 10}px`;
+  tip.style.top = `${rect.top - 10}px`;
+}
+
+function hideApptTrendTooltip() {
+  document.getElementById("apptTrendTooltip")?.remove();
+}
 
   function renderServiceChart() {
     const container = document.getElementById('service-chart');
@@ -1730,7 +1984,8 @@ function getServiceNameById(id) {
     const marginTop = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let cursorY = marginTop;
+    let cursorY = 14; // or whatever you use
+    const yRef = { y: cursorY };
 
     // --- small helpers ---------------------------------------------------
 
@@ -1769,6 +2024,121 @@ function getServiceNameById(id) {
       doc.text(String(value), marginX + 40, cursorY);
       cursorY += 5;
     }
+
+function addExcelTable(doc, headers, rows, opts = {}) {
+  const {
+    marginX = 14,
+    pageWidth = doc.internal.pageSize.getWidth(),
+    pageHeight = doc.internal.pageSize.getHeight(),
+    startYRef,           // pass an object like { y: cursorY } so we can update it
+    colWidths = null,    // optional array
+    fontSize = 8.5,
+    headerFill = [243, 244, 246],
+    gridColor = 210,
+    zebra = true,
+    rowH = 6,
+    headerH = 7,
+    padX = 2
+  } = opts;
+
+  if (!startYRef || typeof startYRef.y !== "number") {
+    throw new Error("addExcelTable: pass startYRef: { y: cursorY }");
+  }
+
+  const availableWidth = pageWidth - marginX * 2;
+
+  // Build widths
+  let widths = Array.isArray(colWidths) && colWidths.length === headers.length
+    ? colWidths.slice()
+    : Array(headers.length).fill(availableWidth / headers.length);
+
+  // Normalize widths to fit availableWidth exactly
+  const sumW = widths.reduce((a, b) => a + b, 0);
+  if (sumW > 0 && Math.abs(sumW - availableWidth) > 0.5) {
+    const scale = availableWidth / sumW;
+    widths = widths.map(w => w * scale);
+  }
+
+  const addPageIfNeeded = (needH) => {
+    if (startYRef.y + needH > pageHeight - 14) {
+      doc.addPage();
+      startYRef.y = 14;
+    }
+  };
+
+  const drawRowGrid = (yTop, height) => {
+    doc.setDrawColor(gridColor);
+    doc.setLineWidth(0.2);
+
+    // horizontals
+    doc.line(marginX, yTop, marginX + availableWidth, yTop);
+    doc.line(marginX, yTop + height, marginX + availableWidth, yTop + height);
+
+    // verticals
+    let x = marginX;
+    doc.line(x, yTop, x, yTop + height);
+    for (let i = 0; i < widths.length; i++) {
+      x += widths[i];
+      doc.line(x, yTop, x, yTop + height);
+    }
+  };
+
+  const fitText = (text, maxWidth) => {
+    let t = text == null ? "" : String(text);
+    if (doc.getTextWidth(t) <= maxWidth) return t;
+    while (t.length && doc.getTextWidth(t + "…") > maxWidth) {
+      t = t.slice(0, -1);
+    }
+    return (t.length ? t : "") + "…";
+  };
+
+  // Header row
+  addPageIfNeeded(headerH + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(55, 65, 81);
+
+  doc.setFillColor(...headerFill);
+  doc.rect(marginX, startYRef.y, availableWidth, headerH, "F");
+  drawRowGrid(startYRef.y, headerH);
+
+  let x = marginX;
+  headers.forEach((h, i) => {
+    doc.text(fitText(h, widths[i] - padX * 2), x + padX, startYRef.y + 4.8);
+    x += widths[i];
+  });
+
+  startYRef.y += headerH;
+
+  // Body rows
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(31, 41, 55);
+
+  rows.forEach((row, idx) => {
+    addPageIfNeeded(rowH + 2);
+
+    // subtle zebra like Excel (optional)
+    if (zebra && idx % 2 === 1) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(marginX, startYRef.y, availableWidth, rowH, "F");
+    }
+
+    drawRowGrid(startYRef.y, rowH);
+
+    let x = marginX;
+    row.forEach((cell, i) => {
+      const maxWidth = widths[i] - padX * 2;
+      doc.text(fitText(cell, maxWidth), x + padX, startYRef.y + 4.8);
+      x += widths[i];
+    });
+
+    startYRef.y += rowH;
+  });
+
+  startYRef.y += 6; // spacing after table
+}
+
 
     function addTable(headers, rows, options = {}) {
       const maxRows = options.maxRows || rows.length;
@@ -1956,12 +2326,13 @@ function getServiceNameById(id) {
         d.appointments,
         d.completed,
       ]);
-
-      addTable(
-        ['Month', 'Appointments', 'Completed'],
-        rows,
-        { maxRows: 12 } // keep it neat
-      );
+    yRef.y = cursorY;  
+    addExcelTable(doc,
+      ['Month', 'Appointments', 'Completed'],
+      rows.slice(0, 12),
+      { startYRef: yRef, marginX, colWidths: [45, 35, 35] }
+    );
+    cursorY = yRef.y;
     }
 
     // --- SECTION: Revenue by Month ---------------------------------------
@@ -1974,12 +2345,13 @@ function getServiceNameById(id) {
         d.month,
         formatPdfCurrency(d.revenue),
       ]);
-
-      addTable(
+      yRef.y = cursorY;
+      addExcelTable(doc,
         ['Month', 'Revenue'],
-        rows,
-        { maxRows: 12 }
+        rows.slice(0, 12),
+        { startYRef: yRef, marginX, colWidths: [60, 60] }
       );
+      cursorY = yRef.y;
     }
 
     // --- SECTION: Top Services by Bookings -------------------------------
@@ -1993,12 +2365,13 @@ function getServiceNameById(id) {
         s.count != null ? s.count : '',
         s.value != null ? `${s.value.toFixed(1)}%` : '',
       ]);
-
-      addTable(
+      yRef.y = cursorY;
+      addExcelTable(doc,
         ['Service', 'Bookings', 'Share'],
-        rows,
-        { maxRows: 8 }
+        rows.slice(0, 8),
+        { startYRef: yRef, marginX, colWidths: [70, 25, 25] }
       );
+      cursorY = yRef.y;
     }
 
     // --- SECTION: Service Revenue Breakdown ------------------------------
@@ -2046,7 +2419,13 @@ function getServiceNameById(id) {
       if (rowsArr.length > 0) {
         addSectionTitle('Service Revenue Breakdown');
         const rows = rowsArr.map(r => [r.name, formatPdfCurrency(r.amount)]);
-        addTable(['Service', 'Revenue'], rows, { maxRows: 10 });
+        yRef.y = cursorY;
+        addExcelTable(doc,
+          ['Service', 'Revenue'],
+          rows.slice(0, 10),
+          { startYRef: yRef, marginX, colWidths: [80, 40] }
+        );
+        cursorY = yRef.y;
       }
     }
 
@@ -2108,12 +2487,13 @@ function getServiceNameById(id) {
         r.appts,
         formatPdfCurrency(r.revenue),
       ]);
-
-        addTable(
-          ['Dentist', 'Appointments', 'Revenue'],
-          rows,
-          { maxRows: 12 }
-        );
+      yRef.y = cursorY;
+      addExcelTable(doc,
+        ['Dentist', 'Appointments', 'Revenue'],
+        rows.slice(0, 12),
+        { startYRef: yRef, marginX, colWidths: [70, 25, 25] }
+      );
+      cursorY = yRef.y;
       }
     }
 
@@ -2147,11 +2527,13 @@ function getServiceNameById(id) {
           });
           return [label, r.count];
         });
-        addTable(
+        yRef.y = cursorY;
+        addExcelTable(doc,
           ['Time', 'Appointments'],
-          rows,
-          { maxRows: 8, colWidths: [ (pageWidth - marginX * 2) * 0.4, (pageWidth - marginX * 2) * 0.6 ] }
+          rows.slice(0, 8),
+          { startYRef: yRef, marginX, colWidths: [50, 50] }
         );
+        cursorY = yRef.y;
       }
     }
 
@@ -2383,6 +2765,157 @@ if (wrapCols.includes(i)) {
   cursorY += 5;
 }
 
+function addExcelTable(doc, headers, rows, opts = {}) {
+  const {
+    marginX = 14,
+    pageWidth = doc.internal.pageSize.getWidth(),
+    pageHeight = doc.internal.pageSize.getHeight(),
+    startYRef,           // pass an object like { y: cursorY } so we can update it
+    colWidths = null,    // optional array
+    fontSize = 8.5,
+    headerFill = [243, 244, 246],
+    gridColor = 210,
+    zebra = true,
+    rowH = 6,
+    headerH = 7,
+    padX = 2,
+
+    // ✅ NEW: wrapping options
+    wrapCols = [],       // e.g. [3] to wrap the "Service" column
+    maxWrapLines = 3,    // limit so rows don't become huge
+    lineGap = 3.6        // line spacing for wrapped text
+  } = opts;
+
+  if (!startYRef || typeof startYRef.y !== "number") {
+    throw new Error("addExcelTable: pass startYRef: { y: cursorY }");
+  }
+
+  const availableWidth = pageWidth - marginX * 2;
+
+  // Build widths
+  let widths = Array.isArray(colWidths) && colWidths.length === headers.length
+    ? colWidths.slice()
+    : Array(headers.length).fill(availableWidth / headers.length);
+
+  // Normalize widths to fit availableWidth exactly
+  const sumW = widths.reduce((a, b) => a + b, 0);
+  if (sumW > 0 && Math.abs(sumW - availableWidth) > 0.5) {
+    const scale = availableWidth / sumW;
+    widths = widths.map(w => w * scale);
+  }
+
+  const addPageIfNeeded = (needH) => {
+    if (startYRef.y + needH > pageHeight - 14) {
+      doc.addPage();
+      startYRef.y = 14;
+    }
+  };
+
+  const drawRowGrid = (yTop, height) => {
+    doc.setDrawColor(gridColor);
+    doc.setLineWidth(0.2);
+
+    // horizontals
+    doc.line(marginX, yTop, marginX + availableWidth, yTop);
+    doc.line(marginX, yTop + height, marginX + availableWidth, yTop + height);
+
+    // verticals
+    let x = marginX;
+    doc.line(x, yTop, x, yTop + height);
+    for (let i = 0; i < widths.length; i++) {
+      x += widths[i];
+      doc.line(x, yTop, x, yTop + height);
+    }
+  };
+
+  const fitText = (text, maxWidth) => {
+    let t = text == null ? "" : String(text);
+    if (doc.getTextWidth(t) <= maxWidth) return t;
+    while (t.length && doc.getTextWidth(t + "…") > maxWidth) {
+      t = t.slice(0, -1);
+    }
+    return (t.length ? t : "") + "…";
+  };
+
+  const wrapTextLines = (text, maxWidth) => {
+    const raw = String(text ?? "");
+    // jsPDF helper gives a nice line wrap
+    const lines = doc.splitTextToSize(raw, maxWidth);
+    return lines.slice(0, maxWrapLines);
+  };
+
+  // Header row
+  addPageIfNeeded(headerH + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(55, 65, 81);
+
+  doc.setFillColor(...headerFill);
+  doc.rect(marginX, startYRef.y, availableWidth, headerH, "F");
+  drawRowGrid(startYRef.y, headerH);
+
+  let x = marginX;
+  headers.forEach((h, i) => {
+    doc.text(fitText(h, widths[i] - padX * 2), x + padX, startYRef.y + 4.8);
+    x += widths[i];
+  });
+
+  startYRef.y += headerH;
+
+  // Body rows
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(fontSize);
+  doc.setTextColor(31, 41, 55);
+
+  rows.forEach((row, idx) => {
+    // ✅ compute dynamic row height if wrapping columns are used
+    let neededLines = 1;
+    if (wrapCols.length) {
+      row.forEach((cell, i) => {
+        if (!wrapCols.includes(i)) return;
+        const maxWidth = widths[i] - padX * 2;
+        const lines = wrapTextLines(cell, maxWidth);
+        neededLines = Math.max(neededLines, lines.length || 1);
+      });
+    }
+
+    const dynRowH = wrapCols.length
+      ? Math.max(rowH, 3 + neededLines * lineGap)
+      : rowH;
+
+    addPageIfNeeded(dynRowH + 2);
+
+    // subtle zebra like Excel (optional)
+    if (zebra && idx % 2 === 1) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(marginX, startYRef.y, availableWidth, dynRowH, "F");
+    }
+
+    drawRowGrid(startYRef.y, dynRowH);
+
+    let x = marginX;
+    row.forEach((cell, i) => {
+      const maxWidth = widths[i] - padX * 2;
+
+      if (wrapCols.includes(i)) {
+        const lines = wrapTextLines(cell, maxWidth);
+        lines.forEach((ln, li) => {
+          doc.text(String(ln), x + padX, startYRef.y + 4.8 + li * lineGap);
+        });
+      } else {
+        doc.text(fitText(cell, maxWidth), x + padX, startYRef.y + 4.8);
+      }
+
+      x += widths[i];
+    });
+
+    startYRef.y += dynRowH;
+  });
+
+  startYRef.y += 6; // spacing after table
+}
+
+
   // ---------- HEADER (title + meta) ----------
 
   const now = new Date();
@@ -2455,14 +2988,20 @@ await hydrateUserNames(patientIds);
     doc.setFontSize(9);
     doc.setTextColor(107, 114, 128);
     doc.text('No appointments for this filter.', marginX, cursorY + 3);
-    cursorY += 10;
   } else {
- addSimpleTable(
-  ['Date/Time', 'Patient', 'Dentist', 'Service', 'Status'],
-  apptRows,
-  [32, 26, 24, 46, 14],
-  { rightAlignCols: [5] }
+    const yRefSys1 = { y: cursorY };
+    addExcelTable(doc,
+      ['Date/Time', 'Patient', 'Dentist', 'Service', 'Status'],
+      apptRows,
+      {
+        startYRef: yRefSys1,
+        marginX,
+        colWidths: [32, 26, 24, 46, 14],
+        wrapCols: [2,3,4], 
+        maxWrapLines: 3
+      }
     );
+    cursorY = yRefSys1.y;
   }
 
   // ---------- SECTION 2: BILLING (no IDs) ----------
@@ -2496,13 +3035,20 @@ if (billRows.length === 0) {
   doc.setFontSize(9);
   doc.setTextColor(107, 114, 128);
   doc.text('No billing data for this filter.', marginX, cursorY + 3);
-  cursorY += 10;
 } else {
-    addSimpleTable(
+  const yRefSys2 = { y: cursorY };
+    addExcelTable(doc,
       ['Date', 'Patient', 'Type', 'Method', 'Status', 'Amount'],
       billRows,
-      [32, 42, 28, 22, 18, 26]
+      {
+        startYRef: yRefSys2,
+        marginX,
+        colWidths: [32, 42, 28, 22, 18, 26],
+        wrapCols: [2], 
+        maxWrapLines: 7
+      }
     );
+    cursorY = yRefSys2.y; 
   }
 
   // ---------- FOOTER (page numbers) ----------
@@ -2520,6 +3066,266 @@ if (billRows.length === 0) {
   const iso = now.toISOString().slice(0, 10);
   doc.save(`ToothHub-System-Report-${iso}.pdf`);
 }
+
+// --- REVENUE DRILLDOWN STATE ---
+let revenueDrilldownMonthKey = null;        // "YYYY-MM"
+let revenueDrilldownRows = [];              // filtered billing rows for the selected month
+
+function monthBoundsFromKey(key) {
+  // key: "YYYY-MM"
+  const [yyyyStr, mmStr] = String(key).split("-");
+  const yyyy = Number(yyyyStr);
+  const mm = Number(mmStr); // 1-12
+  if (!yyyy || !mm) return { start: null, end: null };
+
+  const start = new Date(yyyy, mm - 1, 1);
+  const end = new Date(yyyy, mm, 1); // next month
+  return { start, end };
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d)) return "—";
+  return d.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
+}
+
+async function openRevenueDrilldown(monthKey) {
+  revenueDrilldownMonthKey = monthKey;
+
+  const { start, end } = monthBoundsFromKey(monthKey);
+  if (!start || !end) return;
+
+  // build query: PAID billing for that month
+  let q = supabaseClient
+    .from('Billing')
+    .select('BillingID, UserAccountID, AppointmentID, Amount, PaymentType, PaymentMethod, PaymentStatus, DateIssued')
+    .eq('PaymentStatus', 'PAID')
+    .gte('DateIssued', start.toISOString())
+    .lt('DateIssued', end.toISOString());
+
+  // if dentist filter is applied, filter billing by allowed appointment IDs
+  if (currentDentistId !== 'all') {
+    const { data: apptsForDentist, error: apptErr } = await supabaseClient
+      .from('Appointment')
+      .select('AppointmentID')
+      .eq('DentistID', currentDentistId);
+
+    if (apptErr) {
+      console.error('Drilldown: error loading dentist appointments', apptErr);
+      return;
+    }
+
+    const allowedIds = (apptsForDentist || []).map(a => a.AppointmentID);
+    if (!allowedIds.length) {
+      revenueDrilldownRows = [];
+    } else {
+      q = q.in('AppointmentID', allowedIds);
+    }
+  }
+
+  const { data, error } = await q;
+  if (error) {
+    console.error('Drilldown: error loading billing', error);
+    alert('Failed to load drilldown data. Check console.');
+    return;
+  }
+
+  revenueDrilldownRows = data || [];
+  await hydrateUserNames(revenueDrilldownRows.map(r => r.UserAccountID));
+
+  // subtitle
+  const subtitle = document.getElementById("revenueDrilldownSubtitle");
+  const monthLabel = `${monthLabelFromKey(monthKey)} ${monthKey.split("-")[0]}`;
+  subtitle.textContent = `Month: ${monthLabel} • Dentist scope: ${getCurrentDentistLabel()} • Range filter: ${getCurrentDateRangeLabel()}`;
+
+  // clear search
+  const searchEl = document.getElementById("revenueDrilldownSearch");
+  if (searchEl) searchEl.value = "";
+
+  renderRevenueDrilldownTable();
+
+  document.getElementById("revenueDrilldownModal")?.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function closeRevenueDrilldown() {
+  document.getElementById("revenueDrilldownModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function exportRevenueDrilldownCSV() {
+  if (!revenueDrilldownMonthKey) return alert("No month selected.");
+  if (!revenueDrilldownRows || revenueDrilldownRows.length === 0) {
+    return alert("No rows to export for this month.");
+  }
+
+  let csv = "DateIssued,Patient,PaymentType,PaymentMethod,PaymentStatus,Amount\n";
+  revenueDrilldownRows.forEach(b => {
+    const row = [
+      b.DateIssued || "",
+      (getUserName(b.UserAccountID) || "").replaceAll(",", " "),
+      (b.PaymentType || "").replaceAll(",", " "),
+      (b.PaymentMethod || "").replaceAll(",", " "),
+      (b.PaymentStatus || "").replaceAll(",", " "),
+      Number(b.Amount || 0),
+    ];
+    csv += row.join(",") + "\n";
+  });
+
+  downloadCSV(`revenue_${revenueDrilldownMonthKey}.csv`, csv);
+}
+
+function renderRevenueDrilldownTable() {
+  const body = document.getElementById("revenueDrilldownBody");
+  if (!body) return;
+
+  const search = (document.getElementById("revenueDrilldownSearch")?.value || "").trim().toLowerCase();
+  const sort = document.getElementById("revenueDrilldownSort")?.value || "date_desc";
+
+  let rows = (revenueDrilldownRows || []).slice();
+
+  // Search filter
+  if (search) {
+    rows = rows.filter(b => {
+      const patient = (getUserName(b.UserAccountID) || "").toLowerCase();
+      const type = String(b.PaymentType || "").toLowerCase();
+      const method = String(b.PaymentMethod || "").toLowerCase();
+      return patient.includes(search) || type.includes(search) || method.includes(search);
+    });
+  }
+
+  // Sort
+  const amt = (x) => Number(x?.Amount || 0);
+  const date = (x) => new Date(x?.DateIssued || 0).getTime() || 0;
+  const patient = (x) => (getUserName(x?.UserAccountID) || "").toLowerCase();
+
+  rows.sort((a, b) => {
+    switch (sort) {
+      case "date_asc": return date(a) - date(b);
+      case "date_desc": return date(b) - date(a);
+      case "amt_asc": return amt(a) - amt(b);
+      case "amt_desc": return amt(b) - amt(a);
+      case "patient_asc": return patient(a).localeCompare(patient(b));
+      case "patient_desc": return patient(b).localeCompare(patient(a));
+      default: return date(b) - date(a);
+    }
+  });
+
+  // Summary
+  const total = rows.reduce((s, r) => s + Number(r.Amount || 0), 0);
+  const count = rows.length;
+  const avg = count ? (total / count) : 0;
+
+  document.getElementById("revDD_txnCount").textContent = String(count);
+  document.getElementById("revDD_total").textContent = formatCurrency(total);
+  document.getElementById("revDD_avg").textContent = formatCurrency(avg);
+
+  // Render table
+  if (rows.length === 0) {
+    body.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400">No matching transactions.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(b => {
+    return `
+      <tr class="hover:bg-gray-50">
+        <td class="py-2 px-3 text-gray-700">${fmtDateTime(b.DateIssued)}</td>
+        <td class="py-2 px-3 text-gray-800 font-medium">${getUserName(b.UserAccountID) || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${b.PaymentType || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${b.PaymentMethod || "—"}</td>
+        <td class="py-2 px-3 text-gray-700">${b.PaymentStatus || "—"}</td>
+        <td class="py-2 px-3 text-right text-gray-900 font-semibold">${formatCurrency(b.Amount)}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function weekKeyFromDate(d) {
+  const tmp = new Date(d);
+  tmp.setHours(0,0,0,0);
+  const day = (tmp.getDay() + 6) % 7; // Monday-based
+  tmp.setDate(tmp.getDate() - day);
+  const yyyy = tmp.getFullYear();
+  const mm = String(tmp.getMonth() + 1).padStart(2, "0");
+  const dd = String(tmp.getDate()).padStart(2, "0");
+  return `${yyyy}-W-${mm}-${dd}`; // week starting date
+}
+
+function dayKeyFromDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function labelFromDayKey(key) {
+  const [y,m,d] = key.split("-");
+  return new Date(Number(y), Number(m)-1, Number(d)).toLocaleDateString("en-PH", { month:"short", day:"2-digit" });
+}
+
+function labelFromWeekKey(key) {
+  // key from weekKeyFromDate(): "YYYY-W-MM-DD" where MM-DD is the week start (Mon-based)
+  const [yyyyStr, md] = String(key || "").split("-W-");
+  if (!yyyyStr || !md) return "Week of —";
+
+  const [mmStr, ddStr] = md.split("-");
+  const yyyy = Number(yyyyStr);
+  const mm = Number(mmStr);
+  const dd = Number(ddStr);
+
+  const dt = new Date(yyyy, mm - 1, dd);
+  if (isNaN(dt.getTime())) return "Week of —";
+
+  return `Week of ${dt.toLocaleDateString("en-PH", { month: "short", day: "2-digit" })}`;
+}
+
+
+function labelFromMonthKey(key) {
+  const [y,m] = key.split("-");
+  return `${monthLabelFromKey(key)} ${y}`;
+}
+
+function getTrendGranularityAuto() {
+  const r = String(currentDateRange || "").toLowerCase();
+  if (r === "daily" || r === "today") return "daily";
+  if (r === "weekly" || r === "this_week" || r === "last_30") return "weekly";
+  return "monthly";
+}
+
+
+function buildAppointmentTrendBuckets(granularity) {
+  const grouped = {}; // key -> { total, completed, rows: [] }
+
+  (rawAppointments || []).forEach(a => {
+    if (!a.AppointmentSchedule) return;
+    const d = new Date(a.AppointmentSchedule);
+    if (isNaN(d)) return;
+
+    let key, label;
+    if (granularity === "daily") {
+      key = dayKeyFromDate(d);
+      label = labelFromDayKey(key);
+    } else if (granularity === "weekly") {
+      key = weekKeyFromDate(d);
+      label = labelFromWeekKey(key);
+    } else {
+      const mk = monthKeyFromDate(d);
+      key = mk;
+      label = labelFromMonthKey(mk);
+    }
+
+    if (!grouped[key]) grouped[key] = { key, label, total: 0, completed: 0, rows: [] };
+    grouped[key].total += 1;
+
+    const s = (a.Status || "").toLowerCase();
+    if (s === "finished" || s === "completed") grouped[key].completed += 1;
+
+    grouped[key].rows.push(a);
+  });
+
+  return Object.values(grouped).sort((a,b) => (a.key > b.key ? 1 : -1));
+}
+
 
   // --- INIT ---
 
@@ -2562,6 +3368,66 @@ if (billRows.length === 0) {
 });
 
 </script>
+<!-- Appointments Drilldown Modal -->
+<div id="apptDrilldownModal" class="fixed inset-0 z-[999] hidden">
+  <div class="absolute inset-0 bg-black/40" onclick="closeApptDrilldown()"></div>
+
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden border">
+      <div class="flex items-start justify-between gap-4 p-5 border-b bg-gray-50">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Appointments Drill-down</h3>
+          <p id="apptDrilldownSubtitle" class="text-xs text-gray-500 mt-1">—</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button class="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-gray-100"
+            onclick="exportApptDrilldownCSV()" type="button">Export CSV</button>
+          <button class="px-3 py-2 text-xs rounded-lg bg-primary text-white hover:bg-primary-dark"
+            onclick="closeApptDrilldown()" type="button">Close</button>
+        </div>
+      </div>
+
+      <div class="p-4 border-b flex flex-col md:flex-row md:items-center gap-3">
+        <div class="flex-1">
+          <label class="block text-[11px] text-gray-500 mb-1">Search (patient / service / status)</label>
+          <input id="apptDrilldownSearch" type="text"
+            class="w-full border rounded-lg px-3 py-2 text-sm"
+            placeholder="Search…"
+            oninput="renderApptDrilldownTable()" />
+        </div>
+
+        <div class="w-full md:w-56">
+          <label class="block text-[11px] text-gray-500 mb-1">Sort</label>
+          <select id="apptDrilldownSort" class="w-full border rounded-lg px-3 py-2 text-sm"
+            onchange="renderApptDrilldownTable()">
+            <option value="date_desc">Date (newest)</option>
+            <option value="date_asc">Date (oldest)</option>
+            <option value="patient_asc">Patient (A → Z)</option>
+            <option value="patient_desc">Patient (Z → A)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="p-4 overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr>
+              <th class="text-left py-2 px-3 font-semibold">Date/Time</th>
+              <th class="text-left py-2 px-3 font-semibold">Patient</th>
+              <th class="text-left py-2 px-3 font-semibold">Dentist</th>
+              <th class="text-left py-2 px-3 font-semibold">Service</th>
+              <th class="text-left py-2 px-3 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody id="apptDrilldownBody" class="divide-y divide-gray-100">
+            <tr><td colspan="5" class="py-6 text-center text-gray-400">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

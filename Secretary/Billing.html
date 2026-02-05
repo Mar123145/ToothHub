@@ -58,7 +58,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -75,17 +75,17 @@
         <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
         </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
         <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
         </a>
-        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -110,8 +110,10 @@
           <div class="card-header">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div class="flex items-center gap-2">
-                <button id="tab-to-issue" class="px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white" onclick="setTab('toIssue')">To Issue</button>
-                <button id="tab-issued" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50" onclick="setTab('issued')">Issued Bills</button>
+                <button id="tab-to-issue" class="px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white"
+                  onclick="setTab('toIssue')">To Issue</button>
+                <button id="tab-issued" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-50"
+                  onclick="setTab('issued')">Issued Bills</button>
               </div>
 
               <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -125,7 +127,7 @@
                   <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                 </div>
 
-                <select id="filter-status" class="border rounded-lg px-3 py-2 text-sm" onchange="setStatusFilter(this.value)">
+                <select id="filter-status" class="hidden" onchange="setStatusFilter(this.value)">
                   <option value="all">All Status</option>
                   <option value="paid">Paid</option>
                   <option value="unpaid">Unpaid</option>
@@ -176,11 +178,24 @@
       </div>
     </div>
   </div>
+<!-- Appointment Details Modal -->
+<div id="appt-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/40">
+  <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-xl border">
+    <div class="px-5 py-4 border-b flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-900">Appointment Details</h2>
+      <button class="p-2 rounded-lg hover:bg-gray-100" onclick="closeApptModal()" aria-label="Close">✕</button>
+    </div>
 
-  <!-- Toasts -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+    <div class="p-5 space-y-4" id="appt-modal-content"></div>
+
+    <div class="px-5 py-4 border-t flex items-center justify-end gap-2">
+      <button class="px-4 py-2 rounded-lg border hover:bg-gray-50" onclick="closeApptModal()">Close</button>
+    </div>
+  </div>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/feedback.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="Billing.js"></script>
 </body>

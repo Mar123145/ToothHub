@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Treatment Plans | ToothHub Secretary</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-primary': '#03555E',
+            'custom-hover': '#024449',
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same shell as secretary dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+
+        <!-- ✅ New page link -->
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
+
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-6">
+          <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Treatment Plans</h1>
+          <p class="text-gray-600"> Monitor braces treatment plans and patient readiness for installation and adjustments.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button id="tab-proposed" class="px-4 py-2 rounded-lg border bg-white text-gray-700 font-medium hover:bg-gray-50">
+            Proposed
+          </button>
+          <button id="tab-active" class="px-4 py-2 rounded-lg border bg-white text-gray-700 font-medium hover:bg-gray-50">
+            Active
+          </button>
+          <button id="tab-all" class="px-4 py-2 rounded-lg border bg-white text-gray-700 font-medium hover:bg-gray-50">
+            All
+          </button>
+        </div>
+
+        <!-- List -->
+        <section class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6 border-b flex items-center justify-between gap-3">
+            <!-- LEFT: title + subtitle -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Braces Treatment Plans</h2>
+                <p id="subtitle" class="text-xs text-gray-500 mt-1">Loading...</p>
+            </div>
+
+            <!-- RIGHT: search + refresh -->
+            <div class="flex items-center gap-2 w-full max-w-md">
+                <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search patient name or ID..."
+                    class="w-full pl-9 pr-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-custom-primary/30"
+                />
+                </div>
+
+                <button
+                id="btn-refresh"
+                class="px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm font-medium">
+                Refresh
+                </button>
+            </div>
+            </div>
+
+          <div class="p-6 pt-4">
+            <div id="plansList" class="space-y-3">
+              <p class="text-sm text-gray-500">Loading plans...</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+<div id="progress-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50">
+  <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl border overflow-hidden">
+    <div class="px-5 py-4 border-b flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900">Plan Progress</h3>
+        <p id="progress-subtitle" class="text-xs text-gray-500 mt-1"></p>
+      </div>
+      <button onclick="closeProgressModal()" class="p-2 rounded-lg hover:bg-gray-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-4">
+    <div id="progress-consult" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+      Loading diagnostic...
+    </div>
+
+    <div id="progress-pretreat" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+      Loading pre-treatments...
+    </div>
+
+      <div id="progress-install" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+        Loading installation...
+      </div>
+      <div id="progress-summary" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="p-4 rounded-xl border bg-white">
+            <div class="text-xs text-gray-500">Total Adjustments</div>
+            <div id="sum-count" class="text-lg font-bold text-gray-900">—</div>
+        </div>
+        <div class="p-4 rounded-xl border bg-white">
+            <div class="text-xs text-gray-500">Total Adjustment Revenue</div>
+            <div id="sum-total" class="text-lg font-bold text-gray-900">—</div>
+        </div>
+        <div class="p-4 rounded-xl border bg-white">
+            <div class="text-xs text-gray-500">Last Adjustment</div>
+            <div id="sum-last" class="text-lg font-bold text-gray-900">—</div>
+        </div>
+        </div>
+
+      <div class="rounded-xl border overflow-hidden">
+        <div class="px-4 py-3 border-b bg-white flex items-center justify-between">
+          <div class="font-semibold text-gray-900">Adjustments</div>
+          <div id="progress-adjustment-count" class="text-xs text-gray-500"></div>
+        </div>
+
+        <div class="overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+              <tr>
+                <th class="text-left px-4 py-2">Schedule</th>
+                <th class="text-left px-4 py-2">Status</th>
+                <th class="text-left px-4 py-2">Total</th>
+              </tr>
+            </thead>
+            <tbody id="progress-adjustments-body">
+              <tr><td class="px-4 py-4 text-gray-500" colspan="3">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 py-4 border-t bg-white flex justify-end">
+      <button onclick="closeProgressModal()" class="px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- Auth (same pattern as dashboard) ---
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
+
+      const storedUserId = localStorage.getItem("userId");
+if (storedFirstName && storedRole && storedUserId) {
+  return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+}
+
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      const { data: userData } = await supabaseClient
+        .from('UserAccount')
+        .select('*')
+        .eq('Email', session.user.email)
+        .maybeSingle();
+
+      if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
+
+      return userData;
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "—";
+      try { return new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila" }); }
+      catch { return iso; }
+    }
+
+    function readinessBadge(planStatus, readyForInstall) {
+  if (planStatus === "ACTIVE") {
+    return {
+      label: "ACTIVE — Adjustments ongoing",
+      cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  }
+
+  if (planStatus === "PROPOSED" && readyForInstall) {
+    return {
+      label: "READY FOR INSTALLATION",
+      cls: "bg-blue-50 text-blue-700 border-blue-200",
+    };
+  }
+
+  return {
+    label: "PRE-TREATMENT PENDING",
+    cls: "bg-amber-50 text-amber-700 border-amber-200",
+  };
+}
+
+
+        function badge(status) {
+        const s = String(status || "").toUpperCase();
+
+        // Plan statuses
+        if (s === "ACTIVE") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (s === "PROPOSED") return "bg-amber-50 text-amber-700 border-amber-200";
+        if (s === "PAUSED") return "bg-gray-100 text-gray-700 border-gray-200";
+        if (s === "COMPLETED") return "bg-blue-50 text-blue-700 border-blue-200";
+
+        // Appointment statuses (common)
+        if (s === "FINISHED") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (s === "APPROVED") return "bg-blue-50 text-blue-700 border-blue-200";
+        if (s === "PENDING") return "bg-amber-50 text-amber-700 border-amber-200";
+        if (s === "RESCHEDULED") return "bg-purple-50 text-purple-700 border-purple-200";
+        if (s === "CANCELLED") return "bg-red-50 text-red-700 border-red-200";
+        if (s === "REJECTED") return "bg-red-50 text-red-700 border-red-200";
+
+        return "bg-gray-100 text-gray-700 border-gray-200";
+        }
+
+
+    function money(n) {
+      const v = Number(n || 0);
+      return "₱" + v.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+        let currentTab = "PROPOSED"; // PROPOSED | ACTIVE | ALL
+        let searchTerm = "";
+
+        function setActiveTab(tab) {
+    currentTab = tab;
+
+    const tabs = {
+        PROPOSED: document.getElementById("tab-proposed"),
+        ACTIVE: document.getElementById("tab-active"),
+        ALL: document.getElementById("tab-all"),
+    };
+
+    Object.entries(tabs).forEach(([key, btn]) => {
+        if (!btn) return;
+
+        if (key === tab) {
+        btn.classList.remove("bg-white", "text-gray-700", "border");
+        btn.classList.add(
+            "bg-custom-primary",
+            "text-white",
+            "border-custom-primary"
+        );
+        } else {
+        btn.classList.remove(
+            "bg-custom-primary",
+            "text-white",
+            "border-custom-primary"
+        );
+        btn.classList.add("bg-white", "text-gray-700", "border");
+        }
+    });
+    }
+
+    async function loadBracesPlans() {
+      const listEl = document.getElementById("plansList");
+      const subtitleEl = document.getElementById("subtitle");
+
+      listEl.innerHTML = `<p class="text-sm text-gray-500">Loading plans...</p>`;
+
+      let q = supabaseClient
+        .from("TreatmentPlan")
+        .select(`
+          TreatmentPlanID,
+          UserAccountID,
+          DentistID,
+          PlanType,
+          Status,
+          CreatedAt,
+          SourceAppointmentID
+        `)
+        .eq("PlanType", "BRACES")
+        .order("CreatedAt", { ascending: false });
+
+      if (currentTab === "PROPOSED") q = q.eq("Status", "PROPOSED");
+      if (currentTab === "ACTIVE") q = q.eq("Status", "ACTIVE");
+
+      const { data: plans, error } = await q;
+      if (error) {
+        console.error(error);
+        listEl.innerHTML = `<p class="text-sm text-red-500">Failed to load treatment plans.</p>`;
+        if (subtitleEl) subtitleEl.textContent = "Error loading plans";
+        return;
+      }
+
+      const rows = plans || [];
+      subtitleEl.textContent = `${rows.length} plan${rows.length === 1 ? "" : "s"} found`;
+
+      if (rows.length === 0) {
+        listEl.innerHTML = `<p class="text-sm text-gray-500">No plans found.</p>`;
+        return;
+      }
+
+      // Load patient names in one go (simple 2nd query)
+      const userIds = [...new Set(rows.map(r => r.UserAccountID).filter(Boolean))];
+      let userMap = {};
+      if (userIds.length) {
+        const { data: users, error: uErr } = await supabaseClient
+          .from("UserAccount")
+          .select("UserAccountID, FirstName, LastName")
+          .in("UserAccountID", userIds);
+
+        if (uErr) console.error("UserAccount fetch error:", uErr);
+        (users || []).forEach(u => {
+          const nm = `${u.FirstName || ""} ${u.LastName || ""}`.trim() || "Unknown";
+          userMap[u.UserAccountID] = nm;
+        });
+      }
+
+      // ✅ Apply search filter (patient name or UserAccountID)
+        const term = (searchTerm || "").trim().toLowerCase();
+        let filteredRows = rows;
+
+        if (term) {
+        filteredRows = rows.filter(p => {
+            const name = (userMap[p.UserAccountID] || "").toLowerCase();
+            const id = String(p.UserAccountID || "").toLowerCase();
+            return name.includes(term) || id.includes(term);
+        });
+        }
+
+        subtitleEl.textContent = `${filteredRows.length} plan${filteredRows.length === 1 ? "" : "s"} found`;
+
+
+const htmlArr = await Promise.all(filteredRows.map(async (p) => {
+  const status = String(p.Status || "").toUpperCase();
+  const ready = await isReadyForInstall(p.TreatmentPlanID);
+  const r = readinessBadge(status, ready);
+
+  return `
+    <div class="border rounded-xl p-4 hover:bg-gray-50">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <p class="font-semibold text-gray-900">
+              ${userMap[p.UserAccountID] || p.UserAccountID}
+            </p>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badge(status)}">
+              ${status}
+            </span>
+          </div>
+
+          <p class="text-xs text-gray-500">
+            Created: ${fmtDate(p.CreatedAt)}
+          </p>
+
+          <span class="inline-flex mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${r.cls}">
+            ${r.label}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            class="text-xs px-3 py-2 rounded-lg border text-gray-700 hover:bg-gray-50"
+            onclick="openPlanProgress('${p.TreatmentPlanID}')">
+            View Plan
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}));
+
+listEl.innerHTML = htmlArr.join("");
+
+    }
+
+    function goToBillingForBraces() {
+  window.location.href = "Billing.html";
+}
+
+    async function isReadyForInstall(planId) {
+  const { data, error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("status")
+    .eq("treatmentplanid", planId);
+
+  if (error || !data || data.length === 0) return true;
+  return data.every(r => String(r.status || "").trim().toUpperCase() === "DONE");
+}
+
+    // --- Notifications: reuse your dashboard implementation if you want ---
+async function loadNotifications() {
+  const bellBtn = document.getElementById("notifBellBtn");
+  if (!bellBtn) return;
+
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  const { data: notifications, error } = await supabaseClient
+    .from("Notifications")
+    .select("*")
+    .eq("UserAccountID", userId)
+    .eq("Status", "Unread")
+    .order("DateSent", { ascending: false });
+
+  if (error) return console.error(error);
+
+  // badge
+  const existingBadge = document.getElementById("notif-badge");
+  if (existingBadge) existingBadge.remove();
+
+  if (notifications && notifications.length > 0) {
+    const badge = document.createElement("span");
+    badge.id = "notif-badge";
+    badge.textContent = notifications.length;
+    badge.className =
+      "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+    bellBtn.appendChild(badge);
+  }
+
+  // remove old dropdown if present
+  const prevDropdown = document.getElementById("notif-dropdown");
+  if (prevDropdown) prevDropdown.remove();
+
+  // click opens/closes dropdown
+  bellBtn.onclick = async () => {
+    let dropdown = document.getElementById("notif-dropdown");
+    if (dropdown) return dropdown.remove();
+
+    dropdown = document.createElement("div");
+    dropdown.id = "notif-dropdown";
+    dropdown.className =
+      "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-[60]";
+    dropdown.style.maxHeight = "320px";
+
+    if (!notifications || notifications.length === 0) {
+      const emptyMsg = document.createElement("div");
+      emptyMsg.className = "p-4 text-gray-500 text-sm";
+      emptyMsg.textContent = "No new notifications";
+      dropdown.appendChild(emptyMsg);
+    } else {
+      notifications.forEach((n) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className =
+          "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
+        item.textContent = n.Message;
+
+        item.addEventListener("click", async () => {
+          await supabaseClient
+            .from("Notifications")
+            .update({ Status: "Read" })
+            .eq("NotificationID", n.NotificationID);
+
+          dropdown.remove();
+          loadNotifications();
+        });
+
+        dropdown.appendChild(item);
+      });
+    }
+
+    document.body.appendChild(dropdown);
+
+    // close on outside click
+    const onDocClick = (e) => {
+      if (
+        dropdown &&
+        !dropdown.contains(e.target) &&
+        e.target !== bellBtn &&
+        !bellBtn.contains(e.target)
+      ) {
+        dropdown.remove();
+        document.removeEventListener("click", onDocClick);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", onDocClick), 0);
+  };
+}
+
+
+const INSTALL_ID = "701";
+const ADJUST_ID  = "702";
+
+function parseIds(v) {
+  return String(v || "")
+    .split(",")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function apptHasServiceId(appt, id) {
+  // support: Appointment.ServiceType, Appointment.Service, and mixed usage
+  const a = parseIds(appt?.ServiceType);
+  const b = parseIds(appt?.Service);
+  return a.includes(id) || b.includes(id);
+}
+
+function isInstallAppt(a) {
+  return apptHasServiceId(a, INSTALL_ID);
+}
+
+function isAdjustAppt(a) {
+  return apptHasServiceId(a, ADJUST_ID);
+}
+
+function closeProgressModal() {
+  const m = document.getElementById("progress-modal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+}
+
+function openProgressModal() {
+  const m = document.getElementById("progress-modal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+}
+
+function fmtDateLong(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-PH", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function isConsultAppt(a) {
+  const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
+  return s.includes("diagnostic") || s.includes("consult");
+}
+
+async function openPlanProgress(planId, patientName) {
+  openProgressModal();
+
+  const subtitle = document.getElementById("progress-subtitle");
+  const installBox = document.getElementById("progress-install");
+  const body = document.getElementById("progress-adjustments-body");
+  const countEl = document.getElementById("progress-adjustment-count");
+
+  const sumCount = document.getElementById("sum-count");
+  const sumTotal = document.getElementById("sum-total");
+  const sumLast  = document.getElementById("sum-last");
+
+  // ✅ PRE-TREATMENT BOX
+  const preBox = document.getElementById("progress-pretreat");
+  if (preBox) preBox.textContent = "Loading pre-treatments...";
+
+  // ⬇️⬇️⬇️ PASTE YOUR QUERY RIGHT HERE ⬇️⬇️⬇️
+  const { data: pre, error: preErr } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("servicename, status, toothnumbers, completedat, createdat")
+    .eq("treatmentplanid", planId)
+    .order("createdat", { ascending: true });
+
+  if (preBox) {
+    if (preErr) {
+      console.error(preErr);
+      preBox.innerHTML = `<div class="text-red-600 font-semibold">Failed to load pre-treatments.</div>`;
+    } else if (!pre || pre.length === 0) {
+      preBox.innerHTML = `
+        <div class="font-semibold text-gray-900">Pre-treatments</div>
+        <div class="text-gray-600 text-sm mt-1">No pre-treatments required.</div>
+      `;
+    } else {
+      const done = pre.filter(x => String(x.status || "").toUpperCase() === "DONE").length;
+      const total = pre.length;
+
+      preBox.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-gray-900">Pre-treatments</div>
+            <div class="text-gray-600 text-sm mt-1">${done}/${total} completed</div>
+          </div>
+          <span class="text-xs font-semibold px-2 py-1 rounded-full border ${done === total ? badge("FINISHED") : badge("PENDING")}">
+            ${done === total ? "READY" : "PENDING"}
+          </span>
+        </div>
+
+        <div class="mt-3 space-y-2">
+          ${pre.map(row => {
+            const st = String(row.status || "").toUpperCase();
+            const teeth = (row.toothnumbers || "").trim();
+            return `
+              <div class="flex items-start justify-between gap-3 bg-white rounded-lg border p-3">
+                <div>
+                  <div class="font-medium text-gray-900">${row.servicename || "—"}</div>
+                  ${teeth ? `<div class="text-xs text-gray-500 mt-0.5">Teeth: ${teeth}</div>` : ""}
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge(st)}">
+                  ${st}
+                </span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+  }
+
+
+  subtitle.textContent = patientName ? `Patient: ${patientName}` : `Plan ID: ${planId}`;
+  installBox.textContent = "Loading installation...";
+  body.innerHTML = `<tr><td class="px-4 py-4 text-gray-500" colspan="3">Loading...</td></tr>`;
+  countEl.textContent = "";
+
+  const { data: plan, error: planErr } = await supabaseClient
+  .from("TreatmentPlan")
+  .select("TreatmentPlanID, SourceAppointmentID")
+  .eq("TreatmentPlanID", planId)
+  .maybeSingle();
+
+if (planErr) console.error(planErr);
+
+  // ✅ Load plan-linked appointments
+  const { data: appts, error } = await supabaseClient
+    .from("Appointment")
+    .select("AppointmentID, AppointmentSchedule, Service, ServiceType, Status, TotalAmount, Dentist:DentistID(FirstName, LastName)")
+    .eq("TreatmentPlanID", planId)
+    .order("AppointmentSchedule", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    installBox.innerHTML = `<div class="text-red-600 font-semibold">Failed to load appointments.</div>`;
+    body.innerHTML = `<tr><td class="px-4 py-4 text-gray-500" colspan="3">No adjustments yet.</td></tr>`;
+    return;
+  }
+
+  const rows = appts || [];
+
+  if (plan?.SourceAppointmentID) {
+  const { data: srcRow, error: srcErr } = await supabaseClient
+    .from("Appointment")
+    .select("AppointmentID, AppointmentSchedule, Service, ServiceType, Status, TotalAmount, Dentist:DentistID(FirstName, LastName)")
+    .eq("AppointmentID", plan.SourceAppointmentID)
+    .maybeSingle();
+
+  if (srcErr) console.error(srcErr);
+
+  if (srcRow && !rows.some(a => a.AppointmentID === srcRow.AppointmentID)) {
+    rows.push(srcRow);
+  }
+}
+
+
+const consultBox = document.getElementById("progress-consult");
+if (consultBox) consultBox.textContent = "Loading consultation...";
+
+// ✅ Consultation: show latest consult (prefer FINISHED, else scheduled)
+const consultFinished = rows
+  .filter(a => isConsultAppt(a) && String(a.Status || "").toUpperCase() === "FINISHED")
+  .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
+
+const consultScheduled = rows
+  .filter(a => isConsultAppt(a) && ["APPROVED","PENDING","RESCHEDULED"].includes(String(a.Status || "").toUpperCase()))
+  .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
+
+if (consultBox) {
+  if (!consultFinished && !consultScheduled) {
+    consultBox.innerHTML = `
+      <div class="font-semibold text-gray-900">Diagnostic</div>
+      <div class="text-gray-600 text-sm mt-1">No consultation appointment found yet.</div>
+    `;
+  } else {
+    const c = consultFinished || consultScheduled;
+    const st = String(c.Status || "").toUpperCase();
+    consultBox.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="font-semibold text-gray-900">Diagnostic</div>
+          <div class="text-gray-600 text-sm mt-1">${fmtDateLong(c.AppointmentSchedule)}</div>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge(st)}">
+          ${st || "—"}
+        </span>
+      </div>
+    `;
+  }
+}
+
+// ✅ Installation (keep your logic; this is your existing part)
+const install = rows.find(isInstallAppt);
+
+if (!install) {
+  installBox.innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="font-semibold text-gray-900">Braces Installation</div>
+        <div class="text-gray-600 text-sm mt-1">No installation appointment found yet.</div>
+      </div>
+      <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge("—")}">—</span>
+    </div>
+  `;
+} else {
+  const st = String(install.Status || "").toUpperCase();
+  installBox.innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="font-semibold text-gray-900">Braces Installation</div>
+        <div class="text-gray-600 text-sm mt-1">${fmtDateLong(install.AppointmentSchedule)}</div>
+      </div>
+      <span class="text-xs font-semibold px-2 py-1 rounded-full border ${badge(st)}">
+        ${st || "—"}
+      </span>
+    </div>
+  `;
+}
+
+
+// ✅ Adjustments: FINISHED only (matches MyTreatmentPlan decision)
+const adjustments = rows
+  .filter(a => isAdjustAppt(a) && String(a.Status || "").toUpperCase() === "FINISHED")
+  .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule));
+
+countEl.textContent = `${adjustments.length} record(s)`;
+
+// ✅ Summary based on FINISHED only
+const totalRevenue = adjustments.reduce((acc, a) => acc + Number(a.TotalAmount || 0), 0);
+const lastAdj = adjustments.length ? adjustments[0] : null;
+
+if (sumCount) sumCount.textContent = String(adjustments.length);
+if (sumTotal) sumTotal.textContent = money(totalRevenue);
+if (sumLast)  sumLast.textContent = lastAdj ? fmtDateLong(lastAdj.AppointmentSchedule) : "—";
+
+
+if (!adjustments.length) {
+  body.innerHTML = `<tr><td class="px-4 py-4 text-gray-500" colspan="3">No adjustments yet.</td></tr>`;
+  return;
+}
+
+body.innerHTML = adjustments.map(a => {
+  const sched = fmtDateLong(a.AppointmentSchedule);
+  const st = String(a.Status || "-").toUpperCase();
+  const total = money(a.TotalAmount || 0);
+
+  return `
+    <tr class="border-t">
+      <td class="px-4 py-2">${sched}</td>
+      <td class="px-4 py-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badge(st)}">
+          ${st}
+        </span>
+      </td>
+      <td class="px-4 py-2 font-semibold">${total}</td>
+    </tr>
+  `;
+}).join("");
+}
+
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const user = await checkAuth();
+      if (!user) return;
+
+      if (String(user.Role || "").toLowerCase() !== "secretary") {
+        window.location.href = "/Login.html";
+        return;
+      }
+
+        document.getElementById("tab-proposed").onclick = async () => {
+        setActiveTab("PROPOSED");
+        await loadBracesPlans();
+        };
+
+        document.getElementById("tab-active").onclick = async () => {
+        setActiveTab("ACTIVE");
+        await loadBracesPlans();
+        };
+
+        document.getElementById("tab-all").onclick = async () => {
+        setActiveTab("ALL");
+        await loadBracesPlans();
+        };
+      document.getElementById("btn-refresh").onclick = loadBracesPlans;
+      document.getElementById("progress-modal").addEventListener("click", (e) => {
+        if (e.target.id === "progress-modal") closeProgressModal();
+        });
+
+        const searchEl = document.getElementById("searchInput");
+        if (searchEl) {
+        searchEl.addEventListener("input", async (e) => {
+            searchTerm = e.target.value || "";
+            await loadBracesPlans();
+        });
+        }
+
+    setActiveTab(currentTab);
+      await loadBracesPlans();
+      await loadNotifications();
+      setInterval(loadNotifications, 15000);
+    });
+  </script>
+</body>
+</html>

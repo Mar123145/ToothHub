@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'custom-primary': '#03555E',
+              'custom-hover': '#024449',
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Keep default fonts to match dashboard shell */
+        
+        /* Modal visibility helper */
+        #formModal { display: none; }
+        #formModal.active { display: flex; }
+        /* Prevent browser gestures inside the canvas */
+canvas {
+  touch-action: none;      /* critical on mobile */
+  user-select: none;
+}
+
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Top Header (same shell as dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img src="/Image/logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain"
+               onload="this.nextElementSibling.style.display='none'" onerror="this.remove();" />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Secretary Portal</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same sizing as dashboard) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
+        </a>
+        <a href="Appointment.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar w-5"></i><span>Appointments</span>
+        </a>
+        <a href="DentistSchedule.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clock w-5"></i><span>Dentist Schedules</span>
+        </a>
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i><span>Billing & Transactions</span>
+        </a>
+        <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
+        </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
+        <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
+        </a>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i><span>Profile</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i><span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-6">
+          <h1 id="pageTitle" class="text-2xl font-bold text-gray-900">Today's Appointments – Assessment Form</h1>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+          <div class="grid md:grid-cols-3 gap-4">
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Search patient name or form type..."
+              class="md:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E]"
+            />
+            <select
+              id="statusFilter"
+              class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E] bg-white"
+            >
+              <option value="today">Today (Approved/Rescheduled)</option>
+              <option value="finished">Finished</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="formsList" class="grid gap-4"></div>
+      </div>
+    </main>
+  </div>
+
+    <!-- Modals stay outside the shell main for z-index correctness -->
+
+    <div id="formModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
+            <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+                <h2 class="text-xl font-bold text-gray-800" id="modalHeaderTitle">Assessment Form</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-8">
+                <div>
+                    <h3 class="font-semibold text-[#03555E] mb-4">Patient Information</h3>
+                        <div class="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                          
+                        <div>
+                            <p class="text-sm text-gray-600">Patient Name</p>
+                            <p class="font-medium" id="modalPatientName">---</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-600">Assigned Dentist</p>
+                            <p class="font-medium" id="modalDentist">---</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <div>
+                            <p class="text-sm text-gray-600">Service to be done</p>
+                            <p class="font-medium" id="modalService">---</p>
+                            </div>
+
+                      <div class="flex gap-2">
+                        <button
+                          type="button"
+                          id="btnConsent"
+                          onclick="openConsent()"
+                          class="px-3 py-2 rounded-lg bg-[#03555E] text-white text-sm font-medium hover:bg-[#024449] flex items-center gap-2"
+                        >
+                          <i data-lucide="file-signature" class="w-4 h-4"></i>
+                          New Consent
+                        </button>
+
+                        <button
+                          type="button"
+                          id="btnViewConsents"
+                          onclick="openConsentsList()"
+                          class="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <i data-lucide="folder-open" class="w-4 h-4"></i>
+                          View Consents
+                        </button>
+                            </div>
+
+                        </div>
+                        </div>
+                </div>
+
+                <div id="dynamicFormFields" class="space-y-6">
+                    </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+                    <button id="btnSaveForm" class="flex-1 bg-[#03555E] text-white py-2 rounded-lg hover:bg-[#024449] font-medium">
+                    Save Form
+                    </button>
+                    <button onclick="closeModal()" class="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 font-medium transition-colors">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONSENT MODAL -->
+<div id="consentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consent Form</h2>
+      <button onclick="closeConsentModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <div class="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border">
+        <div>
+          <label class="text-sm text-gray-600">Template</label>
+          <select id="consentTemplateSelect" class="w-full mt-1 px-3 py-2 border rounded-lg bg-white">
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Patient Name</label>
+          <input id="consentPatientName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Date</label>
+          <input id="consentDate" type="date" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-sm text-gray-600">Staff Name</label>
+          <input id="consentStaffName" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600">Status</label>
+          <div id="consentStatus" class="mt-2 text-sm font-semibold">DRAFT</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Consent Text (editable)</label>
+        <textarea id="consentText" rows="12"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm"></textarea>
+      </div>
+
+      <!-- Signature placeholders (we’ll wire later) -->
+ <!-- SIGNATURE PADS -->
+<div class="grid md:grid-cols-2 gap-4">
+
+  <!-- PATIENT SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Patient Signature</div>
+      <button type="button" id="patientSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="patientSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Patient signs here using finger or stylus.
+    </div>
+  </div>
+
+  <!-- STAFF SIGNATURE -->
+  <div class="p-4 border rounded-lg">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-semibold">Staff Signature</div>
+      <button type="button" id="staffSigClear"
+        class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">
+        Clear
+      </button>
+    </div>
+
+    <div class="border rounded-lg bg-white overflow-hidden">
+      <canvas id="staffSigCanvas" class="w-full h-[180px] block"></canvas>
+    </div>
+
+    <div class="mt-2 text-xs text-gray-500">
+      Staff signs here.
+    </div>
+  </div>
+</div>
+
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+        <button id="btnSaveConsent" class="flex-1 bg-[#03555E] text-white py-2 rounded-lg hover:bg-[#024449] font-medium">
+          Save Consent
+        </button>
+        <button onclick="closeConsentModal()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- CONSENTS LIST MODAL -->
+<div id="consentsListModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8">
+    <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+      <h2 class="text-xl font-bold text-gray-800">Consents for this Appointment</h2>
+      <button onclick="closeConsentsList()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+
+    <div class="p-6">
+      <div id="consentsListContainer" class="space-y-3"></div>
+    </div>
+
+    <div class="p-6 border-t flex gap-3">
+      <button onclick="closeConsentsList()" class="flex-1 border py-2 rounded-lg hover:bg-gray-50 font-medium">Close</button>
+    </div>
+  </div>
+</div>
+
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script src="/feedback.js"></script>    
+    <script>
+        const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function checkAuth(redirect = true) {
+  // 1) Try localStorage first
+  const storedFirstName = localStorage.getItem('userFirstName');
+  const storedLastName = localStorage.getItem('userLastName');
+  const storedRole = localStorage.getItem('userRole');
+  const storedEmail = localStorage.getItem('userEmail');
+  const storedAccountId = localStorage.getItem('userAccountId'); // important
+
+  // If we already cached the user with an account ID, use that
+  const storedUserId = localStorage.getItem('userAccountId') || localStorage.getItem('userId');
+
+if (storedFirstName && storedRole) {
+  return {
+    FirstName: storedFirstName,
+    LastName: storedLastName || '',
+    Role: storedRole,
+    Email: storedEmail || '',
+    // may be null for now, but we'll still let the page load
+    UserAccountID: storedUserId || null,
+  };
+}
+  // 2) Fallback to Supabase session
+  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) console.error(sessionError);
+
+  // No session -> not logged in
+  if (!session?.user) {
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 3) Fetch user info from UserAccount table
+  const { data: userData, error } = await supabaseClient
+    .from('UserAccount')
+    .select('*')
+    .eq('Email', session.user.email)
+    .maybeSingle();
+
+  if (error || !userData) {
+    console.error(error || "No user data found");
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
+
+  // 4) Cache to localStorage for next time
+  localStorage.setItem('userFirstName', userData.FirstName || '');
+  localStorage.setItem('userLastName', userData.LastName || '');
+  localStorage.setItem('userRole', userData.Role || '');
+  localStorage.setItem('userEmail', userData.Email || '');
+  localStorage.setItem('userAccountId', userData.UserAccountID); // <- this is what we use for loggedDentistId
+
+  return userData;
+}
+
+// --- Shell helpers (same behavior as dashboard) ---
+async function logout() {
+  await supabaseClient.auth.signOut();
+  localStorage.clear();
+  window.location.href = "/Login.html";
+}
+
+async function loadNotifications() {
+  const bellBtn = document.getElementById("notifBellBtn");
+  if (!bellBtn) return;
+
+  const userId = localStorage.getItem("userAccountId") || localStorage.getItem("userId");
+  if (!userId) return;
+
+  const { data: notifications, error } = await supabaseClient
+    .from("Notifications")
+    .select("NotificationID, Message, Status, DateSent")
+    .eq("UserAccountID", userId)
+    .eq("Status", "Unread")
+    .order("DateSent", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("loadNotifications error:", error);
+    return;
+  }
+
+  // badge
+  document.getElementById("notif-badge")?.remove();
+  if (notifications && notifications.length > 0) {
+    const badge = document.createElement("span");
+    badge.id = "notif-badge";
+    badge.textContent = notifications.length;
+    badge.className =
+      "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
+    bellBtn.appendChild(badge);
+  }
+
+  // dropdown
+  document.getElementById("notif-dropdown")?.remove();
+  bellBtn.onclick = () => {
+    const existing = document.getElementById("notif-dropdown");
+    if (existing) return existing.remove();
+
+    const dropdown = document.createElement("div");
+    dropdown.id = "notif-dropdown";
+    dropdown.className =
+      "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
+    dropdown.style.maxHeight = "320px";
+
+    if (!notifications || notifications.length === 0) {
+      dropdown.innerHTML = `<div class="p-4 text-gray-500 text-sm">No new notifications</div>`;
+    } else {
+      notifications.forEach((n) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className =
+          "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900 text-sm";
+        item.textContent = n.Message;
+        item.addEventListener("click", async () => {
+          await supabaseClient
+            .from("Notifications")
+            .update({ Status: "Read" })
+            .eq("NotificationID", n.NotificationID);
+          dropdown.remove();
+          loadNotifications();
+        });
+        dropdown.appendChild(item);
+      });
+    }
+
+    document.body.appendChild(dropdown);
+
+    const onDocClick = (e) => {
+      if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+        dropdown.remove();
+        document.removeEventListener("click", onDocClick);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", onDocClick), 0);
+  };
+}
+
+        // --- DATA ---
+
+        const conditionsList = [
+        { key: "kidneyProblems", label: "Kidney Problems" },
+        { key: "glandularProblems", label: "Glandular Problems" },
+        { key: "heartTrouble", label: "Heart Trouble" },
+        { key: "learningDisability", label: "Learning Disability" },
+        { key: "diabetes", label: "Diabetes" },
+        { key: "tuberculosis", label: "Tuberculosis" },
+        { key: "mentalDisorder", label: "Mental Disorder" },
+        { key: "bleedingDisorder", label: "Bleeding Disorder" },
+        { key: "asthma", label: "Asthma" },
+        { key: "brainInjury", label: "Brain Injury" },
+        { key: "rheumaticFever", label: "Rheumatic Fever" },
+        { key: "tumors", label: "Tumors" },
+        { key: "liverProblems", label: "Liver Problems" },
+        { key: "neurological", label: "Neurological" },
+        { key: "hyperactivity", label: "Hyperactivity" },
+        { key: "seizures", label: "Seizures" },
+        { key: "earInfection", label: "Ear Infection" },
+        { key: "skinDisorder", label: "Skin Disorder" },
+        { key: "other", label: "Other (specify)" }
+        ];
+
+
+const leftInputFields = [
+  { id: "prevHosp", label: "PREVIOUS HOSPITALIZATIONS", placeholder: "" },
+  { id: "presMeds", label: "PRESCRIBED MEDICATIONS", placeholder: "" },
+  { id: "allergies", label: "ALLERGIES TO MEDICATIONS", placeholder: "" },
+  { id: "familyProb", label: "FAMILY MEDICATION PROBLEMS", placeholder: "" },
+  { id: "concerns", label: "OTHER MEDICAL CONCERNS", placeholder: "" }
+];
+
+// right side single-line
+const rightInputFields = [
+  { id: "alerts", label: "MEDICAL ALERT", placeholder: "" }
+];
+
+
+        // --- UTILS ---
+        const getStatusColor = (status) => {
+            switch (status) {
+                case "Pending": return "bg-yellow-100 text-yellow-800";
+                case "Completed": return "bg-green-100 text-green-800";
+                case "Reviewed": return "bg-blue-100 text-blue-800";
+                default: return "bg-gray-100 text-gray-800";
+            }
+        };
+
+        // --- RENDER LOGIC ---
+function fmtTime(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
+  } catch {
+    return iso;
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById("formModal");
+  modal.classList.remove("active");
+
+  // cleanup
+  document.body.style.overflow = "";
+  delete modal.dataset.appointmentId;
+}
+document.getElementById("formModal").addEventListener("click", (e) => {
+  if (e.target.id === "formModal") {
+    closeModal();
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeModal();
+  }
+});
+
+function collectMedicalConditions() {
+  const conditions = {};
+  document.querySelectorAll("#conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => {
+      conditions[cb.dataset.condKey] = cb.checked;
+    });
+  return conditions;
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return (el?.value ?? "").trim();
+}
+
+
+function lockMedicalFormUI(isLocked) {
+  const ids = ["emergencyName","emergencyNumber","prevHosp","presMeds","allergies","familyProb","concerns","alerts","heightCm","weightKg","bloodPressure"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.readOnly = !!isLocked;
+    el.disabled = !!isLocked;
+    el.classList.toggle("bg-gray-100", !!isLocked);
+  });
+
+  document.querySelectorAll("#conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => {
+      cb.disabled = !!isLocked;
+      cb.parentElement?.classList.toggle("opacity-70", !!isLocked);
+    });
+
+  const btn = document.getElementById("btnSaveForm");
+  if (btn) {
+    btn.disabled = !!isLocked;
+    btn.classList.toggle("opacity-70", !!isLocked);
+    btn.innerText = isLocked ? "Read-only" : "Save Form";
+  }
+
+  const btnConsent = document.getElementById("btnConsent");
+  if (btnConsent) {
+    btnConsent.disabled = !!isLocked;
+    btnConsent.classList.toggle("opacity-70", !!isLocked);
+    btnConsent.title = isLocked ? "Cannot create new consent for finished appointments" : "";
+  }
+}
+
+function clearMedicalFormUI() {
+  // inputs
+  ["prevHosp", "presMeds", "allergies", "familyProb", "concerns", "alerts", "emergencyName", "emergencyNumber","heightCm","weightKg","bloodPressure"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  // checkboxes
+  document.querySelectorAll("#conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => cb.checked = false);
+}
+
+async function saveMedicalRecord() {
+
+  const mode = document.getElementById('statusFilter')?.value || 'today';
+  if (mode === 'finished') {
+    showMessage('Finished appointments are read-only.', 'warning');
+    return;
+  }
+
+  const modal = document.getElementById("formModal");
+  const appointmentId = modal.dataset.appointmentId;
+  if (!appointmentId) {
+    showMessage("Missing AppointmentID.");
+    return;
+  }
+
+  // Find appointment object (to get patient UserAccountID)
+  const appt = todaysAppointments.find(a => a.appointmentId === appointmentId);
+  if (!appt) {
+    showMessage("Appointment not found.");
+    return;
+  }
+
+  // Build payload for MedicalRecord table
+  const payload = {
+    AppointmentID: appointmentId,
+    UserAccountID: appt.userAccountId, // we will add this to todaysAppointments mapping
+    EmergencyContactName: getVal("emergencyName"),
+    EmergencyContactNumber: getVal("emergencyNumber"),
+    PreviousHospitalizations: getVal("prevHosp"),
+    PrescribedMedications: getVal("presMeds"),
+    AllergiesToMedications: getVal("allergies"),
+    FamilyMedicationProblems: getVal("familyProb"),
+    OtherMedicalConcerns: getVal("concerns"),
+    MedicalAlert: getVal("alerts"),
+    MedicalConditions: collectMedicalConditions(),
+    HeightCm: Number(getVal("heightCm")) || null,
+    WeightKg: Number(getVal("weightKg")) || null,
+    BloodPressure: getVal("bloodPressure"),
+  };
+
+  // Basic validation (optional)
+  if (!payload.UserAccountID) {
+    showMessage("Missing patient UserAccountID.");
+    return;
+  }
+
+  showLoading("Saving assessment form…", "Please wait");
+
+  // Disable button while saving
+  const btn = document.getElementById("btnSaveForm");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Saving...";
+    btn.classList.add("opacity-70");
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from("MedicalRecord")
+      .upsert(payload, { onConflict: "AppointmentID" });
+
+    if (error) {
+      console.error("saveMedicalRecord error:", error);
+      showMessage("Failed to save medical record: " + (error.message || "Unknown error"));
+      return;
+    }
+
+    showMessage("Assessment form saved.");
+    closeModal();
+    await hydrateMedicalStatuses();
+    await renderTodaysAppointments();
+
+  } finally {
+    hideLoading();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Save Form";
+      btn.classList.remove("opacity-70");
+    }
+  }
+}
+
+
+async function renderTodaysAppointments() {
+  const container = document.getElementById("formsList");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+
+  const filtered = todaysAppointments.filter(a =>
+    a.patientName.toLowerCase().includes(search) ||
+    a.dentistName.toLowerCase().includes(search)
+  );
+
+  if (filtered.length === 0) {
+    const mode = (document.getElementById('statusFilter')?.value || 'today');
+    const emptyMsg = (mode === 'finished')
+      ? 'No finished appointments found'
+      : "No today's approved/rescheduled appointments found";
+
+    container.innerHTML = `
+      <div class="bg-white p-12 text-center rounded-xl border border-gray-200 shadow-sm">
+        <i data-lucide="calendar-x" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+        <p class="text-gray-600">${emptyMsg}</p>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = filtered.map(a => `
+    <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <i data-lucide="calendar-check" class="w-5 h-5 text-[#03555E]"></i>
+            <h3 class="text-lg font-semibold">${a.patientName}</h3>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+              ${(document.getElementById('statusFilter')?.value === 'finished') ? 'Finished' : 'Today'} • ${fmtTime(a.scheduleISO)}
+            </span>
+            ${medicalBadge(a.medicalStatus)}
+          </div>
+          <div class="text-sm text-gray-500">
+            <span>Dentist: ${a.dentistName}</span>
+          </div>
+        </div>
+            <div class="flex gap-2">
+            <button onclick="openModal('${a.appointmentId}')"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
+                <i data-lucide="clipboard-pen" class="w-4 h-4"></i>
+                ${(document.getElementById('statusFilter')?.value === 'finished') ? 'View Assessment Form' : (a.medicalStatus === 'Completed' ? 'Edit Assessment Form' : 'Fill Assessment Form')}
+            </button>
+        </div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  lucide.createIcons();
+}
+
+function initStaticUI() {
+  // Build a 2-column layout like the reference:
+  // LEFT: 5 inputs
+  // RIGHT: medical alert input + conditions list
+
+  document.getElementById("dynamicFormFields").innerHTML = `
+    <div class="grid md:grid-cols-2 gap-8">
+      
+      <!-- LEFT COLUMN -->
+      <div class="space-y-4">
+        <div class="space-y-4">
+
+  <!-- VITAL SIGNS -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+      HEIGHT (CM)
+    </label>
+    <input
+      id="heightCm"
+      type="number"
+      min="0"
+      step="0.1"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+    />
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+      WEIGHT (KG)
+    </label>
+    <input
+      id="weightKg"
+      type="number"
+      min="0"
+      step="0.1"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+    />
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+      BLOOD PRESSURE
+    </label>
+    <input
+      id="bloodPressure"
+      type="text"
+      placeholder="e.g. 120/80"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+    />
+  </div>
+</div>        
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+      EMERGENCY CONTACT NAME
+    </label>
+    <input
+      id="emergencyName"
+      type="text"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+    />
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">
+      EMERGENCY CONTACT NUMBER
+    </label>
+    <input
+      id="emergencyNumber"
+      type="text"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+    />
+  </div>
+</div>
+
+        ${leftInputFields.map(f => `
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">${f.label}</label>
+            <input
+              id="${f.id}"
+              type="text"
+              placeholder="${f.placeholder || ""}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+            />
+          </div>
+        `).join("")}
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="space-y-4">
+        ${rightInputFields.map(f => `
+          <div>
+            <label class="block text-xs font-semibold tracking-wider text-gray-500 mb-1">${f.label}</label>
+            <input
+              id="${f.id}"
+              type="text"
+              placeholder="${f.placeholder || ""}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#03555E] text-sm bg-white"
+            />
+          </div>
+        `).join("")}
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-3">Medical Conditions</label>
+
+          <div id="conditionsGrid"
+               class="grid grid-cols-2 gap-y-2 gap-x-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render checkboxes in 2 columns, small like the reference
+  document.getElementById('conditionsGrid').innerHTML = conditionsList.map(cond => `
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input
+        type="checkbox"
+        class="w-4 h-4 text-[#03555E] border-gray-300 rounded focus:ring-[#03555E]"
+        data-cond-key="${cond.key}"
+        id="cond_${cond.key}"
+      >
+      <span class="text-gray-700 text-sm">${cond.label}</span>
+    </label>
+  `).join('');
+}
+
+
+        // --- MODAL CONTROLS ---
+async function openModal(appointmentId) {
+  const appt = todaysAppointments.find(x => x.appointmentId === appointmentId);
+  if (!appt) return;
+
+  // Reset UI first
+  clearMedicalFormUI();
+
+  document.getElementById("modalHeaderTitle").innerText = `Assessment Form - ${appt.patientName}`;
+  document.getElementById("modalPatientName").innerText = appt.patientName;
+  document.getElementById("modalDentist").innerText = appt.dentistName;
+
+  // optional if you already added service
+  const svcEl = document.getElementById("modalService");
+  if (svcEl) svcEl.innerText = appt.service || "—";
+
+  // store current appointment id for saving later
+  const modal = document.getElementById("formModal");
+  modal.dataset.appointmentId = appointmentId;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  // If viewing FINISHED appointments, make the medical form read-only
+  const mode = document.getElementById("statusFilter")?.value || "today";
+  const readOnly = (mode === "finished");
+  lockMedicalFormUI(readOnly);
+
+  // Load existing record (if any)
+  const existing = await loadMedicalRecordIntoForm(appointmentId);
+  if (!existing) {
+    const mode = document.getElementById('statusFilter')?.value || 'today';
+    if (mode !== 'finished') {
+      await prefillMedicalFromLastRecord(appt.userAccountId);
+    }
+  }
+
+
+  // Update save button text if you want
+  const btn = document.getElementById("btnSaveForm");
+  if (btn) {
+    const mode2 = document.getElementById('statusFilter')?.value || 'today';
+    if (mode2 === 'finished') {
+      btn.innerText = 'Read-only';
+      btn.disabled = true;
+      btn.classList.add('opacity-70');
+    } else {
+      btn.innerText = existing ? 'Update Form' : 'Save Form';
+      btn.disabled = false;
+      btn.classList.remove('opacity-70');
+    }
+  }
+
+  lucide.createIcons();
+}
+
+
+async function openConsent() {
+  lockConsentUI(false);
+  const appointmentId = document.getElementById("formModal").dataset.appointmentId;
+  if (!appointmentId) return showMessage("Missing AppointmentID.", "error");
+
+  const appt = todaysAppointments.find(a => a.appointmentId === appointmentId);
+  if (!appt) return showMessage("Appointment not found.", "error");
+
+  const authUser = await checkAuth(false);
+  const staffName = authUser ? `${authUser.FirstName || ""} ${authUser.LastName || ""}`.trim() : "";
+
+  // Load templates dropdown (no insert)
+  const templates = await fetchActiveConsentTemplates();
+  const chosen = pickTemplateForService(templates, appt.service);
+
+  const sel = document.getElementById("consentTemplateSelect");
+  sel.innerHTML = templates.map(t => {
+    const svc = t.Service ? ` • ${t.Service}` : " • (Generic)";
+    return `<option value="${t.TemplateID}">${t.Title}${svc}</option>`;
+  }).join("");
+
+  if (chosen?.TemplateID) sel.value = chosen.TemplateID;
+
+  const consentDate = todayPHDateISO();
+  const consentText =
+    (chosen?.Body && chosen.Body.trim().length > 0)
+      ? chosen.Body
+      : placeholderConsentDoc({ service: appt.service, patientName: appt.patientName, date: consentDate });
+
+  // Fill UI fields
+  document.getElementById("consentPatientName").value = appt.patientName || "";
+  document.getElementById("consentStaffName").value = staffName || "";
+  document.getElementById("consentDate").value = consentDate;
+  document.getElementById("consentText").value = consentText;
+
+  // DRAFT mode (not saved yet)
+  document.getElementById("consentStatus").innerText = "DRAFT (Not saved)";
+  const cm = document.getElementById("consentModal");
+  delete cm.dataset.consentId;              // IMPORTANT: means this is a "new unsaved consent"
+  cm.dataset.mode = "new";                 // optional flag
+
+  showConsentModal();
+  initConsentSignaturePads();
+  patientPad?.clear();
+  staffPad?.clear();
+  lucide.createIcons();
+}
+
+async function uploadSignatureWebP({ appointmentId, consentId, role, blob }) {
+  // role: "patient" | "staff"
+  // ✅ include consentId so multiple consents don’t overwrite each other
+  const filePath = `${appointmentId}/${consentId}/${role}.webp`;
+
+  const { error } = await supabaseClient.storage
+    .from("consent-signatures")
+    .upload(filePath, blob, {
+      contentType: "image/webp",
+      upsert: true
+    });
+
+  if (error) throw error;
+  return filePath;
+}
+
+document.getElementById("consentTemplateSelect").onchange = async (e) => {
+  const templateId = e.target.value;
+  if (!templateId) return;
+
+  const templates = await fetchActiveConsentTemplates();
+  const t = templates.find(x => x.TemplateID === templateId);
+  if (!t) return;
+
+  // Update consent body
+  document.getElementById("consentText").value =
+    t.Body && t.Body.trim().length
+      ? t.Body
+      : placeholderConsentDoc({
+          service: document.getElementById("modalService")?.innerText,
+          patientName: document.getElementById("consentPatientName").value,
+          date: document.getElementById("consentDate").value
+        });
+
+  showMessage("Template applied", "info");
+};
+
+
+async function saveConsentAll() {
+  const cm = document.getElementById("consentModal");
+  const consentId = cm.dataset.consentId || null;
+  const currentStatus = document.getElementById("consentStatus").innerText || "";
+if (currentStatus.includes("COMPLETED")) {
+  return showMessage("This consent is already completed and cannot be edited.", "warning");
+}
+
+  const appointmentId = document.getElementById("formModal").dataset.appointmentId;
+  if (!appointmentId) return showMessage("Missing AppointmentID.", "error");
+
+  const appt = todaysAppointments.find(a => a.appointmentId === appointmentId);
+  if (!appt) return showMessage("Appointment not found.", "error");
+
+  const btn = document.getElementById("btnSaveConsent");
+  btn.disabled = true;
+  btn.innerText = "Saving...";
+  showLoading("Saving consent…", "Please wait");
+  try {
+    const basePayload = {
+      AppointmentID: appointmentId,
+      UserAccountID: appt.userAccountId,
+      DentistID: appt.dentistId || null,
+      ServiceSnapshot: appt.service || null,
+      TemplateID: document.getElementById("consentTemplateSelect").value || null,
+      ConsentTitle: getSelectedTemplateTitle(), 
+      ConsentText: document.getElementById("consentText").value,
+      PatientName: document.getElementById("consentPatientName").value.trim(),
+      StaffName: document.getElementById("consentStaffName").value.trim(),
+      ConsentDate: document.getElementById("consentDate").value || null
+    };
+
+    let realConsentId = consentId;
+
+    // 1) INSERT if new, else UPDATE
+    if (!realConsentId) {
+      const { data: created, error: insErr } = await supabaseClient
+        .from("AppointmentConsent")
+        .insert({ ...basePayload, Status: "DRAFT" })
+        .select("ConsentID")
+        .single();
+
+      if (insErr) {
+        console.error("insert consent error:", insErr);
+        return showMessage("Failed to create consent: " + (insErr.message || "Unknown error"), "error");
+      }
+
+      realConsentId = created.ConsentID;
+      cm.dataset.consentId = realConsentId; // now it becomes an existing consent
+    } else {
+      const { error: updErr } = await supabaseClient
+        .from("AppointmentConsent")
+        .update(basePayload)
+        .eq("ConsentID", realConsentId);
+
+      if (updErr) {
+        console.error("update consent error:", updErr);
+        return showMessage("Failed to save consent: " + (updErr.message || "Unknown error"), "error");
+      }
+    }
+
+    // 2) Upload signatures if there is ink
+    const patch = {};
+    const nowISO = new Date().toISOString();
+
+    const patientBlob = await getPatientSignatureBlob();
+    if (patientBlob) {
+      const patientPath = await uploadSignatureWebP({
+  appointmentId,
+  consentId: realConsentId,
+  role: "patient",
+  blob: patientBlob
+});
+      patch.PatientSignaturePath = patientPath;
+      patch.PatientSignedAt = nowISO;
+    }
+
+    const staffBlob = await getStaffSignatureBlob();
+    if (staffBlob) {
+      const staffPath = await uploadSignatureWebP({
+  appointmentId,
+  consentId: realConsentId,
+  role: "staff",
+  blob: staffBlob
+});
+      patch.StaffSignaturePath = staffPath;
+      patch.StaffSignedAt = nowISO;
+    }
+
+    // 3) Update status based on signatures (only if we changed sigs)
+    if (Object.keys(patch).length > 0) {
+      const { data: current, error: readErr } = await supabaseClient
+        .from("AppointmentConsent")
+        .select("PatientSignedAt, StaffSignedAt")
+        .eq("ConsentID", realConsentId)
+        .single();
+
+      if (readErr) {
+        console.error("read consent error:", readErr);
+        return showMessage("Saved, but failed to refresh status.", "warning");
+      }
+
+      const finalPatientSignedAt = patch.PatientSignedAt || current.PatientSignedAt;
+      const finalStaffSignedAt = patch.StaffSignedAt || current.StaffSignedAt;
+      patch.Status = buildConsentStatus(finalPatientSignedAt, finalStaffSignedAt);
+
+      const { error: sigUpdErr } = await supabaseClient
+        .from("AppointmentConsent")
+        .update(patch)
+        .eq("ConsentID", realConsentId);
+
+      if (sigUpdErr) {
+        console.error("signature update error:", sigUpdErr);
+        return showMessage("Failed to save signatures: " + (sigUpdErr.message || "Unknown error"), "error");
+      }
+
+      document.getElementById("consentStatus").innerText = patch.Status;
+    } else {
+      document.getElementById("consentStatus").innerText = "DRAFT";
+    }
+
+    showMessage("Consent saved.", "success");
+  } catch (e) {
+    console.error("saveConsentAll error:", e);
+    showMessage("Failed to save consent: " + (e?.message || "Unknown error"), "error");
+  } finally {
+    hideLoading();
+    btn.disabled = false;
+    btn.innerText = "Save Consent";
+  }
+}
+
+
+
+
+document.getElementById("btnSaveConsent").addEventListener("click", saveConsentAll);
+
+        // ---- APPOINTMENT FETCH (Today + Approved + Rescheduled) ----
+function startEndOfTodayManilaISO() {
+  // Build Manila "today" boundaries using local browser time set to Asia/Manila machines
+  // If your clients are in PH, this is fine. (If not, we can force TZ via server or stored offset.)
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+  return { startISO: start.toISOString(), endISO: end.toISOString() };
+}
+
+let todaysAppointments = []; // replaces medicalForms
+
+async function fetchTodaysAppointments(mode = 'today') {
+  // mode: 'today' or 'finished'
+
+  if (mode === 'finished') {
+    const { data, error } = await supabaseClient
+      .from('Appointment')
+      .select(`
+        AppointmentID,
+        AppointmentSchedule,
+        Status,
+        UserAccountID,
+        DentistID,
+        Service,
+        UserAccount:UserAccountID ( FirstName, LastName ),
+        Dentist:DentistID ( FirstName, LastName )
+      `)
+      .eq('Status', 'Finished')
+      .order('AppointmentSchedule', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('fetchFinishedAppointments error:', error);
+      todaysAppointments = [];
+      return;
+    }
+
+    todaysAppointments = (data || []).map(a => {
+      const patientName = (`${a.UserAccount?.FirstName || ''} ${a.UserAccount?.LastName || ''}`).trim() || '—';
+      const dentistName = (`${a.Dentist?.FirstName || ''} ${a.Dentist?.LastName || ''}`).trim() || '—';
+      return {
+        appointmentId: a.AppointmentID,
+        userAccountId: a.UserAccountID,
+        dentistId: a.DentistID,
+        patientName,
+        dentistName,
+        scheduleISO: a.AppointmentSchedule,
+        status: a.Status,
+        service: a.Service || '—'
+      };
+    });
+
+    return;
+  }
+
+  // Default: TODAY (Approved + Rescheduled)
+  const { startISO, endISO } = startEndOfTodayManilaISO();
+
+  const { data, error } = await supabaseClient
+    .from('Appointment')
+    .select(`
+      AppointmentID,
+      AppointmentSchedule,
+      Status,
+      UserAccountID,
+      DentistID,
+      Service,
+      UserAccount:UserAccountID ( FirstName, LastName ),
+      Dentist:DentistID ( FirstName, LastName )
+    `)
+    .gte('AppointmentSchedule', startISO)
+    .lt('AppointmentSchedule', endISO)
+    .in('Status', ['Approved', 'Rescheduled'])
+    .order('AppointmentSchedule', { ascending: true });
+
+  if (error) {
+    console.error('fetchTodaysAppointments error:', error);
+    todaysAppointments = [];
+    return;
+  }
+
+  todaysAppointments = (data || []).map(a => {
+    const patientName = (`${a.UserAccount?.FirstName || ''} ${a.UserAccount?.LastName || ''}`).trim() || '—';
+    const dentistName = (`${a.Dentist?.FirstName || ''} ${a.Dentist?.LastName || ''}`).trim() || '—';
+
+    return {
+      appointmentId: a.AppointmentID,
+      userAccountId: a.UserAccountID,
+      dentistId: a.DentistID,
+      patientName,
+      dentistName,
+      scheduleISO: a.AppointmentSchedule,
+      status: a.Status,
+      service: a.Service || '—'
+    };
+  });
+}
+
+async function hydrateMedicalStatuses() {
+  if (!todaysAppointments.length) return;
+
+  const ids = todaysAppointments.map(a => a.appointmentId);
+
+  const { data, error } = await supabaseClient
+    .from("MedicalRecord")
+    .select("AppointmentID")
+    .in("AppointmentID", ids);
+
+  if (error) {
+    console.error("hydrateMedicalStatuses error:", error);
+    // default all Pending
+    todaysAppointments = todaysAppointments.map(a => ({ ...a, medicalStatus: "Pending" }));
+    return;
+  }
+
+  const completedSet = new Set((data || []).map(r => r.AppointmentID));
+  todaysAppointments = todaysAppointments.map(a => ({
+    ...a,
+    medicalStatus: completedSet.has(a.appointmentId) ? "Completed" : "Pending"
+  }));
+}
+function medicalBadge(status) {
+  if (status === "Completed") {
+    return `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Assessment Form Completed</span>`;
+  }
+  return `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Assessment Form Pending</span>`;
+}
+
+
+function statusBadge(status) {
+  if (status === "Rescheduled") {
+    return `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Rescheduled</span>`;
+  }
+  return `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Approved</span>`;
+}
+async function loadMedicalRecordIntoForm(appointmentId) {
+  const { data, error } = await supabaseClient
+    .from("MedicalRecord")
+    .select(`
+      AppointmentID,
+      EmergencyContactName,
+      EmergencyContactNumber,
+      PreviousHospitalizations,
+      PrescribedMedications,
+      AllergiesToMedications,
+      FamilyMedicationProblems,
+      OtherMedicalConcerns,
+      MedicalAlert,
+      MedicalConditions,
+      HeightCm,
+      WeightKg,
+      BloodPressure
+    `)
+    .eq("AppointmentID", appointmentId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("loadMedicalRecordIntoForm error:", error);
+    return null;
+  }
+  if (!data) return null;
+
+  // Fill inputs
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = v ?? "";
+  };
+  setVal("emergencyName", data.EmergencyContactName);
+  setVal("emergencyNumber", data.EmergencyContactNumber);
+  setVal("prevHosp", data.PreviousHospitalizations);
+  setVal("presMeds", data.PrescribedMedications);
+  setVal("allergies", data.AllergiesToMedications);
+  setVal("familyProb", data.FamilyMedicationProblems);
+  setVal("concerns", data.OtherMedicalConcerns);
+  setVal("alerts", data.MedicalAlert);
+  setVal("heightCm", data.HeightCm);
+  setVal("weightKg", data.WeightKg);
+
+  // Fill conditions JSON
+  const condObj = data.MedicalConditions || {};
+  document.querySelectorAll("#conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => {
+      const key = cb.dataset.condKey;
+      cb.checked = !!condObj[key];
+    });
+
+  return data;
+}
+function showConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.style.overflow = "hidden";
+}
+
+function closeConsentModal() {
+  const m = document.getElementById("consentModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.style.overflow = "";
+  delete m.dataset.consentId;
+}
+
+function todayPHDateISO() {
+  // good enough for PH clients
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function placeholderConsentDoc({ service, patientName, date }) {
+  return `[DRAFT – TEMPLATE BODY NOT YET PROVIDED]
+
+Service: ${service || "—"}
+Patient: ${patientName || "—"}
+Date: ${date || "—"}
+
+(Secretary can edit this text for testing.)
+`;
+}
+async function fetchActiveConsentTemplates() {
+  const { data, error } = await supabaseClient
+    .from("ConsentTemplate")
+    .select("TemplateID, Service, Title, Body, IsActive")
+    .eq("IsActive", true)
+    .order("Title", { ascending: true });
+
+  if (error) {
+    console.error("fetchActiveConsentTemplates error:", error);
+    return [];
+  }
+  return data || [];
+}
+
+function pickTemplateForService(templates, appointmentService) {
+  if (!appointmentService) return templates.find(t => t.Service == null) || null;
+
+  const svc = appointmentService.toLowerCase();
+
+  // 1) exact match
+  let t = templates.find(x =>
+    x.Service && x.Service.toLowerCase() === svc
+  );
+  if (t) return t;
+
+  // 2) contains match (best for your case)
+  t = templates.find(x =>
+    x.Service && svc.includes(x.Service.toLowerCase())
+  );
+  if (t) return t;
+
+  // 3) fallback generic
+  return templates.find(x => x.Service == null) || null;
+}
+
+async function getOrCreateAppointmentConsent({ appointmentId, userAccountId, dentistId, service, patientName, staffName }) {
+  // 1) If exists, return it
+  const existing = await supabaseClient
+    .from("AppointmentConsent")
+    .select("*")
+    .eq("AppointmentID", appointmentId)
+    .maybeSingle();
+
+  if (existing.error) {
+    console.error("read AppointmentConsent error:", existing.error);
+    throw existing.error;
+  }
+  if (existing.data) return existing.data;
+
+  // 2) Else create using templates
+  const templates = await fetchActiveConsentTemplates();
+  const chosen = pickTemplateForService(templates, service);
+
+  const consentDate = todayPHDateISO();
+  const consentText =
+    (chosen?.Body && chosen.Body.trim().length > 0)
+      ? chosen.Body
+      : placeholderConsentDoc({ service, patientName, date: consentDate });
+
+  const insertPayload = {
+    AppointmentID: appointmentId,
+    UserAccountID: userAccountId,
+    DentistID: dentistId || null,
+
+    ServiceSnapshot: service || null,
+    TemplateID: chosen?.TemplateID || null,
+
+    ConsentText: consentText,
+    PatientName: patientName || null,
+    StaffName: staffName || null,
+    ConsentDate: consentDate,
+
+    Status: "DRAFT"
+  };
+
+  const created = await supabaseClient
+    .from("AppointmentConsent")
+    .insert(insertPayload)
+    .select("*")
+    .single();
+
+  if (created.error) {
+    console.error("create AppointmentConsent error:", created.error);
+    throw created.error;
+  }
+
+  return created.data;
+}
+
+function createSignaturePad(canvas, opts = {}) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  const state = {
+    drawing: false,
+    lastX: 0,
+    lastY: 0,
+    hasInk: false,
+    // you can track strokes for undo if you want later
+  };
+
+  const settings = {
+    lineWidth: opts.lineWidth ?? 2.2,
+    lineColor: opts.lineColor ?? "#111",
+    background: opts.background ?? "#fff",
+  };
+
+  function resizeCanvasToDisplaySize() {
+    // Canvas CSS size (display size)
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // Set actual pixel size (for crisp lines)
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    // Scale drawing operations to match CSS pixels
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Fill background (so WebP/PNG isn't transparent unless you want it)
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Re-apply stroke style
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = settings.lineColor;
+    ctx.lineWidth = settings.lineWidth;
+  }
+
+  function getPointFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+    const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+    return {
+      x: (clientX - rect.left),
+      y: (clientY - rect.top),
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    state.drawing = true;
+    const p = getPointFromEvent(e);
+    state.lastX = p.x;
+    state.lastY = p.y;
+
+    // start a new path
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+  }
+
+  function draw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    const p = getPointFromEvent(e);
+
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    state.lastX = p.x;
+    state.lastY = p.y;
+    state.hasInk = true;
+  }
+
+  function endDraw(e) {
+    if (!state.drawing) return;
+    e.preventDefault();
+    state.drawing = false;
+    ctx.closePath();
+  }
+
+  function clear() {
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    // refill background
+    ctx.fillStyle = settings.background;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    state.hasInk = false;
+  }
+
+  async function toWebPBlob(quality = 0.82) {
+    // returns null if empty
+    if (!state.hasInk) return null;
+
+    return await new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => resolve(blob),
+        "image/webp",
+        quality
+      );
+    });
+  }
+async function loadFromUrl(url) {
+  if (!url) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  // clear + background
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.fillStyle = settings.background;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
+  await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const w = rect.width;
+      const h = rect.height;
+
+      const scale = Math.min(w / img.width, h / img.height);
+      const drawW = img.width * scale;
+      const drawH = img.height * scale;
+      const dx = (w - drawW) / 2;
+      const dy = (h - drawH) / 2;
+
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+      state.hasInk = true;
+      resolve();
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+
+  // Pointer events (best for tablet)
+  canvas.addEventListener("pointerdown", startDraw);
+  canvas.addEventListener("pointermove", draw);
+  window.addEventListener("pointerup", endDraw);
+  window.addEventListener("pointercancel", endDraw);
+
+  // Resize once now
+  resizeCanvasToDisplaySize();
+
+  // Resize when layout changes (modal open / rotate)
+  const ro = new ResizeObserver(() => {
+    // preserve existing signature? (optional)
+    // simplest: clear on resize to avoid stretched ink
+    resizeCanvasToDisplaySize();
+    state.hasInk = false; // you can remove this if you implement re-draw logic later
+  });
+  ro.observe(canvas);
+
+  return {
+    clear,
+    toWebPBlob,
+    hasInk: () => state.hasInk,
+    loadFromUrl, 
+    destroy: () => ro.disconnect()
+  };
+}
+let patientPad = null;
+let staffPad = null;
+
+function initConsentSignaturePads() {
+  const patientCanvas = document.getElementById("patientSigCanvas");
+  const staffCanvas = document.getElementById("staffSigCanvas");
+
+  if (patientCanvas && !patientPad) {
+    patientPad = createSignaturePad(patientCanvas, { lineWidth: 2.2 });
+    document.getElementById("patientSigClear")?.addEventListener("click", () => patientPad.clear());
+  }
+
+  if (staffCanvas && !staffPad) {
+    staffPad = createSignaturePad(staffCanvas, { lineWidth: 2.2 });
+    document.getElementById("staffSigClear")?.addEventListener("click", () => staffPad.clear());
+  }
+  patientPad?.clear();
+staffPad?.clear();
+}
+async function getPatientSignatureBlob() {
+  if (!patientPad) return null;
+  return await patientPad.toWebPBlob(0.82); // quality 0.7–0.9 is good
+}
+
+async function getStaffSignatureBlob() {
+  if (!staffPad) return null;
+  return await staffPad.toWebPBlob(0.82);
+}
+function buildConsentStatus(patientSignedAt, staffSignedAt) {
+  if (patientSignedAt && staffSignedAt) return "COMPLETED";
+  if (patientSignedAt) return "PATIENT_SIGNED";
+  return "DRAFT";
+}
+
+function openConsentsListModal() {
+  const m = document.getElementById("consentsListModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.style.overflow = "hidden";
+}
+
+function closeConsentsList() {
+  const m = document.getElementById("consentsListModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.style.overflow = "";
+}
+
+async function openConsentsList() {
+  showLoading("Loading consents…", "Please wait");
+  try{
+  const appointmentId = document.getElementById("formModal").dataset.appointmentId;
+  if (!appointmentId) return showMessage("Missing AppointmentID.", "error");
+
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select(`
+  ConsentID,
+  ServiceSnapshot,
+  Status,
+  
+  ConsentDate,
+  CreatedAt,
+  ConsentTemplate:TemplateID ( Title )
+`)
+    .eq("AppointmentID", appointmentId)
+    .order("CreatedAt", { ascending: false });
+
+  if (error) {
+    console.error("openConsentsList error:", error);
+    return showMessage("Failed to load consents.", "error");
+  }
+
+  const wrap = document.getElementById("consentsListContainer");
+  if (!data || data.length === 0) {
+    wrap.innerHTML = `<div class="text-gray-600">No saved consents yet.</div>`;
+  } else {
+    wrap.innerHTML = data.map(c => `
+      <div class="border rounded-lg p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="font-semibold truncate"> ${c.ConsentTemplate?.Title || c.ServiceSnapshot || "Consent"}</div>
+          <div class="text-sm text-gray-500">
+            Status: <span class="font-semibold">${c.Status || "DRAFT"}</span>
+            • Date: ${c.ConsentDate || "—"}
+          </div>
+        </div>
+        <button class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium"
+          onclick="loadConsentById('${c.ConsentID}')">
+          Open
+        </button>
+      </div>
+    `).join("");
+  }
+
+  openConsentsListModal();
+  lucide.createIcons();
+}finally{
+    hideLoading()
+  }
+}
+
+async function loadConsentById(consentId) {
+  showLoading("Opening consent…", "Please wait");
+  try{
+  const { data, error } = await supabaseClient
+    .from("AppointmentConsent")
+    .select("*")
+    .eq("ConsentID", consentId)
+    .single();
+  if (data.Status === "COMPLETED") {
+  document.querySelector("#consentModal h2").innerText = "Consent Form (Read-only)";
+} else {
+  document.querySelector("#consentModal h2").innerText = "Consent Form";
+}
+if (data.ConsentTitle) {
+  const readonly = document.getElementById("consentTemplateReadonly");
+  if (readonly) {
+    readonly.innerText = data.ConsentTitle;
+  }
+}
+
+
+  if (error || !data) {
+    console.error("loadConsentById error:", error);
+    return showMessage("Failed to open consent.", "error");
+  }
+
+  // Fill consent modal with existing record
+  const templates = await fetchActiveConsentTemplates();
+  const sel = document.getElementById("consentTemplateSelect");
+  sel.innerHTML = templates.map(t => {
+    const svc = t.Service ? ` • ${t.Service}` : " • (Generic)";
+    return `<option value="${t.TemplateID}">${t.Title}${svc}</option>`;
+  }).join("");
+  if (data.TemplateID) sel.value = data.TemplateID;
+
+  document.getElementById("consentPatientName").value = data.PatientName || "";
+  document.getElementById("consentStaffName").value = data.StaffName || "";
+  document.getElementById("consentDate").value = data.ConsentDate || todayPHDateISO();
+  document.getElementById("consentText").value = data.ConsentText || "";
+  document.getElementById("consentStatus").innerText = data.Status || "DRAFT";
+  const isLocked = data.Status === "COMPLETED";
+  lockConsentUI(isLocked);
+
+
+  const cm = document.getElementById("consentModal");
+  cm.dataset.consentId = data.ConsentID;
+  cm.dataset.mode = "existing";
+
+closeConsentsList();
+showConsentModal();
+initConsentSignaturePads();
+
+// clear first
+patientPad?.clear();
+staffPad?.clear();
+
+// load saved signatures (if any)
+const patientUrl = await getSignedUrl("consent-signatures", data.PatientSignaturePath);
+if (patientUrl) await patientPad?.loadFromUrl(patientUrl);
+
+const staffUrl = await getSignedUrl("consent-signatures", data.StaffSignaturePath);
+if (staffUrl) await staffPad?.loadFromUrl(staffUrl);
+
+lucide.createIcons();
+}finally{
+    hideLoading()
+  }
+}
+async function getSignedUrl(bucket, path, expiresInSeconds = 3600) {
+  if (!path) return null;
+
+  const { data, error } = await supabaseClient.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresInSeconds);
+
+  if (error) {
+    console.error("getSignedUrl error:", error);
+    return null;
+  }
+  return data?.signedUrl || null;
+}
+function lockConsentUI(isLocked) {
+  // Inputs
+  document.getElementById("consentTemplateSelect").disabled = isLocked;
+  document.getElementById("consentPatientName").readOnly = isLocked;
+  document.getElementById("consentStaffName").readOnly = isLocked;
+  document.getElementById("consentDate").readOnly = isLocked;
+  document.getElementById("consentText").readOnly = isLocked;
+
+  // Signature pads (disable pointer events)
+  const patientCanvas = document.getElementById("patientSigCanvas");
+  const staffCanvas = document.getElementById("staffSigCanvas");
+
+  if (patientCanvas) {
+    patientCanvas.style.pointerEvents = isLocked ? "none" : "auto";
+    patientCanvas.style.opacity = isLocked ? "0.6" : "1";
+  }
+
+  if (staffCanvas) {
+    staffCanvas.style.pointerEvents = isLocked ? "none" : "auto";
+    staffCanvas.style.opacity = isLocked ? "0.6" : "1";
+  }
+
+  // Clear buttons
+  document.getElementById("patientSigClear").disabled = isLocked;
+  document.getElementById("staffSigClear").disabled = isLocked;
+
+  // Save button
+  const saveBtn = document.getElementById("btnSaveConsent");
+  saveBtn.disabled = isLocked;
+  saveBtn.innerText = isLocked ? "Consent Locked" : "Save Consent";
+
+  // Status label
+  const statusEl = document.getElementById("consentStatus");
+  if (isLocked) {
+    statusEl.innerText = "COMPLETED (Locked)";
+    statusEl.classList.add("text-green-700", "font-bold");
+  } else {
+    statusEl.classList.remove("text-green-700", "font-bold");
+  }
+}
+function getSelectedTemplateTitle() {
+  const sel = document.getElementById("consentTemplateSelect");
+  if (!sel || sel.selectedIndex < 0) return null;
+  return sel.options[sel.selectedIndex].text;
+}
+async function prefillMedicalFromLastRecord(userAccountId) {
+  if (!userAccountId) return;
+
+  const { data, error } = await supabaseClient
+    .from("MedicalRecord")
+    .select(`
+      EmergencyContactName,
+      EmergencyContactNumber,
+      PreviousHospitalizations,
+      PrescribedMedications,
+      AllergiesToMedications,
+      FamilyMedicationProblems,
+      OtherMedicalConcerns,
+      MedicalAlert,
+      MedicalConditions,
+      HeightCm,
+      WeightKg,
+      BloodPressure,
+      CreatedAt
+    `)
+    .eq("UserAccountID", userAccountId)
+    .order("CreatedAt", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return;
+
+  // fill inputs
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = v ?? "";
+  };
+
+  setVal("emergencyName", data.EmergencyContactName);
+  setVal("emergencyNumber", data.EmergencyContactNumber);
+  setVal("prevHosp", data.PreviousHospitalizations);
+  setVal("presMeds", data.PrescribedMedications);
+  setVal("allergies", data.AllergiesToMedications);
+  setVal("familyProb", data.FamilyMedicationProblems);
+  setVal("concerns", data.OtherMedicalConcerns);
+  setVal("alerts", data.MedicalAlert);
+  setVal("heightCm", data.HeightCm);
+  setVal("weightKg", data.WeightKg);
+  setVal("bloodPressure", data.BloodPressure);
+
+  // conditions
+  const condObj = data.MedicalConditions || {};
+  document
+    .querySelectorAll("#conditionsGrid input[type='checkbox'][data-cond-key]")
+    .forEach(cb => {
+      cb.checked = !!condObj[cb.dataset.condKey];
+    });
+
+  showMessage("Medical history auto-filled from last visit.", "info");
+}
+
+
+        // --- INITIALIZE ---
+    document.getElementById("btnSaveForm").addEventListener("click", saveMedicalRecord);
+    document.getElementById("searchInput").addEventListener("input", renderTodaysAppointments);
+    document.getElementById("statusFilter").addEventListener("change", async () => {
+      const mode = document.getElementById("statusFilter").value || 'today';
+      const titleEl = document.getElementById("pageTitle");
+      if (titleEl) titleEl.innerText = (mode === 'finished') ? 'Finished Appointments – Assessment Form' : "Today's Appointments – Assessment Form";
+
+      await fetchTodaysAppointments(mode);
+      await hydrateMedicalStatuses();
+      await renderTodaysAppointments();
+    });
+
+
+    initStaticUI();
+
+    (async () => {
+      await checkAuth(true);
+      await loadNotifications();
+      await fetchTodaysAppointments("today");
+      await hydrateMedicalStatuses();
+      await renderTodaysAppointments();
+
+      // refresh bell badge periodically
+      setInterval(loadNotifications, 15000);
+    })();
+    lucide.createIcons();
+
+    </script>
+</body>
+</html>

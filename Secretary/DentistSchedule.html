@@ -67,7 +67,7 @@
 
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -84,17 +84,17 @@
         <a href="Analytics.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-chart-column w-5"></i><span>Analytics & Reports</span>
         </a>
+        <a href="TreatmentPlans.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Treatment Plans</span>
+        </a>
         <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
         </a>
-        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
-        </a>
-        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
         </a>
 
         <div class="pt-3 mt-3 border-t border-white/15"></div>
@@ -334,53 +334,11 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/feedback.js"></script>  
   <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // --- showMessage (toast) ---
-    function showMessage(message, type = 'info', ms = 2800) {
-      const host = document.getElementById('toastContainer');
-      if (!host) {
-        alert(message);
-        return;
-      }
-
-      const el = document.createElement('div');
-      const base = "pointer-events-auto w-[340px] max-w-[90vw] rounded-xl border px-4 py-3 shadow-lg";
-      const styles = {
-        success: "bg-emerald-50 border-emerald-200 text-emerald-900",
-        error: "bg-rose-50 border-rose-200 text-rose-900",
-        warning: "bg-amber-50 border-amber-200 text-amber-900",
-        info: "bg-white border-gray-200 text-gray-900",
-      };
-      el.className = `${base} ${styles[type] || styles.info}`;
-      el.innerHTML = `
-        <div class="flex items-start gap-3">
-          <div class="mt-0.5">
-            ${type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : ''}
-            ${type === 'error' ? '<i class="fa-solid fa-circle-xmark"></i>' : ''}
-            ${type === 'warning' ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ''}
-            ${type === 'info' ? '<i class="fa-solid fa-circle-info"></i>' : ''}
-          </div>
-          <div class="flex-1">
-            <div class="text-sm font-semibold">${message}</div>
-          </div>
-          <button class="p-1 rounded-lg hover:bg-black/5" aria-label="Close">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      `;
-
-      const closeBtn = el.querySelector('button');
-      closeBtn.addEventListener('click', () => el.remove());
-
-      host.appendChild(el);
-      setTimeout(() => {
-        if (el.isConnected) el.remove();
-      }, ms);
-    }
 
     // --- Auth check function ---
     async function checkAuth(redirect = true) {
@@ -1079,7 +1037,8 @@
         }
 
         els.saveBlockBtn().disabled = true;
-
+        showLoading("Saving dentist schedule…", "Please wait");
+        try{
         let successCount = 0;
         let targetYmd = ymd;
 
@@ -1122,7 +1081,10 @@
 
         closeModal();
         await fetchAvailabilityBlocksForView();
-      });
+      }finally{
+            hideLoading();
+    els.saveBlockBtn().disabled = false;
+      }});
 
 
 
@@ -1136,15 +1098,18 @@
 
         const btn = els.confirmDeleteBtn();
         btn.disabled = true;
-
+        showLoading("Deleting block…", "Please wait");
+        try{
         const ok = await deleteAvailabilityBlock(ui.pendingDelete.id);
-        btn.disabled = false;
 
         if (!ok) return; // keep modal open if delete failed
 
         closeDeleteModal();
         await fetchAvailabilityBlocksForView();
-      });
+      }finally{
+          hideLoading();
+          btn.disabled = false;
+      }});
 
       // Close modal when clicking outside
       els.modal().addEventListener('click', (e) => {
