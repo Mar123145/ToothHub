@@ -74,7 +74,7 @@
   <!-- App Shell -->
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-house w-5"></i>
@@ -92,6 +92,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+        <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-credit-card w-5"></i>
@@ -125,21 +129,23 @@
     </main>
   </div>
 
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/feedback.js"></script>
   <script>
     // --- Supabase client (replace with your values) ---
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co"; // <- replace
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; // <- replace
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  async function checkAuth(redirect = true) {
+async function checkAuth(redirect = true) {
   const storedFirstName = localStorage.getItem('userFirstName');
   const storedRole = localStorage.getItem('userRole');
   const storedEmail = localStorage.getItem('userEmail');
+  const storedUserId = localStorage.getItem('userId');
 
-  if (storedFirstName && storedRole) {
-    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+  // ✅ Only early-return if userId exists too
+  if (storedFirstName && storedRole && storedUserId) {
+    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail, UserId: storedUserId };
   }
 
   const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
@@ -165,9 +171,15 @@
   localStorage.setItem('userFirstName', userData.FirstName);
   localStorage.setItem('userRole', userData.Role);
   localStorage.setItem('userEmail', userData.Email);
+
+  // ✅ Always store this
   localStorage.setItem('userId', session.user.id);
 
   return userData;
+}
+
+function refreshAvailabilityIfDentistSelected() {
+  if (state.selectedDentist) refreshMonthAvailability();
 }
 
 
@@ -178,87 +190,270 @@
       window.location.href = '/Login.html';
     }
 
-    async function loadNotifications() {
-      if (localStorage.getItem("prefBellNotif") === "false") return;
-      const bellBtn = document.getElementById('notifBellBtn');
-      if (!bellBtn) return;
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
 
-      const userId = localStorage.getItem('userId');
-      if (!userId) return;
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
 
-      const { data: notifications, error } = await supabaseClient
-        .from('Notifications')
-        .select('*')
-        .eq('UserAccountID', userId)
-        .eq('Status', 'Unread')
-        .order('DateSent', { ascending: false });
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
 
-      if (error) return console.error(error);
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-      const existingBadge = document.getElementById('notif-badge');
-      if (existingBadge) existingBadge.remove();
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
 
-      if (notifications && notifications.length > 0) {
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
         const badge = document.createElement('span');
         badge.id = 'notif-badge';
         badge.textContent = notifications.length;
         badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
-        bellBtn.appendChild(badge);
-      }
+        bellContainer.appendChild(badge);
+    }
 
-      const prevDropdown = document.getElementById('notif-dropdown');
-      if (prevDropdown) prevDropdown.remove();
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
 
-      bellBtn.onclick = async () => {
+    bellContainer.onclick = async () => {
         let dropdown = document.getElementById('notif-dropdown');
         if (dropdown) return dropdown.remove();
 
         dropdown = document.createElement('div');
         dropdown.id = 'notif-dropdown';
-        dropdown.className = 'absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
         dropdown.style.maxHeight = '320px';
 
         if (!notifications || notifications.length === 0) {
-          const emptyMsg = document.createElement('div');
-          emptyMsg.className = 'p-4 text-gray-500 text-sm';
-          emptyMsg.textContent = 'No new notifications';
-          dropdown.appendChild(emptyMsg);
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
         } else {
-          notifications.forEach((n) => {
+          notifications.forEach(n => {
             const item = document.createElement('button');
-            item.type = 'button';
-            item.className = 'w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900';
-            item.textContent = n.Message;
-            item.addEventListener('click', async () => {
-              await supabaseClient.from('Notifications').update({ Status: 'Read' }).eq('NotificationID', n.NotificationID);
-              dropdown.remove();
+            item.type = "button";
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
               loadNotifications();
             });
+
             dropdown.appendChild(item);
           });
+
         }
 
-        document.body.appendChild(dropdown);
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
 
-        const onDocClick = (e) => {
-          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener('click', onDocClick);
-          }
-        };
-        setTimeout(() => document.addEventListener('click', onDocClick), 0);
-      };
+
+function fmtManila(iso) {
+  try {
+    return new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila" });
+  } catch {
+    return iso;
+  }
+}
+
+function msToClock(ms) {
+  if (ms <= 0) return "00:00:00";
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+// Gray out the entire booking UI + block clicks
+function applyBookingLockUI(untilISO) {
+  const overlay = document.getElementById("bookingLockOverlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+  overlay.classList.add("flex");
+
+  // Also gray out app root behind (optional but nice)
+  const root = document.getElementById("app-root");
+  if (root) {
+    root.classList.add("opacity-50", "pointer-events-none", "select-none");
+  }
+
+  const untilText = document.getElementById("lockUntilText");
+  if (untilText) untilText.textContent = fmtManila(untilISO);
+
+  const countdownEl = document.getElementById("lockCountdown");
+
+  const tick = () => {
+    const now = new Date();
+    const until = new Date(untilISO);
+    const diff = until.getTime() - now.getTime();
+
+    if (countdownEl) countdownEl.textContent = msToClock(diff);
+
+    // auto-unlock
+    if (diff <= 0) {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+      if (root) root.classList.remove("opacity-50", "pointer-events-none", "select-none");
+      clearInterval(timer);
+      // refresh page state (optional)
+      showMessage("Booking restriction lifted. You may book now.", "success", 4000);
     }
+  };
+
+  tick();
+  const timer = setInterval(tick, 1000);
+}
+
+async function checkBookingRestriction(userId) {
+  if (!userId) return;
+
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("noshowcount, bookingrestricteduntil")
+    .eq("UserAccountID", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("checkBookingRestriction error:", error);
+    return;
+  }
+
+  // ✅ must match the exact column name returned by Supabase
+  const until = data?.bookingrestricteduntil;
+
+  if (!until) return;
+
+  const untilDt = new Date(until);
+  if (isNaN(+untilDt)) return;
+
+  if (untilDt.getTime() > Date.now()) {
+    applyBookingLockUI(until);
+  }
+}
+
+    
     window.addEventListener('DOMContentLoaded', async () => {
       const user = await checkAuth();
-      if (!user) return; // stops script if no user
+      if (!user) return;
 
-      // store userId in state so confirmBooking can use it
       state.currentUserId = localStorage.getItem('userId');
 
+      await checkBookingRestriction(state.currentUserId);
+
+const plan = await getActiveBracesPlan(state.currentUserId);
+state.hasActiveBracesPlan = !!plan;
+state.activeBracesPlan = plan;
+
+state.pretreatGate = plan
+  ? await getPretreatGate(plan.TreatmentPlanID)
+  : { exists: false, allDone: true, pendingCount: 0 };
+
+
+state.pendingPretreatments = plan
+  ? await getPendingPretreatments(plan.TreatmentPlanID)
+  : [];
+console.log("plan", plan);
+console.log("pretreatGate", state.pretreatGate);
+console.log("pendingPretreatments", state.pendingPretreatments);
       render();
       loadNotifications();
     });
+    
+
+function matchesPretreatment(serviceId) {
+  return (state.pendingPretreatments || []).some(
+    p => Number(p.serviceid) === Number(serviceId)
+  );
+}
+
+function isBracesProcedureSelected() {
+  // "Procedure" = Orthodontics that is NOT consultation/diagnostic
+  const list = state.selectedServices || [];
+  return list.some(s => {
+    const cat = String(s.category || "").toLowerCase();
+    if (!cat.includes("orthodont")) return false;
+
+    const n = String(s.name || "").toLowerCase();
+    // allow consultation/diagnostic without blocking
+    if (n.includes("consult")) return false;
+    if (n.includes("diagnos")) return false;
+
+    // everything else orthodontics = procedure (installation/adjustment/etc.)
+    return true;
+  });
+}
+
+function isBracesInstallSelected() {
+  return (state.selectedServices || []).some(s => s.id === 701);
+}
+
+function isBracesAdjustSelected() {
+  return (state.selectedServices || []).some(s => s.id === 702);
+}
+
+
+function getPretreatMissingNames() {
+  return (state.pendingPretreatments || [])
+    .filter(p => String(p.status || "").toUpperCase() === "PENDING")
+    .map(p => p.servicename || `Service #${p.serviceid}`)
+    .filter(Boolean);
+}
+
 
         // ---------- REPLACE getBookedTimes WITH getBookedAppointments ----------
 async function getBookedAppointments(dentistUserAccountId, dateYmd) {
@@ -403,13 +598,10 @@ async function getDentistBlocksForMonth(dentistUserAccountId, monthStartISO, mon
         return dt.toLocaleTimeString('en-US', options).replace(/\u202F/g, '').replace(/\s+/g,' '); 
       }
 
-     // ---------- REPLACE renderTimeSlots ----------
 function renderTimeSlots() {
   const { selectedDate, selectedDentist, bookedAppointments, selectedTime } = state;
 
-  const totalMinutes =
-    computeTotalDurationMinutes(state.selectedServices) +
-    (state.selectedAddOns || []).reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+  const totalMinutes = computeTotalDurationMinutes(state.selectedServices);
 
   // Manila "today" in YYYY-MM-DD
   const todayYmd = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
@@ -428,7 +620,7 @@ function renderTimeSlots() {
       candidateStart = makeManilaDateTime(selectedDate, time);
       candidateEnd = new Date(candidateStart.getTime() + totalMinutes * 60000);
       const clinicClose = makeManilaDateTime(selectedDate, "5:00 PM");
-      const exceedsClosing = candidateEnd > clinicClose;
+      exceedsClosing = candidateEnd > clinicClose;
     }
 
     // overlap check vs bookedAppointments (dentist-specific list)
@@ -460,28 +652,51 @@ function renderTimeSlots() {
       isTooSoonToday = true;
     }
 
+    let disabledReason = "";
+    if (isBooked) disabledReason = "booked";
+    else if (isBlocked) disabledReason = "blocked";
+    else if (isTooSoonToday) disabledReason = "tooSoon";
+    else if (exceedsClosing) disabledReason = "exceedsClosing";
+
     const disabled =
-      !(state.selectedServices && state.selectedServices.length) ||   // ✅ at least one service
+      !(state.selectedServices && state.selectedServices.length) ||
       !selectedDentist ||
       !selectedDate ||
       totalMinutes <= 0 ||
       isBooked ||
       isBlocked ||
-      isTooSoonToday;
+      isTooSoonToday ||
       exceedsClosing;
 
     const isActive = selectedTime === time;
 
+    const disabledClass =
+    disabledReason === "blocked"
+      ? "bg-rose-50 text-rose-700 border-rose-200 cursor-not-allowed"
+      : disabledReason === "tooSoon"
+        ? "bg-amber-50 text-amber-700 border-amber-200 cursor-not-allowed"
+        : disabled
+          ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200"
+          : "";
+
+  const title =
+    disabledReason === "booked" ? "Already booked" :
+    disabledReason === "blocked" ? "Dentist unavailable (blocked)" :
+    disabledReason === "tooSoon" ? "Too soon (must be 1 hour from now)" :
+    disabledReason === "exceedsClosing" ? "Doesn't fit before 5:00 PM" :
+    "";
+
     return `
-      <button
-        class="p-3 border rounded-lg text-sm
-          ${isActive && !disabled ? "border-primary bg-primary text-white" : ""}
-          ${!isActive && !disabled ? "border-gray-200 hover:border-primary/50" : ""}
-          ${disabled ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200" : ""}"
-        ${disabled ? "disabled" : `onclick="setSelectedTime('${time}')"`}>
-        ${time}
-      </button>
-    `;
+    <button
+      class="p-3 border rounded-lg text-sm
+        ${isActive && !disabled ? "border-primary bg-primary text-white" : ""}
+        ${!isActive && !disabled ? "border-gray-200 hover:border-primary/50" : ""}
+        ${disabledClass}"
+      title="${title}"
+      ${disabled ? "disabled" : `onclick="setSelectedTime('${time}')"`}>
+      ${time}
+    </button>
+  `;
   }).join("");
 }
 
@@ -490,37 +705,78 @@ function renderTimeSlots() {
     // --- Data ---
 // --- MAIN SERVICES (specific procedures) ---
 const mainServices = [
-  // ✅ Existing (already specific)
-  { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", category: "Cleaning", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [] },
-  { id: 6, name: "Whitening (In-clinic Session)", category: "Whitening", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [] },
-  { id: 4, name: "Root Canal (Anterior / Single Canal)", category: "Root Canal", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
-
-  // ✅ EXTRACTION (patient selects the specific type)
-  { id: 401, name: "Simple Extraction – Anterior / Premolar", category: "Extraction", durationMinutes: 30, basePrice: 1500, allowedAddOnIds: [901, 902, 903] },
-  { id: 402, name: "Simple Extraction – Molar", category: "Extraction", durationMinutes: 45, basePrice: 2000, allowedAddOnIds: [901, 902, 903] },
-  { id: 403, name: "Complicated Extraction", category: "Extraction", durationMinutes: 60, basePrice: 3000, allowedAddOnIds: [901, 902, 903] },
-  // NOTE: Surgery extraction is intentionally not selectable by patient.
-
-  // ✅ RESTORATION (patient selects the surface count)
-  { id: 501, name: "Restoration – 1 Surface", category: "Restoration", durationMinutes: 45, basePrice: 1500, allowedAddOnIds: [904, 905] },
-  { id: 502, name: "Restoration – 2 Surfaces", category: "Restoration", durationMinutes: 60, basePrice: 2000, allowedAddOnIds: [904, 905] },
-  { id: 503, name: "Restoration – 3 Surfaces", category: "Restoration", durationMinutes: 75, basePrice: 2500, allowedAddOnIds: [904, 905] },
-
-  // ✅ Bridge / Veneer
-  { id: 201, name: "Fixed Bridge (Porcelain Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
-  { id: 202, name: "Fixed Bridge (Plastic Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 75, basePrice: 5000, allowedAddOnIds: [] },
-  { id: 203, name: "Direct Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 10000, allowedAddOnIds: [] },
-  { id: 204, name: "Indirect Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [] },
-
-  // ✅ Denture
-  { id: 301, name: "Removable Partial Denture (Upper & Lower)", category: "Denture", durationMinutes: 120, basePrice: 10000, allowedAddOnIds: [] },
-  { id: 302, name: "Complete Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 12000, allowedAddOnIds: [] },
-  { id: 303, name: "Flexible Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
-  { id: 304, name: "Ivocap Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
-
-  // ✅ Orthodontics (consultation/check-up only for now)
-  { id: 5, name: "Orthodontic Consultation / Check-up", category: "Orthodontics", durationMinutes: 30, basePrice: 0, allowedAddOnIds: [] },
+  {
+    id: 1,
+    name: "Dental Cleaning",
+    category: "Cleaning",
+    durationMinutes: 45,
+    basePrice: 1200, // starts from
+  },
+  {
+    id: 2,
+    name: "Tooth Extraction",
+    category: "Extraction",
+    durationMinutes: 60,
+    basePrice: 1500,
+  },
+  {
+    id: 3,
+    name: "Tooth Filling (Pasta)",
+    category: "Restoration",
+    durationMinutes: 60,
+    basePrice: 1500,
+  },
+  {
+    id: 4,
+    name: "Root Canal Treatment",
+    category: "Root Canal",
+    durationMinutes: 90,
+    basePrice: 7000,
+  },
+  {
+    id: 5,
+    name: "Teeth Whitening",
+    category: "Whitening",
+    durationMinutes: 60,
+    basePrice: 5500,
+  },
+  {
+    id: 6,
+    name: "Crowns / Bridges / Veneers",
+    category: "Crowns & Veneers",
+    durationMinutes: 90,
+    basePrice: 5000, // starts from
+  },
+  {
+    id: 7,
+    name: "Dentures",
+    category: "Denture",
+    durationMinutes: 120,
+    basePrice: 10000,
+  },
+  {
+    id: 8,
+    name: "Braces Consultation",
+    category: "Orthodontics",
+    durationMinutes: 30,
+    basePrice: 2500,
+  },
+  {
+    id: 701,
+    name: "Braces Installation",
+    category: "Orthodontics",
+    durationMinutes: 120,
+    basePrice: 15000, // starts from
+  },
+  {
+    id: 702,
+    name: "Braces Adjustment",
+    category: "Orthodontics",
+    durationMinutes: 45,
+    basePrice: 800, // starts from
+  },
 ];
+
 
 const services = mainServices.map(s => ({
   id: s.id,
@@ -547,39 +803,41 @@ const addOns = [
 
 // --- SERVICE DESCRIPTIONS (tooltips) ---
 const serviceCategoryDescriptions = {
-  "Cleaning": "Professional cleaning to remove plaque and tartar. Helps prevent cavities and gum disease.",
-  "Extraction": "Removal of a tooth. Select the tooth type so the estimate and duration are more accurate.",
-  "Restoration": "Dental filling. The estimate depends on how many tooth surfaces are involved.",
-  "Root Canal": "Treatment to remove infection inside the tooth (single canal). Final plan may vary after assessment.",
-  "Orthodontics": "Consultation / check-up for braces. The dentist will recommend the proper procedure and cost after evaluation.",
-  "Whitening": "In-clinic teeth whitening session. Results may vary per patient.",
-  "Bridge / Veneer": "Tooth restoration using crowns/veneers. Prices shown are per tooth unless stated otherwise.",
-  "Denture": "Replacement of missing teeth using dentures (upper & lower). Type depends on material and fit."
+  "Cleaning":
+    "Professional dental cleaning to remove plaque and tartar and help maintain healthy teeth and gums.",
+
+  "Extraction":
+    "Removal of a damaged, decayed, or problematic tooth based on clinical assessment.",
+
+  "Restoration":
+    "Dental fillings to repair cavities or restore damaged tooth surfaces.",
+
+  "Root Canal":
+    "Treatment to remove infection inside a tooth and relieve pain while preserving the tooth structure.",
+
+  "Orthodontics":
+    "Orthodontic services related to braces evaluation, installation, and adjustment.",
+
+  "Whitening":
+    "In-clinic teeth whitening procedure to improve tooth color and brightness.",
+
+  "Crowns & Veneers":
+    "Treatments that improve the appearance or strength of teeth. This may include crowns, bridges, or veneers depending on your dental condition.",
+
+  "Denture":
+    "Removable dental appliances designed to replace missing teeth and restore oral function."
 };
+
 
 const serviceProcedureDescriptions = {
   1: "Basic cleaning to remove plaque and tartar.",
-  4: "Root canal for a single canal tooth (anterior).",
-  5: "Orthodontic consultation/check-up (procedure recommendation after assessment).",
-  6: "In-clinic whitening session.",
-
-  401: "Simple extraction for anterior or premolar teeth.",
-  402: "Simple extraction for molar teeth.",
-  403: "Complicated extraction (e.g., difficult position).",
-
-  501: "Composite restoration on 1 tooth surface.",
-  502: "Composite restoration on 2 tooth surfaces.",
-  503: "Composite restoration on 3 tooth surfaces.",
-
-  201: "Fixed bridge with porcelain crown (per tooth).",
-  202: "Fixed bridge with plastic crown (per tooth).",
-  203: "Direct veneer (per tooth).",
-  204: "Indirect veneer (per tooth).",
-
-  301: "Removable partial denture for upper & lower.",
-  302: "Complete denture for upper & lower.",
-  303: "Flexible denture for upper & lower.",
-  304: "Ivocap denture for upper & lower."
+  2: "Tooth extraction based on assessment.",
+  3: "Tooth filling (pasta) to repair cavities.",
+  4: "Root canal treatment to remove infection and relieve pain.",
+  5: "In-clinic teeth whitening session.",
+  6: "Crown/bridge/veneer depending on assessment.",
+  7: "Denture fitting depending on assessment.",
+  8: "Braces consultation and evaluation."
 };
 // ----------------------------------------
 
@@ -591,6 +849,28 @@ function escAttr(s) {
     .replace(/>/g, "&gt;");
 }
 
+function formatDesc(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+
+  // Allow authoring descriptions with "\n" for new lines or "- " for bullets.
+  // Convert to safe HTML with <br/> and bullet dots.
+  const safe = escAttr(raw);
+
+  // If user wrote bullet-style lines, render them cleaner
+  const lines = safe.split(/\n+/).map(s => s.trim()).filter(Boolean);
+
+  if (lines.length > 1) {
+    // show as compact bullet list
+    return `
+      <ul class="list-disc pl-5 space-y-1">
+        ${lines.map(l => `<li>${l.replace(/^-+\s*/, "")}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  return safe; // single line
+}
 
 
 
@@ -602,46 +882,75 @@ function getMainById(id){ return mainServices.find(s=>s.id===id); }
 function getAddOnById(id){ return addOns.find(a=>a.id===id); }
 
 // ---------- INCOMPATIBILITY MAP & HELPERS ----------
-const incompatibleById = {
-  4: [5, 6, 201, 202, 203, 204, 301, 302, 303, 304, 401, 402, 403],
-  5: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 303, 304],
-  6: [4, 5, 201, 202, 203, 204, 301, 302, 303, 304],
-  201: [1, 6, 4, 401, 402, 403, 501, 502, 503, 202, 203, 204, 301, 302, 303, 304, 5],
-  202: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 203, 204, 301, 302, 303, 304, 5],
-  203: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 204, 301, 302, 303, 304, 5],
-  204: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 301, 302, 303, 304, 5],
-  301: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 302, 303, 304, 5],
-  302: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 303, 304, 5],
-  303: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 304, 5],
-  304: [1, 6, 4, 401, 402, 403, 501, 502, 503, 201, 202, 203, 204, 301, 302, 303, 5],
-  401: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
-  402: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
-  403: [4, 5, 6, 201, 202, 203, 204, 301, 302, 303, 304],
-  501: [5, 201, 202, 203, 204, 301, 302, 303, 304],
-  502: [5, 201, 202, 203, 204, 301, 302, 303, 304],
-  503: [5, 201, 202, 203, 204, 301, 302, 303, 304],
+const SVC = {
+  CLEANING: 1,
+  EXTRACTION: 2,
+  RESTORATION: 3,
+  ROOT_CANAL: 4,
+  WHITENING: 5,
+  CROWNS_VENEERS: 6,
+  DENTURE: 7,
+  ORTHO: 8,
 };
-// helper: find service by id
-function getServiceById(id) {
-  return mainServices.find(s => s.id === id) || addOns.find(a => a.id === id) || null;
+
+function addPair(map, a, b) {
+  if (!map[a]) map[a] = [];
+  if (!map[b]) map[b] = [];
+  if (!map[a].includes(b)) map[a].push(b);
+  if (!map[b].includes(a)) map[b].push(a);
 }
-function getIncompatibleServiceIds(selectedServices) {
-  const incompatibleIds = new Set();
-  const selectedIds = (selectedServices || []).map(s => s.id);
 
-  for (const svc of services) {
-    if (selectedIds.includes(svc.id)) continue;
+function buildIncompatibleById() {
+  const map = {};
 
-    for (const selId of selectedIds) {
-      const a = incompatibleById[selId] || [];
-      const b = incompatibleById[svc.id] || [];
-      if (a.includes(svc.id) || b.includes(selId)) {
-        incompatibleIds.add(svc.id);
-        break;
-      }
+  // ✅ Whitening is ONLY allowed with Cleaning
+  // "Whitening ay laging kasabay lang ng cleaning"
+  const whiteningAllowedWith = new Set([SVC.CLEANING]);
+  Object.values(SVC).forEach(id => {
+    if (id === SVC.WHITENING) return;
+    if (!whiteningAllowedWith.has(id)) addPair(map, SVC.WHITENING, id);
+  });
+
+  // ✅ Major procedures should NOT be combined with other major procedures
+  // "Major procedures (surgery, impacted, root canal) ay hindi isinasabay sa ibang major procedures"
+  // In your current list, treat these as major:
+  const major = [SVC.EXTRACTION, SVC.ROOT_CANAL, SVC.CROWNS_VENEERS];
+  for (let i = 0; i < major.length; i++) {
+    for (let j = i + 1; j < major.length; j++) {
+      addPair(map, major[i], major[j]);
     }
   }
-  return incompatibleIds;
+
+  // ✅ Denture can combine with cleaning/restoration/extraction only
+  // "Denture + cleaning/resto/extraction"
+  const dentureAllowedWith = new Set([SVC.CLEANING, SVC.RESTORATION, SVC.EXTRACTION]);
+  Object.values(SVC).forEach(id => {
+    if (id === SVC.DENTURE) return;
+    if (!dentureAllowedWith.has(id)) addPair(map, SVC.DENTURE, id);
+  });
+
+  // ✅ Ortho should NOT be combined with cleaning/resto/extraction (must be done before braces)
+  // "Ortho → cleaning, resto, extraction muna bago braces"
+  // So booking ortho is separate appointment.
+  const orthoNotTogether = [SVC.CLEANING, SVC.RESTORATION, SVC.EXTRACTION, SVC.ROOT_CANAL, SVC.WHITENING, SVC.CROWNS_VENEERS, SVC.DENTURE];
+  orthoNotTogether.forEach(id => addPair(map, SVC.ORTHO, id));
+
+  // ✅ Explicit rule already covered by whitening-only-with-cleaning:
+  // "Extraction + whitening" -> whitening rule makes it incompatible anyway.
+
+  return map;
+}
+
+const incompatibleById = buildIncompatibleById();
+
+function getIncompatibleServiceIds(selectedServices) {
+  const set = new Set();
+  (selectedServices || []).forEach(s => {
+    (incompatibleById[s.id] || []).forEach(x => set.add(x));
+  });
+  // don’t mark already-selected as “incompatible”
+  (selectedServices || []).forEach(s => set.delete(s.id));
+  return set;
 }
 
 // compute total minutes for currently selected services
@@ -670,9 +979,9 @@ function intervalsOverlap(s1, e1, s2, e2) {
 
     // IMPORTANT: add real UserAccountID values for dentist.userAccountId
     const dentists = [
-      { id: 1, userAccountId: "c2466c5f-4ef2-4998-8579-64f8449acc6c", name: "Daemarie Nicomedes", specialty: "General Dentistry", experience: "8 years", image: "https://via.placeholder.com/64x64?text=F" },
-      { id: 2, userAccountId: "e0d777c4-6e23-4816-8056-8132da8b5cf9", name: "Kate de Chavez", specialty: "Orthodontics", experience: "12 years", image: "https://via.placeholder.com/64x64?text=M" },
-      { id: 3, userAccountId: "abd23f38-21a9-429d-971c-65741e0bb9e7", name: "Julius Silo", specialty: "Oral Surgery", experience: "10 years", image: "https://via.placeholder.com/64x64?text=FS" },
+      { id: 1, userAccountId: "c2466c5f-4ef2-4998-8579-64f8449acc6c", name: "Daemarie Nicomedes", image: "https://via.placeholder.com/64x64?text=F" },
+      { id: 2, userAccountId: "e0d777c4-6e23-4816-8056-8132da8b5cf9", name: "Kate de Chavez", image: "https://via.placeholder.com/64x64?text=M" },
+      { id: 3, userAccountId: "abd23f38-21a9-429d-971c-65741e0bb9e7", name: "Julius Silo", image: "https://via.placeholder.com/64x64?text=FS" },
     ];
 
     const iconMap = {
@@ -701,8 +1010,6 @@ let state = {
 
   // NEW FLOW
   selectedServices: [],     // ✅ multiple MAIN services
-  selectedAddOns: [],       // ✅ add-ons (still multi-select)
-
   // Scheduling
   selectedDate: "",
   selectedTime: "",
@@ -716,6 +1023,11 @@ let state = {
   // Payment
   receiptFile: null,
   appointmentNotes: "",
+  hasActiveBracesPlan: false,
+  activeBracesPlan: null,     
+  orthoDentistLocked: false,
+  isPretreatBooking: false,
+  pretreatPlanId: null,  
 };
 
     function setState(newState) {
@@ -730,22 +1042,7 @@ let state = {
   selectedServices.forEach(s => (s.allowedAddOnIds || []).forEach(id => union.add(id)));
   return union;
 }
-    // --- Simple message UI (top) ---
-    function showMessage(text, type = "info", timeout = 3500) {
-      let msg = document.getElementById("globalMessage");
-      if (!msg) {
-        msg = document.createElement("div");
-        msg.id = "globalMessage";
-        msg.className = "fixed top-6 right-6 z-50 p-3 rounded shadow";
-        document.body.appendChild(msg);
-      }
-      msg.textContent = text;
-      msg.style.background = type === "success" ? "#16a34a" : type === "error" ? "#dc2626" : "#3b82f6";
-      msg.style.color = "#fff";
-      msg.style.display = "block";
-      clearTimeout(msg._t);
-      msg._t = setTimeout(() => { msg.style.display = "none"; }, timeout);
-    }
+
 
     // --- Helpers ---
     function timeStringTo24h(timeStr) {
@@ -772,7 +1069,22 @@ let state = {
 
     const canProceed = () => {
       switch (state.currentStep) {
-        case 1: return (state.selectedServices?.length || 0) > 0;
+        case 1: {
+          const hasSvc = (state.selectedServices?.length || 0) > 0;
+          if (!hasSvc) return false;
+
+        if (isBracesInstallSelected()) {
+          const missing = getPretreatMissingNames();
+          if (missing.length > 0) return false;
+        }
+
+        // Adjustment needs ACTIVE plan
+        if (isBracesAdjustSelected()) {
+          if (String(state.activeBracesPlan?.Status || "").toUpperCase() !== "ACTIVE") return false;
+        }
+
+          return true;
+        }
         case 2: return state.selectedDentist !== null;
         case 3: return state.selectedDate && state.selectedTime;
         case 4: return true;
@@ -782,7 +1094,7 @@ let state = {
 
 const goToPreviousMonth = () => {
 const newMonth = new Date(state.currentMonth);
-newMonth.setMonth(newMonth.getMonth() + 1);
+newMonth.setMonth(newMonth.getMonth() - 1);
 setState({ currentMonth: newMonth });
 if (state.selectedDentist) refreshMonthAvailability(newMonth);
 
@@ -868,22 +1180,12 @@ function renderStep1() {
   const selectedServices = state.selectedServices || [];
   const incompatibleIds = getIncompatibleServiceIds(selectedServices);
 
-  const allowedSet = getAllowedAddOnIdsForSelectedServices(selectedServices);
-  const allowedAddOns = addOns.filter(a => allowedSet.has(a.id));
+  const bracesProcedureSelected = isBracesInstallSelected();
+  const missingPretreat = bracesProcedureSelected ? getPretreatMissingNames() : [];
+  const hasMissingPretreat = missingPretreat.length > 0;
 
-  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowedSet.has(a.id));
-  if (cleanedAddOns.length !== (state.selectedAddOns || []).length) {
-    state.selectedAddOns = cleanedAddOns; // direct update to avoid render loop
-  }
-
-  const totalMinutes =
-    computeTotalDurationMinutes(selectedServices) +
-    cleanedAddOns.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
-
-  const totalEstimate =
-    selectedServices.reduce((sum, s) => sum + (s.price || 0), 0) +
-    cleanedAddOns.reduce((sum, a) => sum + (a.price || 0), 0);
-
+  const totalMinutes = computeTotalDurationMinutes(selectedServices);
+  const totalEstimate = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
   const durationLabel = totalMinutes
     ? `${Math.floor(totalMinutes / 60) ? Math.floor(totalMinutes / 60) + " hr " : ""}${totalMinutes % 60 ? (totalMinutes % 60) + " min" : ""}`.trim()
     : "—";
@@ -895,12 +1197,37 @@ function renderStep1() {
     "Root Canal",
     "Orthodontics",
     "Whitening",
-    "Bridge / Veneer",
+    "Crowns & Veneers",
     "Denture"
   ];
 
+const INSTALL_ID = 701;
+const ADJUST_ID = 702;
+
+const servicesForUI = (services || []).filter(s => {
+  // Braces Installation gating
+  if (s.id === INSTALL_ID) {
+    if (!state.hasActiveBracesPlan) return false;
+
+    // If pretreatments exist -> only show when all done
+    if (state.pretreatGate?.exists) return !!state.pretreatGate.allDone;
+
+    // If none exist -> allow installation
+    return true;
+  }
+
+  // Braces Adjustment gating (only when ACTIVE)
+  if (s.id === ADJUST_ID) {
+    if (!state.hasActiveBracesPlan) return false;
+    const st = String(state.activeBracesPlan?.Status || "").toUpperCase();
+    return st === "ACTIVE";
+  }
+
+  return true; // all other services always visible
+});
+
   const byCat = {};
-  (services || []).forEach(s => {
+  (servicesForUI || []).forEach(s => {
     const cat = s.category || "Other";
     if (!byCat[cat]) byCat[cat] = [];
     byCat[cat].push(s);
@@ -931,6 +1258,23 @@ function renderStep1() {
       <span class="font-bold"><i class="fas fa-info-circle mr-2"></i>Pricing Notice:</span>
       Prices shown are estimates only and may change after assessment and actual treatment.
     </div>
+    ${hasMissingPretreat ? `
+  <div class="p-4 mb-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg">
+    <div class="flex gap-2">
+      <i class="fas fa-triangle-exclamation mt-0.5"></i>
+      <div>
+        <p class="font-semibold">Braces procedure is locked</p>
+        <p class="mt-1">
+          You still have pending pre-treatment requirements. Please complete these first:
+        </p>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          ${missingPretreat.map(x => `<li>${escAttr(x)}</li>`).join("")}
+        </ul>
+      </div>
+    </div>
+  </div>
+` : ""}
+
 
     <div class="mb-4 grid gap-2">
       <div class="inline-flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-full text-xs text-primary font-medium w-fit">
@@ -938,14 +1282,15 @@ function renderStep1() {
         Estimated duration: ${durationLabel}
       </div>
       <div class="text-sm text-gray-700">
-        <strong>Estimated Total:</strong> ₱${totalEstimate.toLocaleString()}
+        <strong>Estimated Cost:</strong> ₱${totalEstimate.toLocaleString()}
         <p class="text-xs text-gray-500 mt-1">Final price may vary depending on procedures performed.</p>
       </div>
     </div>
 
     <h3 class="font-semibold text-lg mb-3">Choose Service(s)</h3>
     <p class="text-sm text-gray-600 mb-4">
-      Select a <strong>service category</strong>, then choose the <strong>specific procedure</strong> from the dropdown (if applicable).
+      Select the dental service you think you need. 
+      The dentist will determine the exact procedure and final cost after assessment.
     </p>
 
     <div class="grid gap-4 md:grid-cols-2 mb-8">
@@ -958,8 +1303,11 @@ function renderStep1() {
         const reallyDisabled = !isSelected && allIncompatible;
 
         const badgePrice = selected
-          ? `₱${(selected.price || 0).toLocaleString()}`
-          : (options.length === 1 ? `₱${(options[0].price || 0).toLocaleString()}` : "—");
+          ? `Starts from ₱${(selected.price || 0).toLocaleString()}`
+          : (options.length === 1
+              ? `Starts from ₱${(options[0].price || 0).toLocaleString()}`
+              : "—");
+
 
         const safeCat = String(cat).replace(/'/g, "\'");
         return `
@@ -974,26 +1322,32 @@ function renderStep1() {
                     ${reallyDisabled ? "disabled" : `onchange="toggleCategory('${safeCat}')"` }
                   />
                   <div>
-                    <div class="font-semibold flex items-center gap-2" title="${escAttr(serviceCategoryDescriptions[cat] || '')}"><span>${cat}</span><span class="text-gray-400"><i class="fas fa-circle-info"></i></span></div>
+                    <div class="font-semibold">
+                      ${cat}</div><div class="mt-2 text-xs text-primary bg-primary/10 border border-primary/20 rounded-md px-3 py-2 leading-snug"><i class="fas fa-circle-info text-gray-400 mt-[2px]"></i>
+                      ${escAttr(serviceCategoryDescriptions[cat] || "")}
+                    </div>
                     ${selected ? `<div class="text-xs text-gray-600 mt-1">Selected: <span class="font-medium">${selected.name}</span></div>` : `<div class="text-xs text-gray-500 mt-1">Not selected</div>`}
                     ${reallyDisabled ? `<div class="text-xs text-red-500 mt-1">Not compatible with selected service(s)</div>` : ""}
-                    ${cat === "Orthodontics" ? `<div class="text-xs text-gray-500 mt-1">Consultation/check-up only. Procedure & cost will be recommended after assessment.</div>` : ""}
+                      ${cat === "Orthodontics" ? `
+                        <div class="mt-2 flex flex-wrap gap-2">
+                          ${(byCat["Orthodontics"] || []).map(opt => {
+                            const checked = (selected?.id === opt.id);
+                            const disabled = incompatibleIds.has(opt.id) && !checked;
+                            return `
+                              <button
+                                type="button"
+                                class="px-3 py-1.5 text-xs rounded-full border
+                                  ${checked ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-200 hover:border-primary/50"}
+                                  ${disabled ? "opacity-50 cursor-not-allowed" : ""}"
+                                ${disabled ? "disabled" : `onclick="setCategoryService('Orthodontics', ${opt.id})"`}>
+                                ${opt.name}
+                              </button>
+                            `;
+                          }).join("")}
+                        </div>
+                      ` : ""}
                   </div>
                 </div>
-
-                ${isSelected && options.length > 1 ? `
-                  <div class="mt-3">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Choose specific procedure</label>
-                    <select class="w-full border rounded p-2 text-sm"
-                      onchange="setCategoryService('${safeCat}', this.value)">
-                      ${options.map(opt => `
-                        <option value="${opt.id}" ${selected?.id === opt.id ? "selected" : ""} title="${escAttr(serviceProcedureDescriptions[opt.id] || '')}">
-                          ${opt.name} — ₱${(opt.price || 0).toLocaleString()}
-                        </option>
-                      `).join("")}
-                    </select>
-                  </div>
-                ` : ""}
               </div>
 
               <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
@@ -1005,36 +1359,7 @@ function renderStep1() {
       }).join("")}
     </div>
 
-    <h3 class="font-semibold text-lg mb-3">Optional Add-ons</h3>
-    ${!selectedServices.length ? `
-      <p class="text-sm text-gray-500">Select at least one service to view available add-ons.</p>
-    ` : `
-      ${!allowedAddOns.length ? `
-        <p class="text-sm text-gray-500">No add-ons available for the selected service(s).</p>
-      ` : `
-        <div class="grid gap-4 md:grid-cols-2">
-          ${allowedAddOns.map(a => {
-            const isChecked = cleanedAddOns.some(x => x.id === a.id);
-            return `
-              <div class="p-4 border rounded-lg ${isChecked ? "border-primary bg-primary/5" : "border-gray-200"}">
-                <label class="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleAddOn(${a.id})" class="mt-1">
-                  <div class="flex-1">
-                    <div class="flex justify-between">
-                      <span class="font-semibold">${a.name}</span>
-                      <span class="text-xs font-medium bg-gray-100 px-2 py-1 rounded-full">
-                        ₱${(a.price || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <p class="text-xs text-gray-500">+${a.durationMinutes || 0} min • ${a.description || ""}</p>
-                  </div>
-                </label>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `}
-    `}
+
   `;
 }
 
@@ -1075,31 +1400,49 @@ function renderStep2() {
 
               // ✅ NEW: gray out day if fully booked (dentist-dependent)
               // monthAvailability[YYYY-MM-DD] = { anyAvailable: true/false }
-            const fullyBooked =
-              !!state.selectedDentist &&
-              !!state.monthAvailability &&
-              !!state.monthAvailability[day.date] &&
-              state.monthAvailability[day.date].anyAvailable === false;
+const info = state.monthAvailability?.[day.date] || null;
 
-              const disabled = day.isPast || fullyBooked;
+const isBlockedDay =
+  !!state.selectedDentist &&
+  !!info &&
+  info.blockedAllDay === true;
 
-              const btnClass = disabled
-                ? "text-gray-300 cursor-not-allowed"
-                : (selectedDate === day.date
-                    ? "bg-primary text-white"
-                    : day.isToday
-                      ? "bg-primary/10 text-primary border border-primary"
-                      : "hover:bg-primary/5 text-gray-700");
+const fullyBooked =
+  !!state.selectedDentist &&
+  !!info &&
+  info.anyAvailable === false &&
+  !isBlockedDay;
 
-              // Optional: add a subtle ring for fully booked dates
-              const extraClass = fullyBooked ? "bg-gray-100 border border-gray-200" : "";
+// disable past OR blocked OR fully booked
+const disabled = day.isPast || isBlockedDay || fullyBooked;
 
+let btnClass = "";
+let title = "";
+
+if (day.isPast) {
+  btnClass = "text-gray-300 cursor-not-allowed";
+  title = "Past date";
+} else if (isBlockedDay) {
+  // dentistavailability full-day block
+  btnClass = "bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed";
+  title = "Dentist unavailable (blocked)";
+} else if (fullyBooked) {
+  // fully booked day
+  btnClass = "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed";
+  title = "Fully booked";
+} else if (selectedDate === day.date) {
+  btnClass = "bg-primary text-white";
+} else if (day.isToday) {
+  btnClass = "bg-primary/10 text-primary border border-primary";
+} else {
+  btnClass = "hover:bg-primary/5 text-gray-700";
+}
               return `
                 <div class="aspect-square">
                   <button
                     class="w-full h-full flex items-center justify-center text-sm font-medium rounded-lg ${btnClass}"
                     ${disabled ? "disabled" : `onclick="setSelectedDate('${day.date}')"`}
-                    title="${fullyBooked ? "Fully booked for selected dentist" : ""}"
+                    title="${title}"
                   >
                     ${day.day}
                   </button>
@@ -1115,20 +1458,37 @@ function renderStep2() {
           </p>
         ` : ""}
 
-        ${
-          state.selectedDentist ? `
-            <p class="mt-2 text-xs text-gray-500">
-              Gray dates mean <strong>fully booked</strong> for the selected dentist.
-            </p>
-          ` : `
-            <p class="mt-2 text-xs text-gray-500">
-              Select a dentist to check availability accurately.
-            </p>
-            <p class="mt-2 text-xs text-gray-500">
-              Gray slots are unavailable (dentist already booked, dentist unavailable, too soon, or the selected service duration can’t be accommodated before 5:00 PM).
-            </p>
-          `
-        }
+${
+  state.selectedDentist ? `
+    <div class="mt-3 space-y-1 text-xs text-gray-500">
+      <p>
+        <span class="inline-block w-3 h-3 rounded bg-gray-100 border border-gray-200 align-middle mr-2"></span>
+        Gray dates mean <strong>fully booked</strong>.
+      </p>
+
+      <p>
+        <span class="inline-block w-3 h-3 rounded bg-rose-50 border border-rose-200 align-middle mr-2"></span>
+        Pink dates mean <strong>dentist unavailable (blocked)</strong>.
+      </p>
+
+      <p class="mt-2">
+        <span class="inline-block w-3 h-3 rounded bg-gray-200 border border-gray-300 align-middle mr-2"></span>
+        Gray time slots mean not available (already booked, clinic closed, or blocked).
+      </p>
+
+      <p>
+        <span class="inline-block w-3 h-3 rounded bg-amber-50 border border-amber-200 align-middle mr-2"></span>
+        Amber time slots mean <strong>too soon today</strong> (must be at least 1 hour from now).
+      </p>
+    </div>
+  ` : `
+    <p class="mt-2 text-xs text-gray-500">
+      Select a dentist to view availability details.
+    </p>
+  `
+}
+
+        
       </div>
 
       <div>
@@ -1142,10 +1502,13 @@ function renderStep2() {
 }
 
     function renderStep3() {
+      const list = state.orthoDentistLocked && state.selectedDentist
+        ? [state.selectedDentist]  // show only the owner dentist
+        : dentists;
       const { selectedDentist } = state;
       return `
         <div class="grid gap-4 max-w-2xl mx-auto">
-          ${dentists.map(dentist => `
+          ${list.map(dentist => `
             <div class="p-4 border rounded-lg cursor-pointer transition-all ${
               selectedDentist?.id === dentist.id ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/50"
             }" onclick="setSelectedDentist(${dentist.id})">
@@ -1155,8 +1518,6 @@ function renderStep2() {
                 </div>
                 <div class="flex-1">
                   <h3 class="font-semibold text-lg">${dentist.name}</h3>
-                  <p class="text-primary font-medium">${dentist.specialty}</p>
-                  <p class="text-gray-600 text-sm">${dentist.experience} experience</p>
                 </div>
                 ${selectedDentist?.id === dentist.id ? `<i class="${iconMap.Check} text-primary"></i>` : ''}
               </div>
@@ -1168,16 +1529,11 @@ function renderStep2() {
 
    function renderStep4() {
   const { selectedServices, selectedDate, selectedTime, selectedDentist, currentMonth } = state;
-  
-const addSel = state.selectedAddOns || [];
-const totalServicePrice = (selectedServices || []).reduce((sum,s)=>sum+(s.price||0),0);
-const addOnPrice = addSel.reduce((sum,a)=>sum+(a.price||0),0);
-const estimatedTotal = totalServicePrice + addOnPrice;
+
+const totalServicePrice = (selectedServices || []).reduce((sum, s) => sum + (s.price || 0), 0);
+const estimatedTotal = totalServicePrice;  
 const downpaymentAmount = FIXED_DOWNPAYMENT;
 const remainingBalance = Math.max(estimatedTotal - downpaymentAmount, 0);
-
-const main = state.selectedMainService;
-const addons = state.selectedAddOns || [];
   const calendarDays = generateCalendarDays(currentMonth);
   const selectedDayDetails = calendarDays.find(d => d && d.date === selectedDate);
 
@@ -1201,8 +1557,6 @@ const addons = state.selectedAddOns || [];
             <span>Services:</span>
             <div class="text-right">
               ${selectedServices.map(s => `<div>${s.name}</div>`).join('')}
-              ${addSel.length ? `<div class="mt-2 text-xs text-gray-500">Add-ons:</div>` : ""}
-              ${addSel.map(a => `<div>Add-on: ${a.name}</div>`).join('')}
             </div>
           </div>
           <div class="flex justify-between">
@@ -1222,8 +1576,8 @@ const addons = state.selectedAddOns || [];
             <span>${selectedDentist?.name || 'N/A'}</span>
           </div>
           <div class="flex justify-between">
-          <span>Estimated Total:</span>
-          <span>₱${estimatedTotal.toLocaleString()}</span>
+            <span>Estimated Cost:</span>
+            <span>₱${estimatedTotal.toLocaleString()}</span>
           </div>
           <hr class="my-3 border-gray-300"/>
           <div class="flex justify-between">
@@ -1292,6 +1646,7 @@ const addons = state.selectedAddOns || [];
 
 <!-- Confirm button -->
       <button
+        type="button"
         onclick="confirmBooking()"
         id="confirmBookingBtn"
         class="w-full px-4 py-3 text-lg font-medium rounded-md text-white bg-primary hover:bg-primary/90">
@@ -1439,8 +1794,7 @@ function isAnySlotAvailableForDateDentistOnly(dateYmd, bookedAppointments) {
 
 function isAnySlotAvailableForDate(dateYmd, bookedAppointments) {
   const totalMinutes =
-  computeTotalDurationMinutes(state.selectedServices) +
-  (state.selectedAddOns || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+  computeTotalDurationMinutes(state.selectedServices);
   if (!state.selectedDentist || !dateYmd || !totalMinutes) return true; // don't block calendar yet
 
   // today lead time handling
@@ -1542,6 +1896,7 @@ async function refreshMonthAvailability(monthDate = state.currentMonth) {
   const todayYmd = nowManila.toLocaleDateString("en-CA");
 
   // Build availability map for all days in month
+  // Build availability map for all days in month
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const availMap = {};
 
@@ -1553,33 +1908,99 @@ async function refreshMonthAvailability(monthDate = state.currentMonth) {
     const blockIntervals = groupedBlocks[dateYmd] || [];
     const isToday = dateYmd === todayYmd;
 
+    // ✅ quick flag: if dentist set a full-day block
+    const hasFullDayBlock = blockIntervals.some(b => b.isfullday === true);
+
     let anyAvailable = false;
 
     for (const label of timeSlots) {
       const slotStart = makeManilaDateTime(dateYmd, label);
-      const totalMinutes =
-        computeTotalDurationMinutes(state.selectedServices) +
-        (state.selectedAddOns || []).reduce((sum,a)=>sum+(a.durationMinutes||0),0);
+
+      const totalMinutes = computeTotalDurationMinutes(state.selectedServices);
 
       const slotEnd = new Date(slotStart.getTime() + totalMinutes * 60000);
       const close = makeManilaDateTime(dateYmd, "5:00 PM");
-      if (totalMinutes > 0 && slotEnd > close) continue; // ✅ doesn't fit
+
+      // doesn’t fit before closing
+      if (totalMinutes > 0 && slotEnd > close) continue;
+
+      // too soon today rule
       if (isToday && slotStart <= nowPlus1h) continue;
 
-      const blocked =
-        intervals.some(b => slotStart >= b.startDt && slotStart < b.endDt) ||
-        blockIntervals.some(b => (b.isfullday === true) || (slotStart >= b.startDt && slotStart < b.endDt));
-      if (!blocked) {
+      const blockedByAppointments = intervals.some(b => slotStart >= b.startDt && slotStart < b.endDt);
+
+      const blockedByAvailability = blockIntervals.some(b =>
+        (b.isfullday === true) || (slotStart >= b.startDt && slotStart < b.endDt)
+      );
+
+      if (!blockedByAppointments && !blockedByAvailability) {
         anyAvailable = true;
         break;
       }
     }
 
-    availMap[dateYmd] = { anyAvailable };
+    // ✅ blockedAllDay means “dentist blocked this date” (full day block),
+    // and we also treat it as unavailable even if there are open slots.
+    availMap[dateYmd] = {
+      anyAvailable,
+      blockedAllDay: hasFullDayBlock
+    };
   }
 
   setState({ monthAvailability: availMap });
 }
+
+let pendingPretreatService = null;
+
+function openPretreatBookingModal(service) {
+  pendingPretreatService = service;
+  const m = document.getElementById("pretreatBookingModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+}
+
+function closePretreatBookingModal() {
+  const m = document.getElementById("pretreatBookingModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+}
+
+function handlePretreatChoice(isPretreat) {
+  closePretreatBookingModal();
+
+  // NO → explicitly clear flags
+  if (!isPretreat) {
+    setState({ isPretreatBooking: false, pretreatPlanId: null });
+    return;
+  }
+
+  // YES → lock dentist + tag booking
+  const plan = state.activeBracesPlan;
+  if (!plan) return;
+
+  const owner = dentists.find(
+    d => String(d.userAccountId) === String(plan.DentistID)
+  );
+
+  if (owner) {
+    setState({
+      selectedDentist: owner,
+      orthoDentistLocked: true,
+      selectedTime: "",
+
+      // ✅ ADD THESE
+      isPretreatBooking: true,
+      pretreatPlanId: plan.TreatmentPlanID
+    });
+
+    showMessage(
+      "Booking is linked to your braces pre-treatment and locked to your braces dentist.",
+      "info"
+    );
+  }
+}
+
+
 
 
 // ---------- REPLACE toggleService (UPDATED for better state management) ----------
@@ -1594,14 +2015,16 @@ window.toggleCategory = (category) => {
   if (existing) {
     const updatedServices = selected.filter(s => (s.category || "Other") !== cat);
 
-    const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
-    const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
-
     setState({
       selectedServices: updatedServices,
-      selectedAddOns: cleanedAddOns,
       selectedTime: ""
     });
+    const stillHasPretreat = (updatedServices || []).some(s => matchesPretreatment(s.id));
+if (!stillHasPretreat && state.isPretreatBooking) {
+  setState({ isPretreatBooking: false, pretreatPlanId: null });
+}
+    enforceOrthoDentistLock();   
+    refreshAvailabilityIfDentistSelected();
 
     // refresh bookings if needed
     if (state.selectedDentist && state.selectedDate) {
@@ -1611,11 +2034,21 @@ window.toggleCategory = (category) => {
     return;
   }
 
+
   // add default option (first option in category)
   const options = (services || []).filter(s => (s.category || "Other") === cat);
   if (!options.length) return;
 
-  const candidate = options[0];
+  let candidate = options[0];
+
+// ✅ Orthodontics: prefer Installation if it’s available in servicesForUI
+if (cat === "Orthodontics") {
+  const install = options.find(x => x.id === 701);
+  const adjust  = options.find(x => x.id === 702);
+  const consult = options.find(x => x.id === 8);
+  candidate = install || adjust || consult || options[0];
+}
+
 
   // compatibility check vs already selected services
   for (const sel of selected) {
@@ -1629,14 +2062,18 @@ window.toggleCategory = (category) => {
 
   const updatedServices = [...selected, candidate];
 
-  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
-  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
-
   setState({
     selectedServices: updatedServices,
-    selectedAddOns: cleanedAddOns,
     selectedTime: ""
   });
+
+if (state.hasActiveBracesPlan && matchesPretreatment(candidate.id)) {
+  openPretreatBookingModal(candidate);
+}
+
+// always refresh after service changes
+enforceOrthoDentistLock();
+refreshAvailabilityIfDentistSelected();
 
   if (state.selectedDentist && state.selectedDate) {
     getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
@@ -1665,14 +2102,24 @@ window.setCategoryService = (category, serviceId) => {
 
   const updatedServices = [...others, candidate];
 
-  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
-  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
 
   setState({
     selectedServices: updatedServices,
-    selectedAddOns: cleanedAddOns,
     selectedTime: ""
   });
+
+  // 🔁 Reset pretreat flag if replaced service no longer matches
+const stillHasPretreat = (updatedServices || []).some(s => matchesPretreatment(s.id));
+if (!stillHasPretreat && state.isPretreatBooking) {
+  setState({ isPretreatBooking: false, pretreatPlanId: null });
+}
+
+if (state.hasActiveBracesPlan && matchesPretreatment(candidate.id)) {
+  openPretreatBookingModal(candidate);
+}
+enforceOrthoDentistLock();
+refreshAvailabilityIfDentistSelected();
+
 
   if (state.selectedDentist && state.selectedDate) {
     getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
@@ -1694,7 +2141,7 @@ window.toggleService = (serviceId) => {
     // remove
     updatedServices = selected.filter(s => s.id !== fullService.id);
   } else {
-    // add with compatibility check (ID-based)
+    // add with compatibility check
     for (const sel of selected) {
       const a = incompatibleById[sel.id] || [];
       const b = incompatibleById[fullService.id] || [];
@@ -1706,23 +2153,31 @@ window.toggleService = (serviceId) => {
     updatedServices = [...selected, fullService];
   }
 
-  // ✅ clean add-ons that are no longer allowed after service change
-  const allowed = getAllowedAddOnIdsForSelectedServices(updatedServices);
-  const cleanedAddOns = (state.selectedAddOns || []).filter(a => allowed.has(a.id));
-
-  // ✅ update state ONCE (reset time because duration changed)
   setState({
     selectedServices: updatedServices,
-    selectedAddOns: cleanedAddOns,
     selectedTime: ""
   });
 
-  // ✅ refresh dentist-specific bookings if dentist+date already chosen
+  // reset pretreat flag if no pretreat service remains
+  const stillHasPretreat = (updatedServices || []).some(s => matchesPretreatment(s.id));
+  if (!stillHasPretreat && state.isPretreatBooking) {
+    setState({ isPretreatBooking: false, pretreatPlanId: null });
+  }
+
+  // show modal only when ADDING
+  if (!isSelected && state.hasActiveBracesPlan && matchesPretreatment(fullService.id)) {
+    openPretreatBookingModal(fullService);
+  }
+
+  enforceOrthoDentistLock();
+  refreshAvailabilityIfDentistSelected();
+
   if (state.selectedDentist && state.selectedDate) {
     getBookedAppointments(state.selectedDentist.userAccountId, state.selectedDate)
       .then(booked => setState({ bookedAppointments: booked }));
   }
 };
+
 
 // -------------------------------------------------------
     window.setSelectedDate = async (date) => {
@@ -1738,14 +2193,14 @@ window.toggleService = (serviceId) => {
   }
 };
 
-// helper to check overlap
-function intervalsOverlap(startA, endA, startB, endB) {
-  return startA < endB && endA > startB;
-}
-
 // -------------------------------------------------------
 
 window.setSelectedDentist = async (dentistId) => {
+
+  if (state.orthoDentistLocked) {
+  showMessage("Clinic rule: Braces appointments must be booked with your braces dentist only.", "error");
+  return;
+}
   const fullDentist = dentists.find(d => d.id === dentistId);
   if (!fullDentist) return;
 
@@ -1776,29 +2231,6 @@ window.setSelectedDentist = async (dentistId) => {
   preview.innerHTML = `<img src="${url}" alt="Receipt preview" class="w-40 h-40 object-cover rounded-lg" />`;
 };
 
-window.toggleAddOn = (addOnId) => {
-  if (!state.selectedServices || !state.selectedServices.length) {
-    showMessage("Please select at least one service first.", "error");
-    return;
-  }
-
-  const allowed = getAllowedAddOnIdsForSelectedServices(state.selectedServices);
-  if (!allowed.has(addOnId)) {
-    showMessage("This add-on is not available for your selected service(s).", "error");
-    return;
-  }
-
-  const addon = addOns.find(a => a.id === addOnId);
-  if (!addon) return;
-
-  const exists = (state.selectedAddOns || []).some(a => a.id === addOnId);
-  const updated = exists
-    ? state.selectedAddOns.filter(a => a.id !== addOnId)
-    : [...state.selectedAddOns, addon];
-
-  setState({ selectedAddOns: updated, selectedTime: "" }); // reset time because duration changed
-};
-
 
 window.setSelectedTime = (time) => {
   if (!state.selectedDentist || !state.selectedDate) {
@@ -1812,8 +2244,7 @@ window.setSelectedTime = (time) => {
   }
 
   const totalMinutes =
-    computeTotalDurationMinutes(state.selectedServices) +
-    (state.selectedAddOns || []).reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+  computeTotalDurationMinutes(state.selectedServices);
 
   if (!totalMinutes || totalMinutes <= 0) {
     showMessage("Invalid service duration. Please reselect your services.", "error");
@@ -1915,6 +2346,129 @@ function computeEstimatedTotal(mainSvc, addOnList) {
   return main + add;
 }
 
+async function getActiveBracesPlan(userId) {
+  if (!userId) return null;
+
+  const { data, error } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("TreatmentPlanID, DentistID, Status, PlanType, CreatedAt")
+    .eq("UserAccountID", userId)
+    .order("CreatedAt", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("getActiveBracesPlan error:", error);
+    return null;
+  }
+
+  const plans = data || [];
+  const bracesPlan = plans.find(p => {
+    const planType = String(p.PlanType || "").toUpperCase();
+    const status = String(p.Status || "").toUpperCase();
+    return planType === "BRACES" && (status === "ACTIVE" || status === "PROPOSED");
+  });
+
+  return bracesPlan || null;
+}
+
+async function getPretreatGate(planId) {
+  if (!planId) return { exists: false, allDone: true, pendingCount: 0 };
+
+  const { data, error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("status")
+    .eq("treatmentplanid", planId);
+
+  if (error) {
+    console.error("getPretreatGate error:", error);
+    // safest default: don't block if fetch fails? or block.
+    // I recommend block to avoid invalid booking:
+    return { exists: true, allDone: false, pendingCount: 1 };
+  }
+
+  const rows = data || [];
+  if (rows.length === 0) return { exists: false, allDone: true, pendingCount: 0 };
+
+  const pendingCount = rows.filter(r => {
+  const st = String(r.status || "").trim().toUpperCase();
+  return !(st === "DONE" || st === "WAIVED");
+}).length;
+  return { exists: true, allDone: pendingCount === 0, pendingCount };
+}
+
+
+async function getPendingPretreatments(planId) {
+  if (!planId) return [];
+
+  const { data, error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("serviceid, servicename, status")
+    .eq("treatmentplanid", planId)
+    .eq("status", "PENDING");
+
+  if (error) {
+    console.error("getPendingPretreatments error:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+
+function isOrthoServiceSelected() {
+  const ids = (state.selectedServices || []).map(s => s.id);
+  return ids.includes(701) || ids.includes(702);
+}
+
+function enforceOrthoDentistLock() {
+  // ✅ If not booking ortho services, unlock dentist selection
+  if (!isOrthoServiceSelected()) {
+    if (state.orthoDentistLocked) {
+      setState({ orthoDentistLocked: false });
+    }
+    return;
+  }
+
+  // ✅ Ortho selected: must have active braces plan + dentist owner
+  const plan = state.activeBracesPlan;
+  const planDentistId = plan?.DentistID;
+
+  if (!planDentistId) {
+    // This should rarely happen because you already gate ortho by hasActiveBracesPlan
+    showMessage("Active braces plan not found. Please contact the clinic.", "error");
+    setState({ orthoDentistLocked: false });
+    return;
+  }
+
+  // Find dentist that matches TreatmentPlan.DentistID (UserAccountID of dentist)
+  const owner = dentists.find(d => String(d.userAccountId) === String(planDentistId));
+
+  if (!owner) {
+    showMessage("Your braces dentist is not available in the booking list.", "error");
+    setState({ orthoDentistLocked: false });
+    return;
+  }
+
+  // ✅ Force-select owner dentist + lock selection
+  const alreadySelectedSame =
+    state.selectedDentist && String(state.selectedDentist.id) === String(owner.id);
+
+  if (!alreadySelectedSame || !state.orthoDentistLocked) {
+    setState({
+      selectedDentist: owner,
+      orthoDentistLocked: true,
+      selectedTime: "" // important: time slots depend on dentist
+    });
+
+    // ℹ️ Inform patient ONCE when lock is applied
+    showMessage(
+      "Dentist is locked to your braces dentist for orthodontic procedures.",
+      "info"
+    );
+  }
+}
+
+
     // --- Booking handler (upload + insert) ---
 window.confirmBooking = async () => {
   // 🔹 1. Ensure user is logged in
@@ -1963,24 +2517,40 @@ if (!state.selectedServices || !state.selectedServices.length) {
 
   // 🔹 5. Compute ESTIMATED totals + FIXED downpayment
 const selectedServices = state.selectedServices || [];
-const addons = state.selectedAddOns || [];
 
 const estimatedTotalAmount =
-  selectedServices.reduce((sum, s) => sum + (s.price || 0), 0) +
-  addons.reduce((sum, a) => sum + (a.price || 0), 0);
+  selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
 
 const downpaymentAmount = FIXED_DOWNPAYMENT;
 
 const totalDurationMinutes =
-  selectedServices.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) +
-  addons.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+  selectedServices.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
 
+// ✅ Block braces procedure booking if pre-treatments are still pending
+if (isBracesInstallSelected()) {
+  const missing = getPretreatMissingNames();
+  if (missing.length > 0) {
+    showMessage(
+      "Braces installation cannot be booked yet. Complete pre-treatment first: " + missing.join(", "),
+      "error",
+      6000
+    );
+    return;
+  }
+}
+
+if (isBracesAdjustSelected()) {
+  if (String(state.activeBracesPlan?.Status || "").toUpperCase() !== "ACTIVE") {
+    showMessage("Braces adjustment is available only when your braces plan is ACTIVE.", "error", 5000);
+    return;
+  }
+}
 
   const confirmBtn = document.getElementById('confirmBookingBtn') || document.getElementById('confirmBookingBottom');
   if (confirmBtn) confirmBtn.disabled = true;
 
   try {
-    showMessage("Uploading receipt and submitting appointment...", "info", 5000);
+    showLoading("Uploading receipt and submitting appointment…", "Submitting Booking…");
 
     // 🔹 6. Upload receipt
     let receiptPath = null;
@@ -1996,6 +2566,7 @@ const totalDurationMinutes =
 
       if (uploadError) {
         console.error(uploadError);
+        hideLoading(); // ✅ ADD THIS
         showMessage("Receipt upload failed: " + uploadError.message, "error");
         if (confirmBtn) confirmBtn.disabled = false;
         return;
@@ -2017,23 +2588,51 @@ const totalDurationMinutes =
 
     // 🔹 8. Build ServiceType CSV (MAIN procedures only) + readable Service string + AddOns JSON
     const selectedServiceIds = (state.selectedServices || []).map(s => s.id).filter(Boolean);
+
+    let bracesPlan = null;
+
+    if (selectedServiceIds.includes(701) || selectedServiceIds.includes(702)) {
+      bracesPlan = await getActiveBracesPlan(userId);
+      if (!bracesPlan) {
+        hideLoading(); // ✅ ADD
+        showMessage("Braces procedures can only be booked if you have a braces treatment plan (Proposed or Active).", "error");
+        if (confirmBtn) confirmBtn.disabled = false;
+        return;
+      }
+    }
+
+    let planIdToSave = null;
+
+// Ortho booking (701/702) uses bracesPlan
+if (bracesPlan?.TreatmentPlanID) planIdToSave = bracesPlan.TreatmentPlanID;
+
+// Pretreat booking uses state (works for Extraction/Cleaning/etc.)
+if (state.isPretreatBooking && state.pretreatPlanId) planIdToSave = state.pretreatPlanId;
+
+
     const serviceType = selectedServiceIds.join(',');
 
     const serviceNames = (state.selectedServices || []).map(s => s.name).join(', ');
-
-    // Snapshot selected add-ons into JSON (so historical pricing stays accurate)
-    const addonsJson = (state.selectedAddOns || []).map(a => ({
-      id: a.id,
-      name: a.name,
-      price: a.price || 0,
-      durationMinutes: a.durationMinutes || 0
-    }));
 
     // 🔹 9. Dentist mapping
     const dentistRecord = dentists.find(d => d.id === state.selectedDentist.id);
     const dentistUserAccountId = dentistRecord?.userAccountId || null;
 
+    // ✅ enforce same dentist (clinic rule)
+    const planDentistId = bracesPlan?.DentistID;
+    const selectedDentistUA = dentistUserAccountId;
+
+    if (planDentistId && String(planDentistId) !== String(selectedDentistUA)) {
+      hideLoading(); // ✅ ADD
+      showMessage("Clinic rule: Braces appointments must be booked with your braces dentist only.", "error");
+      if (confirmBtn) confirmBtn.disabled = false;
+      return;
+    }
+
+    
+
     if (!dentistRecord) {
+      hideLoading(); // ✅ ADD
       showMessage("Invalid dentist selected.", "error");
       if (confirmBtn) confirmBtn.disabled = false;
       return;
@@ -2049,20 +2648,23 @@ const totalDurationMinutes =
         DentistID: dentistUserAccountId,
         ServiceType: serviceType,
         Service: serviceNames,
-        AddOns: addonsJson,
+        AddOns: [],
         AppointmentSchedule: startIsoUTC,
         endschedule: endIsoUTC,
         Status: 'Pending',
         ReceiptImage: receiptPath,
         AppointmentNotes: document.getElementById('appointmentNotes')?.value || '',
         TransactionID: transactionId,
+        TotalAmount: estimatedTotalAmount,
         DownpaymentAmount: downpaymentAmount,
-        PaymentState: 'DOWNPAYMENT PENDING REVIEW'
+        PaymentState: 'DOWNPAYMENT PENDING REVIEW',
+        TreatmentPlanID: planIdToSave
       }])
       .select();
 
     if (insertError) {
       console.error(insertError);
+      hideLoading(); // ✅ ADD
       showMessage("Failed to save appointment: " + insertError.message, "error");
       if (confirmBtn) confirmBtn.disabled = false;
       return;
@@ -2110,6 +2712,7 @@ const totalDurationMinutes =
     }
 
     // 🔹 12. Success UI & reset
+    hideLoading();
     showMessage("Appointment request sent successfully! Secretary will review the appointment fee.", "success", 5000);
 
     // ✅ 10c) Email confirmation to patient: request received
@@ -2134,22 +2737,20 @@ if (appointmentId) {
       date: state.selectedDate,
       time: state.selectedTime,
       dentist: state.selectedDentist?.name,
-      services: [
-  ...selectedServices.map(s => s.name),
-  ...addons.map(a => `Add-on: ${a.name}`)
-],
+      services: selectedServices.map(s => s.name),
       downpayment: downpaymentAmount
     });
 
 setState({
   currentStep: 1,
   selectedServices: [],
-  selectedAddOns: [],
   selectedDate: "",
   selectedTime: "",
   selectedDentist: null,
   receiptFile: null,
-  appointmentNotes: ""
+  appointmentNotes: "",
+  isPretreatBooking: false,
+pretreatPlanId: null,
 });
 
 
@@ -2163,6 +2764,7 @@ setState({
 
   } catch (err) {
     console.error(err);
+    hideLoading(); // ✅ ADD
     showMessage("Unexpected error occurred while booking.", "error");
     if (confirmBtn) confirmBtn.disabled = false;
   }
@@ -2210,7 +2812,15 @@ setState({
         <h3 class="font-semibold">Appointment Fee</h3>
         <ul class="list-disc pl-5 mt-2 space-y-1">
           <li>A fixed <strong>appointment fee</strong> of <strong>₱<span id="policyFeeAmount"></span></strong> is required to submit a booking request.</li>
-          <li>The appointment fee is <strong>non-refundable</strong> and <strong>not deductible</strong> from the final treatment cost.</li>
+          <li>
+            The appointment fee is generally <strong>non-refundable</strong> and
+            <strong>not deductible</strong> from the final treatment cost.
+          </li>
+          <li>
+            If the clinic marks an appointment as <strong>unavailable</strong>,
+            the patient will be notified and may choose to
+            <strong>request a reschedule or a cancellation</strong>.
+          </li>
           <li>Your booking request will be reviewed after receipt verification.</li>
         </ul>
       </div>
@@ -2219,13 +2829,18 @@ setState({
         <h3 class="font-semibold">Pricing & Treatment</h3>
         <ul class="list-disc pl-5 mt-2 space-y-1">
           <li>Prices shown are <strong>estimates only</strong>. Final cost may change after assessment and actual treatment.</li>
-          <li>Some procedures may require additional steps based on the dentist’s evaluation.</li>
+          <li>
+  Optional add-ons may be requested by the patient and discussed during treatment
+  based on the dentist’s evaluation. Pricing may vary accordingly and will proceed
+  only upon the patient’s agreement.
+</li>
         </ul>
       </div>
 
       <div>
         <h3 class="font-semibold">Reschedule</h3>
         <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li>Reschedule requests are only available after appointment approval.</li>
           <li>Reschedule requests must be made at least <strong>24 hours</strong> before the appointment time.</li>
           <li>Each appointment may be rescheduled up to <strong>2 times</strong> only.</li>
           <li>Reschedule is subject to dentist availability.</li>
@@ -2236,7 +2851,19 @@ setState({
         <h3 class="font-semibold">Cancellation & No-show</h3>
         <ul class="list-disc pl-5 mt-2 space-y-1">
           <li><strong>Valid cancellation:</strong> If you cancel at least <strong>24 hours</strong> before your scheduled time, your cancellation is valid.</li>
-          <li><strong>Refund eligibility:</strong> For valid cancellations (24+ hours), the <strong>appointment fee may be refunded</strong>, after verification.</li>
+          <li>
+            <strong>Refund eligibility:</strong> The appointment fee may be refunded or voided
+            after verification if:
+            <ul class="list-disc pl-5 mt-1 space-y-1">
+              <li>
+                the patient cancels at least <strong>24 hours</strong> before the appointment time, or
+              </li>
+              <li>
+                the clinic marks the appointment as <strong>unavailable</strong>, and the patient
+                chooses to cancel instead of rescheduling.
+              </li>
+            </ul>
+          </li>
           <li><strong>Late cancellation / no-show:</strong> Cancellations within <strong>24 hours</strong> of the appointment time or no-shows may result in <strong>forfeiture</strong> of the appointment fee.</li>
           <li>Repeated no-shows may restrict future booking requests.</li>
 </ul>
@@ -2253,7 +2880,12 @@ setState({
       <div>
         <h3 class="font-semibold">Clinic-Initiated Changes</h3>
         <ul class="list-disc pl-5 mt-2 space-y-1">
-          <li>The clinic may reschedule in emergencies (e.g., dentist illness or equipment issues). You will be notified as soon as possible.</li>
+          <li>
+  The clinic may mark an appointment as unavailable due to unforeseen circumstances
+  (e.g., dentist illness, emergency closure, or equipment issues).
+  The patient will be notified and may choose to
+  <strong>request a reschedule or cancellation</strong>.
+</li>
         </ul>
       </div>
     </div>
@@ -2261,6 +2893,62 @@ setState({
     <div class="mt-6 flex justify-end gap-3">
       <button onclick="closePolicyModal()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
       <button onclick="acceptPolicyModal()" class="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90">I Agree</button>
+    </div>
+  </div>
+</div>
+
+<div id="bookingLockOverlay"
+  class="fixed inset-0 hidden items-center justify-center bg-black/30 z-50">
+  <div class="bg-white w-full max-w-md mx-4 p-6 rounded-xl shadow-lg border">
+    <h2 class="text-xl font-bold text-gray-900">Booking Temporarily Restricted</h2>
+    <p class="text-sm text-gray-600 mt-2">
+      Due to multiple no-shows, your booking access is temporarily disabled.
+    </p>
+
+    <div class="mt-4 p-4 rounded-lg bg-gray-50 border">
+      <div class="text-sm text-gray-700">
+        <div class="flex justify-between">
+          <span>Restriction ends in:</span>
+          <span class="font-semibold" id="lockCountdown">—</span>
+        </div>
+        <div class="flex justify-between mt-2">
+          <span>Restricted until:</span>
+          <span class="font-semibold" id="lockUntilText">—</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs text-gray-500 mt-3">
+      If you believe this is a mistake, please contact the clinic.
+    </p>
+
+    <div class="mt-5 flex justify-end">
+      <a href="MyBooking.html"
+         class="px-4 py-2 rounded bg-primary text-white">
+        View My Appointments
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="pretreatBookingModal"
+  class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
+    <h3 class="text-lg font-bold mb-2">Braces Pre-Treatment</h3>
+    <p class="text-sm text-gray-600 mb-4">
+      This service is required before your braces installation.
+      Is this appointment for your braces pre-treatment?
+    </p>
+
+    <div class="flex justify-end gap-3">
+      <button onclick="handlePretreatChoice(false)"
+        class="px-4 py-2 rounded border">
+        No
+      </button>
+      <button onclick="handlePretreatChoice(true)"
+        class="px-4 py-2 rounded bg-primary text-white">
+        Yes
+      </button>
     </div>
   </div>
 </div>

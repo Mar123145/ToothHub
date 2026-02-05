@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Treatment Plan | ToothHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "custom-primary": "#03555E",
+            "custom-hover": "#024449",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <style>
+  .tooth-chart-container {
+    display: grid;
+    grid-template-columns: repeat(17, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+  .tooth-chart-container > div:nth-child(9) {
+    grid-column: 9 / span 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #d1d5db;
+  }
+  .quadrant-grid { display: contents; }
+
+  .tooth-shape {
+    border-radius: 60% 60% 15% 15% / 60% 60% 15% 15%;
+  }
+  .upper-arch .tooth-shape {
+    transform: scaleY(-1);
+    transform-origin: center center;
+  }
+  .tooth-button-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+  .upper-arch .tooth-button-inner {
+    transform: scaleY(-1);
+  }
+</style>
+
+</head>
+
+<body class="min-h-screen bg-gray-50">
+  <!-- Top Header (same shell as Dashboard) -->
+  <header class="bg-custom-primary text-white sticky top-0 z-50">
+    <div class="px-5 h-[72px] flex items-center justify-between">
+      <a href="Dashboard.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg overflow-hidden relative flex items-center justify-center bg-white text-custom-primary font-bold">
+          <img
+            src="/Image/logo.png"
+            alt="Logo"
+            class="absolute inset-0 w-full h-full object-contain"
+            onload="this.nextElementSibling.style.display='none'"
+            onerror="this.remove();"
+          />
+          <span class="select-none">TD</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-xl font-bold">ToothHub</h1>
+          <p class="text-sm opacity-90">Happy Tooth Dae Dental Clinic</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button id="notifBellBtn" class="relative p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Notifications">
+          <i class="fas fa-bell w-6 h-6"></i>
+        </button>
+
+        <a href="Profile.html" class="p-2 rounded-lg hover:bg-custom-hover transition-colors" aria-label="Profile">
+          <i class="fas fa-user w-6 h-6"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Shell -->
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar (same shell as Dashboard) -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
+      <nav class="p-4 space-y-1">
+        <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-house w-5"></i>
+          <span>Home</span>
+        </a>
+        <a href="Booking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-plus w-5"></i>
+          <span>Book Appointment</span>
+        </a>
+        <a href="MyBooking.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-calendar-check w-5"></i>
+          <span>My Appointment</span>
+        </a>
+        <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-file-lines w-5"></i>
+          <span>Treatment Records</span>
+        </a>
+
+        <!-- ✅ New page link -->
+        <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
+        </a>
+
+        <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-credit-card w-5"></i>
+          <span>Billing</span>
+        </a>
+        <a href="notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-bell w-5"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-user w-5"></i>
+          <span>Profile</span>
+        </a>
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i>
+          <span>Settings</span>
+        </a>
+
+        <div class="pt-3 mt-3 border-t border-white/15"></div>
+
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
+          <i class="fa-solid fa-right-from-bracket w-5"></i>
+          <span class="font-medium">Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">My Treatment Plan</h1>
+        <p class="text-gray-600">Track your braces plan status and progress.</p>
+      </div>
+
+      <!-- Main container -->
+      <div id="tpContainer" class="space-y-6"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- Auth (same approach as Dashboard) ---
+    async function checkAuth(redirect = true) {
+      const storedFirstName = localStorage.getItem("userFirstName");
+      const storedRole = localStorage.getItem("userRole");
+      const storedEmail = localStorage.getItem("userEmail");
+      if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) console.error(sessionError);
+
+      if (!session?.user) {
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      const { data: userData, error } = await supabaseClient
+        .from("UserAccount")
+        .select("*")
+        .eq("Email", session.user.email)
+        .maybeSingle();
+
+      if (error || !userData) {
+        console.error(error || "No user data found");
+        if (redirect) window.location.href = "/Login.html";
+        return null;
+      }
+
+      localStorage.setItem("userFirstName", userData.FirstName);
+      localStorage.setItem("userRole", userData.Role);
+      localStorage.setItem("userEmail", userData.Email);
+      localStorage.setItem("userId", session.user.id);
+
+      return userData;
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      window.location.href = "/Login.html";
+    }
+
+    // --- Helpers ---
+        function fmtDate(iso) {
+        if (!iso) return "—";
+        try {
+            return new Date(iso).toLocaleDateString("en-PH", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            });
+        } catch {
+            return iso;
+        }
+        }
+    function badge(status) {
+      const s = String(status || "").toUpperCase();
+      const map = {
+        "ACTIVE": "bg-emerald-50 text-emerald-700 border-emerald-200",
+        "PROPOSED": "bg-amber-50 text-amber-700 border-amber-200",
+        "PAUSED": "bg-gray-100 text-gray-700 border-gray-200",
+        "COMPLETED": "bg-blue-50 text-blue-700 border-blue-200",
+      };
+      return map[s] || "bg-gray-100 text-gray-700 border-gray-200";
+    }
+
+
+    function badgeAppointment(status) {
+    const s = String(status || "").toUpperCase();
+
+    if (s === "FINISHED") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (s === "APPROVED") return "bg-blue-50 text-blue-700 border-blue-200";
+    if (s === "PENDING") return "bg-amber-50 text-amber-700 border-amber-200";
+    if (s === "RESCHEDULED") return "bg-purple-50 text-purple-700 border-purple-200";
+    if (s === "CANCELLED") return "bg-red-50 text-red-700 border-red-200";
+    if (s === "REJECTED") return "bg-red-50 text-red-700 border-red-200";
+
+    return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+
+    function toggleAdjustmentsHistory() {
+    const panel = document.getElementById("adj-history-panel");
+    const icon = document.getElementById("adj-history-icon");
+    const btn = document.getElementById("adj-history-btn");
+    if (!panel) return;
+
+    panel.classList.toggle("hidden");
+
+    const nowHidden = panel.classList.contains("hidden");
+    if (btn) btn.textContent = nowHidden ? "View" : "Hide";
+    if (icon) icon.classList.toggle("rotate-180", !nowHidden);
+    }
+
+    function openNotifications() {
+  window.location.href = "Notifications.html";
+}
+
+    function isInstallServiceName(name) {
+      const n = String(name || "").toLowerCase();
+      return n.includes("installation") || n.includes("bonding") || n.includes("braces bonding") || n.includes("appliance placement");
+    }
+
+    function isAdjustmentServiceName(name) {
+      const n = String(name || "").toLowerCase();
+      return n.includes("adjustment") || n.includes("ortho adjustment") || n.includes("orthodontic adjustment");
+    }
+
+    function isInstall(appt) {
+  return Number(appt?.ServiceType) === 701;
+}
+function isAdjust(appt) {
+  return Number(appt?.ServiceType) === 702;
+}
+
+    // --- Data fetch ---
+    async function loadLatestBracesPlan(userId) {
+      const { data, error } = await supabaseClient
+        .from("TreatmentPlan")
+        .select("*")
+        .eq("UserAccountID", userId)
+        .eq("PlanType", "BRACES")
+        .order("CreatedAt", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      return (data && data[0]) ? data[0] : null;
+    }
+
+ async function loadPlanAppointments(treatmentPlanId, userId, sourceAppointmentId) {
+  let q = supabaseClient
+    .from("Appointment")
+    .select(`
+      AppointmentID,
+      Service,
+      ServiceType,
+      Status,
+      AppointmentSchedule,
+      TreatmentPlanID,
+      Dentist:DentistID ( FirstName, LastName )
+    `);
+
+  if (treatmentPlanId) q = q.eq("TreatmentPlanID", treatmentPlanId);
+  else q = q.eq("UserAccountID", userId);
+
+  const { data: planLinked, error } = await q;
+  if (error) throw error;
+
+  // also include the source diagnostic appointment even if TreatmentPlanID is null
+  let src = null;
+  if (sourceAppointmentId) {
+    const { data: srcRow, error: srcErr } = await supabaseClient
+      .from("Appointment")
+      .select(`
+        AppointmentID,
+        Service,
+        ServiceType,
+        Status,
+        AppointmentSchedule,
+        TreatmentPlanID,
+        Dentist:DentistID ( FirstName, LastName )
+      `)
+      .eq("AppointmentID", sourceAppointmentId)
+      .maybeSingle();
+
+    if (srcErr) throw srcErr;
+    src = srcRow || null;
+  }
+
+  const merged = [...(planLinked || [])];
+  if (src && !merged.some(a => a.AppointmentID === src.AppointmentID)) merged.push(src);
+
+  return merged;
+}
+
+
+    // --- Rendering ---
+    function renderNoPlan() {
+      const el = document.getElementById("tpContainer");
+      el.innerHTML = `
+        <section class="bg-white border rounded-2xl shadow-sm p-6">
+          <div class="text-center py-10 text-gray-500">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <i class="fa-regular fa-clipboard text-xl"></i>
+            </div>
+            <p class="font-medium">No braces treatment plan yet</p>
+            <p class="text-sm">If your dentist recommends braces, your plan will appear here after your diagnostic visit.</p>
+            <a href="Booking.html" class="inline-flex mt-4 px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm font-medium">
+              Book Appointment
+            </a>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPlan(plan, progress, appts, pretreat) {
+      const el = document.getElementById("tpContainer");
+      const isActive = String(plan.Status || "").toUpperCase() === "ACTIVE";
+
+      const pretreatRows = pretreat || [];
+      const pretreatExists = pretreatRows.length > 0;
+      const pretreatPending = pretreatRows.filter(r => {
+        const st = String(r.status || "").trim().toUpperCase();
+        return !(st === "DONE" || st === "WAIVED");
+      });
+      const readyForInstall = !pretreatExists || pretreatPending.length === 0;
+
+      const totalReq = pretreatRows.length;
+      const clearedReq = pretreatRows.filter(r => {
+        const st = String(r.status || "").trim().toUpperCase();
+        return st === "DONE" || st === "WAIVED";
+      }).length;
+      const pct = totalReq ? Math.round((clearedReq / totalReq) * 100) : 100;
+
+
+      const installLabel = progress.installDone
+        ? "Done"
+        : (progress.installScheduled ? "Scheduled" : "Not scheduled");
+
+      const installSub = progress.installDone
+        ? "Completed"
+        : (progress.installScheduled ? `Next: ${fmtDate(progress.installScheduledDate)}` : "Book when ready");
+
+
+      const adjSub = progress.adjustmentsCount > 0
+        ? `Last: ${fmtDate(progress.lastAdjustmentDate)}`
+        : "No adjustments yet";
+
+      const consultation = (appts || [])
+        .filter(a => {
+          const s = String(a.Service || a.ServiceType || "").toLowerCase();
+          return s.includes("consult") || s.includes("diagnostic");
+        })
+        .sort((a, b) => new Date(a.AppointmentSchedule) - new Date(b.AppointmentSchedule))[0];
+
+
+      el.innerHTML = `
+        <!-- Plan summary -->
+        <section class="bg-white border rounded-2xl shadow-sm">
+          <div class="px-6 py-4 border-b flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Braces Treatment Plan</h2>
+              <p class="text-sm text-gray-500">Plan created: ${fmtDate(plan.CreatedAt)}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold border ${badge(plan.Status)}">
+              ${String(plan.Status || "—").toUpperCase()}
+            </span>
+          </div>
+
+          <div class="p-6 grid gap-4">
+            <div class="p-4 rounded-xl border bg-gray-50">
+              <p class="text-xs text-gray-500">Plan Type</p>
+              <p class="text-lg font-bold text-gray-900">${plan.PlanType || "—"}</p>
+              <p class="text-sm text-gray-600 mt-1">Open contract adjustments</p>
+            </div>
+          </div>
+        </section>
+
+${pretreatExists ? `
+  <section class="bg-white border rounded-2xl shadow-sm">
+    <div class="px-6 py-4 border-b flex items-start justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900">Pre-treatment Requirements</h2>
+        <p class="text-sm text-gray-500">
+          These must be completed before braces installation.
+        </p>
+      </div>
+
+      <span class="px-3 py-1 rounded-full text-xs font-semibold border ${
+        readyForInstall
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : "bg-amber-50 text-amber-700 border-amber-200"
+      }">
+        ${readyForInstall ? "READY" : `${pretreatPending.length} pending`}
+      </span>
+    </div>
+
+    <div class="p-6 space-y-3">
+      ${pretreatRows.map(r => {
+        const st = String(r.status || "PENDING").trim().toUpperCase();
+        const stBadge =
+          (st === "DONE") ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+          (st === "WAIVED") ? "bg-gray-100 text-gray-700 border-gray-200" :
+          "bg-amber-50 text-amber-700 border-amber-200";
+
+        return `
+          <div class="p-4 rounded-xl border bg-white flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="font-semibold text-gray-900 truncate">${esc(r.servicename || "—")}</div>
+              <div class="text-xs text-gray-500 mt-1">
+                ${st === "DONE" && r.completedat ? `Completed: ${fmtDate(r.completedat)}` : ""}
+              </div>
+            </div>
+            <span class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border ${stBadge}">
+              ${st}
+            </span>
+          </div>
+        `;
+      }).join("")}
+
+      ${!readyForInstall ? `
+        <div class="p-4 rounded-xl border bg-amber-50 text-amber-800 text-sm">
+          <div class="font-semibold">Installation is locked</div>
+          <div class="text-xs mt-1">
+            Please complete: ${pretreatPending.map(p => esc(p.servicename)).join(", ")}
+          </div>
+        </div>
+      ` : ""}
+    </div>
+  </section>
+` : `
+  <section class="bg-white border rounded-2xl shadow-sm">
+    <div class="px-6 py-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-900">Pre-treatment Requirements</h2>
+      <p class="text-sm text-gray-500">No pre-treatment requirements were added for your plan.</p>
+    </div>
+    <div class="p-6">
+      <div class="p-4 rounded-xl border bg-emerald-50 text-emerald-800 text-sm">
+        <div class="font-semibold">You may proceed to braces installation</div>
+        <div class="text-xs mt-1">No requirements are blocking installation.</div>
+      </div>
+    </div>
+  </section>
+`}
+
+
+        <!-- Progress tracker -->
+
+        <section class="bg-white border rounded-2xl shadow-sm">
+          <div class="px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold text-gray-900">Progress Tracker</h2>
+            <p class="text-sm text-gray-500">Automatically updated from your appointments</p>
+          </div>
+
+          
+          
+          <div class="p-6 grid md:grid-cols-3 gap-4">
+            <!-- ✅ Consultation -->
+              <div class="p-5 rounded-2xl border">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="font-semibold text-gray-900">Diagnostic</p>
+                    <p class="text-sm text-gray-600">
+                      ${
+                        progress.consultDone
+                          ? `Finished: ${fmtDate(progress.consultDoneDate)}`
+                          : (progress.consultScheduled
+                              ? `Scheduled: ${fmtDate(progress.consultScheduledDate)}`
+                              : "Not scheduled")
+                      }
+                    </p>
+                  </div>
+                  <span class="text-xs font-semibold px-3 py-1 rounded-full border ${
+                    progress.consultDone
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : (progress.consultScheduled
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-gray-100 text-gray-700 border-gray-200")
+                  }">
+                    ${progress.consultDone ? "Done" : (progress.consultScheduled ? "Scheduled" : "Pending")}
+                  </span>
+                </div>
+
+                <div class="mt-4">
+                  ${
+                    (() => {
+                      const consultAppt = (appts || []).find(a => {
+                        const s = String(a.Service || a.ServiceType || "").toLowerCase();
+                        return s.includes("diagnostic") || s.includes("consult");
+                      });
+                      return consultAppt
+                        ? `<button
+                            onclick="openTRModal('${consultAppt.AppointmentID}')"
+                            class="inline-flex px-4 py-2 rounded-lg border text-sm font-medium text-custom-primary hover:bg-gray-50">
+                            View Details
+                          </button>`
+                        : `<p class="text-xs text-gray-500">No Diagnostic record yet.</p>`;
+                    })()
+                  }
+                </div>
+              </div>
+            <div class="p-5 rounded-2xl border">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-gray-900">Braces Installation</p>
+                  <p class="text-sm text-gray-600">${installSub}</p>
+                </div>
+                <span class="text-xs font-semibold px-3 py-1 rounded-full border ${progress.installDone ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (progress.installScheduled ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-100 text-gray-700 border-gray-200")}">
+                  ${installLabel}
+                </span>
+              </div>
+                <div class="mt-4">
+                ${
+                    progress.installDone
+                      ? `
+                        <div class="p-3 rounded-lg border bg-emerald-50 text-emerald-800 text-sm">
+                          <div class="font-semibold">Installation completed</div>
+                          <div class="text-xs mt-1">
+                            Finished: ${fmtDate(progress.installDoneDate)}
+                          </div>
+                        </div>
+
+                        <div class="mt-3 pt-3 border-t">
+                          ${
+                            (() => {
+                              const installAppt = appts.find(a =>
+                                isInstall(a) &&
+                                String(a.Status || "").toUpperCase() === "FINISHED"
+                              );
+                              return installAppt
+                                ? `
+                                  <button
+                                    onclick="openTRModal('${installAppt.AppointmentID}')"
+                                    class="inline-flex px-4 py-2 rounded-lg border text-sm font-medium text-custom-primary hover:bg-gray-50">
+                                    View Details
+                                  </button>
+                                `
+                                : "";
+                            })()
+                          }
+                        </div>
+                      `
+                      : `
+                    <a href="Booking.html"
+                      class="inline-flex px-4 py-2 rounded-lg ${readyForInstall ? "bg-custom-primary text-white hover:bg-custom-hover" : "bg-gray-200 text-gray-500 cursor-not-allowed"} text-sm font-medium"
+                      ${readyForInstall ? "" : "aria-disabled='true' onclick='return false;'"} >
+                      Book Installation
+                    </a>
+                    <p class="text-xs text-gray-500 mt-2">
+                      ${readyForInstall ? "You may now book braces installation." : "Complete the pre-treatment requirements first."}
+                    </p>
+                    `
+                }
+                </div>
+            </div>
+
+            <div class="p-5 rounded-2xl border">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-gray-900">Adjustments</p>
+                  <p class="text-sm text-gray-600">${adjSub}</p>
+                </div>
+                <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-gray-100 text-gray-700 border-gray-200">
+                 ${progress.adjustmentsCount} total
+                </span>
+              </div>
+
+              <div class="mt-4">
+                <a href="Booking.html" class="inline-flex px-4 py-2 rounded-lg ${isActive ? "bg-custom-primary text-white hover:bg-custom-hover" : "bg-gray-200 text-gray-500 cursor-not-allowed"} text-sm font-medium"
+                   ${isActive ? "" : "aria-disabled='true' onclick='return false;'"}>
+                  Book Adjustment
+                </a>
+                <p class="text-xs text-gray-500 mt-2">Booking is available once your plan is confirmed by the clinic.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Adjustments History (Collapsible) -->
+        <section class="bg-white border rounded-2xl shadow-sm">
+          <div class="px-6 py-4 border-b flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Adjustments History</h2>
+              <p class="text-sm text-gray-500">All adjustment appointments linked to your braces plan</p>
+            </div>
+
+            <button
+              id="adj-history-btn"
+              onclick="toggleAdjustmentsHistory()"
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50">
+              View
+              <i id="adj-history-icon" class="fa-solid fa-chevron-down transition-transform"></i>
+            </button>
+          </div>
+
+          <div id="adj-history-panel" class="hidden">
+            <div class="p-6">
+              ${
+                (() => {
+                  const rows = (appts || [])
+                    .filter(a => isAdjust(a) && String(a.Status || "").toUpperCase() === "FINISHED")
+                    .sort((a, b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule));
+
+                  if (!rows.length) {
+                    return `<p class="text-sm text-gray-500">No adjustments yet.</p>`;
+                  }
+
+                  return `
+                    <div class="rounded-xl border overflow-hidden">
+                      <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600">
+                          <tr>
+                            <th class="text-left px-4 py-2">Date</th>
+                            <th class="text-left px-4 py-2">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${
+                            rows.map(a => {
+                              const dt = fmtDate(a.AppointmentSchedule);
+                              const st = String(a.Status || "—").toUpperCase();
+
+                              return `
+                                <tr class="border-t">
+                                  <td class="px-4 py-2">${dt}</td>
+                                  <td class="px-4 py-2 flex items-center justify-between gap-3">
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeAppointment(st)}">
+                                      ${st}
+                                    </span>
+
+                                    ${
+                                      st === "FINISHED"
+                                        ? `<button
+                                            onclick="openTRModal('${a.AppointmentID}')"
+                                            class="text-sm font-medium text-custom-primary underline">
+                                            View Details
+                                          </button>`
+                                        : ""
+                                    }
+                                  </td>
+                                </tr>
+                              `;
+                            }).join("")
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  `;
+                })()
+              }
+            </div>
+          </div>
+        </section>
+      `;
+
+    }
+
+async function loadPretreatments(planId) {
+  if (!planId) return [];
+
+  const { data, error } = await supabaseClient
+    .from("treatmentplanpretreatment")
+    .select("pretreatmentid, serviceid, servicename, status, createdat, completedat")
+    .eq("treatmentplanid", planId)
+    .order("createdat", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+
+function computeProgressFromAppointments(appts) {
+  let installScheduledDate = null;
+  let installDoneDate = null;
+  let installScheduled = false;
+  let installDone = false;
+
+  let consultScheduledDate = null;
+  let consultDoneDate = null;
+  let consultScheduled = false;
+  let consultDone = false;
+
+  let adjustmentsCount = 0;
+  let lastAdjustmentDate = null;
+
+  for (const a of (appts || [])) {
+    const serviceName = a.Service || a.ServiceType || "";
+    const status = String(a.Status || "").toUpperCase();
+    const sched = a.AppointmentSchedule ? new Date(a.AppointmentSchedule) : null;
+
+    // ✅ CONSULTATION (Orthodontic Diagnostic)
+    const sLower = String(serviceName).toLowerCase();
+    if (sLower.includes("diagnostic") || sLower.includes("consult")) {
+      if (status === "FINISHED") {
+        consultDone = true;
+        if (!consultDoneDate || (sched && sched > consultDoneDate)) consultDoneDate = sched;
+      } else if (["APPROVED", "PENDING", "RESCHEDULED"].includes(status)) {
+        consultScheduled = true;
+        if (!consultScheduledDate || (sched && sched > consultScheduledDate)) consultScheduledDate = sched;
+      }
+    }
+
+    // ✅ INSTALLATION
+    if (isInstall(a)) {
+      if (status === "FINISHED") {
+        installDone = true;
+        if (!installDoneDate || (sched && sched > installDoneDate)) installDoneDate = sched;
+      } else if (["APPROVED", "PENDING", "RESCHEDULED"].includes(status)) {
+        installScheduled = true;
+        if (!installScheduledDate || (sched && sched > installScheduledDate)) installScheduledDate = sched;
+      }
+    }
+
+        if (isAdjust(a) && status === "FINISHED") {
+          adjustmentsCount += 1;
+
+          if (!lastAdjustmentDate || (sched && sched > lastAdjustmentDate)) {
+            lastAdjustmentDate = sched;
+          }
+        }
+      }
+
+  return {
+    consultScheduled,
+    consultScheduledDate: consultScheduledDate ? consultScheduledDate.toISOString() : null,
+    consultDone,
+    consultDoneDate: consultDoneDate ? consultDoneDate.toISOString() : null,
+
+    installScheduled,
+    installScheduledDate: installScheduledDate ? installScheduledDate.toISOString() : null,
+    installDone,
+    installDoneDate: installDoneDate ? installDoneDate.toISOString() : null,
+
+    adjustmentsCount,
+    lastAdjustmentDate: lastAdjustmentDate ? lastAdjustmentDate.toISOString() : null,
+  };
+}
+
+
+function esc(s) {
+  return (s == null ? "" : String(s))
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function summarizeTeeth(teethStatus) {
+  if (!teethStatus || typeof teethStatus !== "object") return "";
+  const groups = {};
+  for (const [tooth, status] of Object.entries(teethStatus)) {
+    if (!status || status === "Clear") continue;
+    if (!groups[status]) groups[status] = [];
+    groups[status].push(Number(tooth));
+  }
+  const rows = Object.entries(groups)
+    .map(([status, teeth]) => {
+      teeth.sort((a, b) => a - b);
+      return `
+        <div class="p-3 rounded-lg border bg-gray-50">
+          <div class="text-xs font-semibold text-gray-700">${esc(status)}</div>
+          <div class="text-sm text-gray-700 mt-1">${teeth.join(", ")}</div>
+        </div>
+      `;
+    })
+    .join("");
+  return rows || `<p class="text-sm text-gray-500">No tooth marks recorded.</p>`;
+}
+
+const TOOTH_STATUS_META = {
+  "Cavity": { border: "border-red-600", overlay: "" },
+  "OK/Pasta": { border: "border-emerald-600", overlay: "" },
+  "Root Fragments": { border: "border-orange-600", overlay: "" },
+  "Impacted": { border: "border-yellow-500", overlay: "" },
+  "Missing": { border: "border-gray-700", overlay: "×" },
+  "Amalgam": { border: "border-slate-600", overlay: "" },
+  "Composite": { border: "border-sky-600", overlay: "" },
+  "Complete Denture": { border: "border-violet-600", overlay: "" },
+  "Crowns": { border: "border-indigo-600", overlay: "" },
+  "Clear": { border: "border-gray-300", overlay: "" },
+};
+
+const TOOTH_STATUS_OPTIONS = Object.keys(TOOTH_STATUS_META);
+
+function toothBtnHTML(n, status) {
+  const meta = TOOTH_STATUS_META[status || "Clear"] || TOOTH_STATUS_META.Clear;
+  const isMarked = status && status !== "Clear";
+  return `
+    <button type="button"
+      class="w-full aspect-square relative flex items-center justify-center tooth-shape bg-white transition-all duration-200 shadow-sm border-4 ${meta.border} ${isMarked ? "shadow-md" : ""}">
+      <div class="tooth-button-inner">
+        <span class="text-xl font-bold text-gray-900">${n}</span>
+        ${meta.overlay ? `<div class="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-gray-700/70">${meta.overlay}</div>` : ""}
+      </div>
+    </button>
+  `;
+}
+
+function renderToothChartHTML(teethStatus) {
+  const Q1 = [8,7,6,5,4,3,2,1];
+  const Q2 = [9,10,11,12,13,14,15,16];
+  const Q4 = [32,31,30,29,28,27,26,25];
+  const Q3 = [24,23,22,21,20,19,18,17];
+
+  const quad = (nums, upper) => `
+    <div class="quadrant-grid ${upper ? "upper-arch" : "lower-arch"}">
+      ${nums.map(n => toothBtnHTML(n, teethStatus?.[n])).join("")}
+    </div>
+  `;
+
+  const legend = `
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+      ${TOOTH_STATUS_OPTIONS.filter(s => s !== "Clear").map(s => {
+        const m = TOOTH_STATUS_META[s];
+        return `
+          <div class="flex items-center gap-2 px-3 py-2 rounded-lg border bg-gray-50">
+            <span class="w-4 h-4 border-4 rounded ${m.border} bg-white"></span>
+            <span class="text-xs font-semibold">${esc(s)}</span>
+          </div>
+        `;
+      }).join("")}
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white">
+        <span class="w-3 h-3 rounded-full bg-white border border-gray-300"></span>
+        <span class="text-xs font-semibold">Clear</span>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="border p-4 rounded-xl bg-gray-50">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-sm font-bold text-gray-700">Tooth Chart</div>
+          <div class="text-xs text-gray-500">View only</div>
+        </div>
+      </div>
+
+      ${legend}
+
+      <div class="bg-white p-4 rounded-xl border shadow-inner">
+        <h4 class="text-center text-xs font-semibold text-gray-500 mb-2 uppercase tracking-widest">
+          Maxillary Arch (Upper)
+        </h4>
+        <div class="tooth-chart-container">
+          ${quad(Q1, true)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quad(Q2, true)}
+        </div>
+
+        <div class="w-full h-1 bg-gray-100 my-4 rounded-full"></div>
+
+        <div class="tooth-chart-container">
+          ${quad(Q4, false)}
+          <div class="text-sm font-light text-gray-300">|</div>
+          ${quad(Q3, false)}
+        </div>
+
+        <h4 class="text-center text-xs font-semibold text-gray-500 mt-2 uppercase tracking-widest">
+          Mandibular Arch (Lower)
+        </h4>
+      </div>
+    </div>
+  `;
+}
+
+
+async function openTRModal(appointmentId) {
+  let dentistName = "—";
+  const modal = document.getElementById("trModal");
+  const body = document.getElementById("trModalBody");
+
+  modal.classList.remove("hidden");
+  body.innerHTML = `<div class="text-sm text-gray-500">Loading…</div>`;
+
+  // 1) TreatmentRecord
+const { data: tr, error: trErr } = await supabaseClient
+  .from("TreatmentRecord")
+  .select("TreatmentRecordID, TreatmentNotes")
+  .eq("AppointmentID", appointmentId)
+  .maybeSingle();
+
+
+if (trErr || !tr) {
+  body.innerHTML = `<p class="text-gray-500">No treatment record found.</p>`;
+  return;
+}
+
+
+  // 2) ToothChart (by TreatmentRecordID)
+  const { data: tc } = await supabaseClient
+    .from("ToothChart")
+    .select("TeethStatus")
+    .eq("TreatmentRecordID", tr.TreatmentRecordID)
+    .maybeSingle();
+
+  const teethStatus = tc?.TeethStatus || {};
+
+  // 3) Uploaded files (attachments)
+  const { data: att, error: attErr } = await supabaseClient
+    .from("treatmentattachment")
+    .select("filepath, filename, mimetype, createdat")
+    .eq("treatmentrecordid", tr.TreatmentRecordID)
+    .order("createdat", { ascending: false });
+
+  const files = attErr ? [] : (att || []);
+
+const appt = (window.appts || []).find(a => a.AppointmentID === appointmentId);
+
+if (appt?.Dentist) {
+  dentistName = `${appt.Dentist.FirstName || ""} ${appt.Dentist.LastName || ""}`.trim();
+}
+
+
+  const filesHtml = files.length === 0
+  ? `<p class="text-sm text-gray-500">No files uploaded.</p>`
+  : `
+    <div class="space-y-2">
+      ${files.map(f => {
+        const url = supabaseClient.storage
+          .from("treatment-files")
+          .getPublicUrl(f.filepath).data.publicUrl;
+
+        return `
+          <div class="flex items-center justify-between border rounded-lg px-3 py-2">
+            <div class="min-w-0">
+              <div class="text-sm font-semibold truncate">${esc(f.filename || "File")}</div>
+              <div class="text-xs text-gray-500 truncate">${esc(f.mimetype || "")}</div>
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                onclick="openPreview('${url}','${esc(f.filename)}','${esc(f.mimetype)}')"
+                class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+                Preview
+              </button>
+              <a href="${url}" target="_blank"
+                 class="px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+                Open
+              </a>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+
+// Optional header fields (if you want like TreatmentRecords)
+document.getElementById("trTitle").textContent = "Treatment Record";
+document.getElementById("trSub").textContent ="";
+document.getElementById("trDentist").textContent = `Dentist: ${dentistName}`;
+
+body.innerHTML = `
+  <div class="space-y-6">
+    <div>
+      <label class="block text-sm font-bold text-gray-700 mb-2">Treatment Notes</label>
+      <textarea class="min-h-[100px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+        readonly>${esc(tr.TreatmentNotes || "—")}</textarea>
+    </div>
+
+    ${renderToothChartHTML(teethStatus)}
+
+    <div class="border p-4 rounded-xl bg-white">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div>
+          <div class="text-sm font-bold text-gray-700">Uploaded Files</div>
+          <div class="text-xs text-gray-500">X-ray, photos, documents</div>
+        </div>
+      </div>
+      <div class="mt-2">${filesHtml}</div>
+    </div>
+  </div>
+`;
+}
+
+
+function closeTRModal() {
+  document.getElementById("trModal").classList.add("hidden");
+}
+
+function openPreview(url, filename, mimetype) {
+  const modal = document.getElementById("previewModal");
+  const title = document.getElementById("previewTitle");
+  const meta = document.getElementById("previewMeta");
+  const body = document.getElementById("previewBody");
+  const openBtn = document.getElementById("previewOpenNewTab");
+
+  title.textContent = filename || "File";
+  meta.textContent = mimetype || "";
+  openBtn.href = url;
+
+  const isImage = String(mimetype || "").startsWith("image/");
+  body.innerHTML = isImage
+    ? `
+      <div class="w-full flex justify-center">
+        <img src="${url}" alt="${esc(filename)}" class="max-h-[70vh] rounded-lg border bg-white" />
+      </div>
+    `
+    : `
+      <div class="p-6 bg-white rounded-lg border">
+        <div class="text-sm text-gray-700">Preview not available for this file type.</div>
+        <a href="${url}" target="_blank" rel="noreferrer"
+           class="inline-flex mt-3 px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+          Open file
+        </a>
+      </div>
+    `;
+
+  modal.classList.remove("hidden");
+}
+
+function closePreview() {
+  document.getElementById("previewModal").classList.add("hidden");
+}
+
+    // --- Notifications (same behavior as Dashboard) ---
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
+
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach(n => {
+            const item = document.createElement('button');
+            item.type = "button";
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
+              loadNotifications();
+            });
+
+            dropdown.appendChild(item);
+          });
+
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
+    
+    async function init() {
+      const user = await checkAuth();
+      if (!user) return;
+
+      const userId = localStorage.getItem("userId");
+      const container = document.getElementById("tpContainer");
+
+      container.innerHTML = `
+        <section class="bg-white border rounded-2xl shadow-sm p-6">
+          <div class="flex items-center gap-3 text-gray-600">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>Loading treatment plan...</p>
+          </div>
+        </section>
+      `;
+
+      try {
+        const plan = await loadLatestBracesPlan(userId);
+        if (!plan) return renderNoPlan();
+        const appts = await loadPlanAppointments(plan.TreatmentPlanID, userId, plan.SourceAppointmentID);
+        window.appts = appts;
+
+        const pretreat = await loadPretreatments(plan.TreatmentPlanID);
+
+        const progress = computeProgressFromAppointments(appts);
+        renderPlan(plan, progress, appts, pretreat);
+
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = `
+            <section class="bg-white border rounded-2xl shadow-sm p-6">
+            <div class="p-4 rounded-xl border bg-red-50 text-red-700">
+                <p class="font-semibold">Failed to load treatment plan</p>
+                <p class="text-sm mt-1">Please refresh the page or try again later.</p>
+            </div>
+            </section>
+        `;
+        }
+      loadNotifications();
+      const bellBtn = document.getElementById("notifBellBtn");
+if (bellBtn) bellBtn.onclick = openNotifications;
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+
+  </script>
+
+<!-- Treatment Record Modal -->
+<!-- Treatment Record Modal (match TreatmentRecords style) -->
+<div id="trModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTRModal()"></div>
+
+  <div class="relative w-full max-w-4xl mx-auto mt-8 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="relative sticky top-0 bg-white border-b z-10 px-6 py-4">
+      <div class="text-center">
+        <div id="trTitle" class="text-xl font-semibold text-custom-primary">Treatment Record</div>
+        <div id="trSub" class="text-sm text-gray-600 mt-1">—</div>
+        <div id="trDentist" class="text-xs text-gray-500 mt-1">Dentist: —</div>
+      </div>
+
+      <button onclick="closeTRModal()"
+        class="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-900">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="trModalBody" class="p-6 overflow-y-auto">
+      Loading…
+    </div>
+  </div>
+</div>
+
+
+<!-- File Preview Modal (same idea as TreatmentRecords) -->
+<div id="previewModal" class="fixed inset-0 z-[80] hidden">
+  <div class="absolute inset-0 bg-black/70" onclick="closePreview()"></div>
+
+  <div class="relative max-w-4xl mx-auto mt-10 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between p-4 border-b">
+      <div class="min-w-0">
+        <div id="previewTitle" class="font-bold truncate">File</div>
+        <div id="previewMeta" class="text-xs text-gray-500 truncate"></div>
+      </div>
+      <button type="button" onclick="closePreview()" class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="previewBody" class="p-4 bg-gray-50"></div>
+
+    <div class="p-4 border-t flex justify-end gap-2 bg-white">
+      <a id="previewOpenNewTab" href="#" target="_blank" rel="noreferrer"
+         class="px-4 py-2 rounded-lg border hover:bg-gray-50 text-sm font-medium">
+        Open in new tab
+      </a>
+      <button type="button" onclick="closePreview()"
+              class="px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm font-medium">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

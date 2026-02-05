@@ -181,12 +181,12 @@
 }
 .tip .tip-box {
   position: absolute;
-  left: 50%;
-  top: 125%;
-  transform: translateX(-50%);
-  width: 260px;
+  left: 120%;              /* 👉 move to the right */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
   max-width: 70vw;
-  background: #111827; /* gray-900 */
+  background: #111827;
   color: #fff;
   border-radius: 0.5rem;
   padding: 0.6rem 0.7rem;
@@ -198,24 +198,33 @@
   transition: opacity .15s ease, transform .15s ease;
   z-index: 60;
 }
-.tip:hover .tip-box {
+
+.tip:hover .tip-box,
+.tip.tip-open .tip-box {
   opacity: 1;
-  transform: translateX(-50%) translateY(2px);
+  transform: translateY(-50%) translateX(2px);
 }
+
 .tip .tip-arrow {
   position: absolute;
-  left: 50%;
-  top: 118%;
-  transform: translateX(-50%);
-  width: 0; height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid #111827; /* gray-900 */
+  left: 110%;              /* arrow between icon and box */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 6px solid #111827; /* arrow pointing left */
   opacity: 0;
   transition: opacity .15s ease;
   z-index: 60;
 }
-.tip:hover .tip-arrow { opacity: 1; }
+
+.tip:hover .tip-arrow,
+.tip.tip-open .tip-arrow {
+  opacity: 1;
+}
+
 
 .info-dot {
   width: 18px;
@@ -275,7 +284,7 @@
 
   <!-- App Shell -->
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-house w-5"></i>
@@ -292,6 +301,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+          <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-credit-card w-5"></i>
@@ -336,10 +349,12 @@
                         <div class="flex gap-2 mb-4">
                         <button onclick="loadDentistAppointments('all')" class="filter-btn-new">All</button>
                         <button onclick="loadDentistAppointments('today')" class="filter-btn-new">Today</button>
+                        <button onclick="loadDentistAppointments('pending')" class="filter-btn-new">Pending</button>
                         <button onclick="loadDentistAppointments('upcoming')" class="filter-btn-new active">Upcoming</button>
                         <button onclick="loadDentistAppointments('finished')" class="filter-btn-new">Finished</button>
                         <button onclick="loadDentistAppointments('rescheduled')" class="filter-btn-new">Rescheduled</button>
                         <button onclick="loadDentistAppointments('cancelled')" class="filter-btn-new">Cancelled</button>
+                        <button onclick="loadDentistAppointments('no show')" class="filter-btn-new">No Show</button>
                         <button onclick="loadDentistAppointments('requests')" class="filter-btn-new">Requests</button>
                         <button onclick="loadDentistAppointments('needs action')" class="filter-btn-new">Needs action</button>
 
@@ -420,12 +435,14 @@
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/feedback.js"></script>
 <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    
+    let patientApptChannel = null;
+    let isModalOpen = false;
 
     // Logout (shared shell)
     async function logout() {
@@ -435,90 +452,97 @@
     }
 
     // Notifications (shared shell)
-    async function loadNotifications() {
-      if (localStorage.getItem("prefBellNotif") === "false") return;
-      const bellBtn = document.getElementById("notifBellBtn");
-      if (!bellBtn) return;
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
 
-      const { data: notifications, error } = await supabaseClient
-        .from("Notifications")
-        .select("*")
-        .eq("UserAccountID", userId)
-        .eq("Status", "Unread")
-        .order("DateSent", { ascending: false });
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-      // badge
-      const existingBadge = document.getElementById("notif-badge");
-      if (existingBadge) existingBadge.remove();
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
 
-      if (notifications && notifications.length > 0) {
-        const badge = document.createElement("span");
-        badge.id = "notif-badge";
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
         badge.textContent = notifications.length;
-        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
-        bellBtn.appendChild(badge);
-      }
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
 
-      // remove old dropdown
-      const prevDropdown = document.getElementById("notif-dropdown");
-      if (prevDropdown) prevDropdown.remove();
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
 
-      bellBtn.onclick = async () => {
-        let dropdown = document.getElementById("notif-dropdown");
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
         if (dropdown) return dropdown.remove();
 
-        dropdown = document.createElement("div");
-        dropdown.id = "notif-dropdown";
-        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
-        dropdown.style.maxHeight = "320px";
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
 
         if (!notifications || notifications.length === 0) {
-          const emptyMsg = document.createElement("div");
-          emptyMsg.className = "p-4 text-gray-500 text-sm";
-          emptyMsg.textContent = "No new notifications";
-          dropdown.appendChild(emptyMsg);
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
         } else {
-          notifications.forEach((n) => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
-            item.textContent = n.Message;
-            item.addEventListener("click", async () => {
-              await supabaseClient
-                .from("Notifications")
-                .update({ Status: "Read" })
-                .eq("NotificationID", n.NotificationID);
-              dropdown.remove();
-              loadNotifications();
+            notifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+                const first = n.Appointment?.User?.FirstName ?? '';
+                const last  = n.Appointment?.User?.LastName ?? '';
+                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+                dropdown.appendChild(item);
             });
-            dropdown.appendChild(item);
-          });
         }
 
-        document.body.appendChild(dropdown);
-
-        // close on outside click
-        const onDocClick = (e) => {
-          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener("click", onDocClick);
-          }
-        };
-        setTimeout(() => document.addEventListener("click", onDocClick), 0);
-      };
-    }
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
 
 // 1. GLOBAL VARIABLE TO STORE ALL FETCHED APPOINTMENTS
     let allAppointments = [];
-
+    const sample = allAppointments.find(a => a.RequestRequestedAt);
+console.log("RequestRequestedAt raw from DB:", sample?.RequestRequestedAt);
     async function checkAuth(redirect = true) {
         // ... (Your existing checkAuth logic) ...
         const storedFirstName = localStorage.getItem('userFirstName');
@@ -557,7 +581,212 @@
         return userData;
     }
 
+function startPatientAppointmentsRealtime() {
+  stopPatientAppointmentsRealtime();
+
+  patientApptChannel = supabaseClient
+    .channel("patient-appts-live")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "Appointment" },
+      () => {
+        if (!isModalOpen) loadAppointments();
+      }
+    )
+    .subscribe();
+}
+
+function stopPatientAppointmentsRealtime() {
+  if (patientApptChannel) {
+    supabaseClient.removeChannel(patientApptChannel);
+    patientApptChannel = null;
+  }
+}
+
+function fmtDateLong(isoOrDate) {
+  if (!isoOrDate) return "—";
+  const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
+  if (isNaN(+d)) return "—";
+  return d.toLocaleDateString("en-PH", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function fmtTime(isoOrDate) {
+  if (!isoOrDate) return "—";
+  const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
+  if (isNaN(+d)) return "—";
+  return d.toLocaleTimeString("en-PH", {
+    timeZone: "Asia/Manila",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function fmtDateTimeLong(isoOrDate) {
+  if (!isoOrDate) return "—";
+  return `${fmtDateLong(isoOrDate)} • ${fmtTime(isoOrDate)}`;
+}
+
+  function escapeHtml(str) {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+function renderAppointmentsTable(targetElId, list, mode = "upcoming") {
+  const el = document.getElementById(targetElId);
+  if (!el) return;
+
+  if (!list || list.length === 0) {
+    el.innerHTML = `
+      <div class="text-center py-10 text-gray-500">
+        <h3 class="text-lg font-medium mb-2">No ${mode} appointments</h3>
+      </div>
+    `;
+    return;
+  }
+
+  const rows = list.map(a => {
+    const service = a.Service || "—";
+    const serviceSafe = escapeHtml(service);
+    const when = fmtDateTimeLong(a.AppointmentSchedule);
+    const st = String(a.Status || "—");
+    const stKey = st.toLowerCase().replace(/\s+/g, "");
+    const badgeClass = getStatusBadgeClass(st);
+
+    // Patient actions (keep your logic)
+    const viewBtn = `
+      <button onclick='openAppointmentModal(${JSON.stringify(a)})'
+        class="button-style button-outline text-xs">
+        View
+      </button>
+    `;
+
+    const cancelBtn = canRequestCancel(a) ? `
+      <button
+        onclick="openRequestModal('${a.AppointmentID}', 'CANCEL')"
+        class="button-style button-outline text-xs text-red-600">
+        Request Cancel
+      </button>
+    ` : ``;
+
+    const reschedBtn = canRequestReschedule(a) ? `
+      <button
+        onclick='openReschedPicker(${JSON.stringify(a)})'
+        class="button-style button-outline text-xs">
+        Request Resched
+      </button>
+    ` : ``;
+
+    const reuploadBtn = a.ReceiptReuploadRequestedAt ? `
+      <button
+        onclick="openReceiptReuploadModal('${a.AppointmentID}')"
+        class="button-style bg-[#03555E] hover:bg-[#024449] text-white text-xs">
+        Re-upload Receipt
+      </button>
+    ` : ``;
+
+    const reqType = String(a.RequestType || "").toUpperCase();
+    const hasNotice = !!reqType;
+
+    const label =
+      reqType === "CLINICUNAVAILABLE" ? "Schedule unavailable" :
+      reqType === "CANCEL" ? "Cancel requested" :
+      reqType === "RESCHEDULE" ? "Reschedule requested" :
+      "Notice";
+
+    const reasonHtml = hasNotice ? (formatRequestReason(a) || "") : "";
+
+    const reqAt = a.RequestRequestedAt ? fmtDateTimeLong(a.RequestRequestedAt) : "";
+
+    const noticeText = hasNotice
+      ? `
+        <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(label)}</div>
+        ${reqAt ? `<div style="opacity:.85; margin-bottom:6px;">Requested at: ${escapeHtml(reqAt)}</div>` : ""}
+        <div>${reasonHtml}</div>
+      `
+      : "";
+
+
+    return `
+      <tr class="border-b last:border-b-0 hover:bg-gray-50">
+        <td class="px-3 py-3 text-sm font-semibold text-gray-900">
+          <div class="clamp-1 max-w-[360px]" title="${serviceSafe}">
+            ${serviceSafe}
+          </div>
+        </td>
+
+        <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+          ${when}
+        </td>
+
+        <td class="px-3 py-3 whitespace-nowrap">
+          <!-- keep your existing badge styles -->
+          <span class="badge-style ${badgeClass}">
+            ${st}
+          </span>
+        </td>
+
+        ${mode !== "past" ? `
+        <td class="px-3 py-3">
+          ${hasNotice ? `
+            <div class="tip" id="tip-${a.AppointmentID}">
+              <span class="info-dot" aria-label="View notice">i</span>
+              <span class="tip-arrow"></span>
+              <div class="tip-box">
+                ${noticeText}
+              </div>
+            </div>
+          ` : `<span class="text-xs text-gray-400">—</span>`}
+        </td>
+      ` : ""}
+
+        <td class="px-3 py-3 whitespace-nowrap">
+          <div class="flex flex-nowrap gap-2 overflow-x-auto">
+            ${viewBtn}
+            ${reschedBtn}
+            ${cancelBtn}
+            ${reuploadBtn}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="overflow-x-auto border rounded-xl bg-white">
+      <table class="w-full text-left">
+        <thead class="bg-gray-100 text-xs text-gray-600 uppercase">
+          <tr>
+            <th class="px-3 py-2 w-[380px]">Service</th>
+            <th class="px-3 py-2">Schedule</th>
+            <th class="px-3 py-2">Status</th>
+            ${mode !== "past" ? `<th class="px-3 py-2">Notice</th>` : ""}
+            <th class="px-3 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
+
     async function loadAppointments() {
+       showLoading("Fetching your appointments…", "Loading");
+        try {
         const userId = localStorage.getItem('userId');
         if (!userId) return;
 
@@ -575,63 +804,25 @@
 
         // Store all fetched data globally
         allAppointments = appointments || [];
-
+        const sample = allAppointments.find(a => a.RequestRequestedAt || a.requestrequestedat);
+console.log("RequestRequestedAt raw (camel):", sample?.RequestRequestedAt);
+console.log("requestrequestedat raw (lower):", sample?.requestrequestedat);
         // Load existing reviews for this user
         // Render both the main list (Upcoming) and the static Past list on load
         renderAppointments(allAppointments);
 
         // Automatically apply the default filter for the Upcoming card display
         loadDentistAppointments('upcoming');
-    }
-
-    function renderAppointments(appointments) {
-        const pastContainer = document.getElementById('past-container');
-        
-        if (!appointments || appointments.length === 0) {
-            pastContainer.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <h3 class="text-lg font-medium mb-2">No past appointments</h3>
-                </div>
-            `;
-            return;
-        }
-
-        // Show only appointments explicitly marked as Finished
-        const past = appointments.filter(a => (a.Status || '').toLowerCase() === 'finished');
-
-        if (past.length === 0) {
-            pastContainer.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <h3 class="text-lg font-medium mb-2">No past appointments</h3>
-                </div>
-            `;
-        } else {
-            pastContainer.innerHTML = past.map(a => {
-                const badgeClass = getStatusBadgeClass(a.Status);
-// Safely pass minimal data to review modal
-return `
-                <div class="border rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                        <h3 class="font-semibold">${a.Service}</h3>
-                        <p class="text-sm text-gray-500">
-                            ${new Date(a.AppointmentSchedule).toLocaleString()}
-                        </p>
-                        <p class="text-sm text-gray-400">Status: ${a.Status}</p>
-                    </div>
-                    <div class="flex flex-col gap-2 items-end">
-                        <div class="badge-style ${badgeClass}">
-                            ${a.Status}
-                        </div>
-                        <button onclick='openAppointmentModal(${JSON.stringify(a)})'
-                            class="button-style button-outline text-sm">
-                            View Details
-                        </button>
-                    </div>
-                </div>
-                `;
-            }).join('');
+                } finally {
+          hideLoading();
         }
     }
+
+function renderAppointments(appointments) {
+  const past = (appointments || []).filter(a => (a.Status || '').toLowerCase() === 'finished');
+  renderAppointmentsTable("past-container", past, "past");
+}
+
 
     // 2. NEW FUNCTION TO HANDLE FILTERING AND RENDERING FOR THE 'UPCOMING' CARD
     function loadDentistAppointments(filterType) {
@@ -702,6 +893,27 @@ case 'finished':
         filteredAppointments = allAppointments.filter(a => !!a.ReceiptReuploadRequestedAt);
         break;
 
+  case 'no show':
+  filteredAppointments = allAppointments.filter(a => {
+    const status = (a.Status || '').toLowerCase().replace(/\s+/g, '');
+    // supports: "NoShow", "No Show", "noshow"
+    return status === 'noshow';
+  });
+  break;
+
+  case 'pending':
+  filteredAppointments = allAppointments.filter(a => {
+    const status = (a.Status || '').toLowerCase();
+    const rt = (a.RequestType || '').toLowerCase();
+
+    // keep clinic notice visible (optional — consistent with your upcoming logic)
+    if (rt === 'clinicunavailable') return true;
+
+    return status === 'pending';
+  });
+  break;
+
+
     default:
         filteredAppointments = allAppointments;
         break;
@@ -720,145 +932,7 @@ case 'finished':
                 </div>
             `;
         } else {
-            upcomingContainer.innerHTML = filteredAppointments.map(a => {
-                const badgeClass = getStatusBadgeClass(a.Status);
-                const isFinished = (a.Status || '').toLowerCase() === 'finished';
-const st = (a.Status || "").toLowerCase();
-                const rt = (a.RequestType || "").toLowerCase(); // ✅ ADD
-                const isClinicUnavailable = (rt === "clinicunavailable"); // ✅ ADD
-
-                let prettyReq = "";
-                if (st === "reschedulerequested" || st === "cancelrequested" || isClinicUnavailable) {
-                  prettyReq = formatRequestReason(a);
-                }
-
-                    return `
-                    <div class="border rounded-lg p-4 ${isClinicUnavailable ? 'notice-strip bg-amber-50/40' : ''}">
-
-                        <div class="flex items-start justify-between gap-4">
-                        <!-- LEFT: details -->
-                        <div class="min-w-0">
-                            <h3 class="font-semibold">${a.Service}</h3>
-                            <p class="text-sm text-gray-500">
-                            ${new Date(a.AppointmentSchedule).toLocaleString()}
-                            </p>
-
-                            <div class="mt-2 flex flex-wrap items-center gap-2">
-                              <span class="text-xs text-gray-500">Status:</span>
-
-                              <!-- ✅ ALWAYS show the real status -->
-                              <span class="badge-style ${badgeClass}">
-                                ${a.Status || "—"}
-                              </span>
-
-                              <!-- ✅ Compact request/notice info (no big box) -->
-                              ${(st === "reschedulerequested" || st === "cancelrequested") ? `
-                                <span class="text-[11px] px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-800">
-                                  Request pending • ${st === "cancelrequested" ? "CANCEL" : "RESCHEDULE"}
-                                </span>
-                                ${prettyReq ? `
-                                  <span class="text-xs text-amber-800 clamp-1 max-w-[240px]">
-                                    ${prettyReq}
-                                  </span>
-                                ` : ``}
-                              ` : isClinicUnavailable ? `
-                              <span class="notice-chip text-[11px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-2">
-                                ⚠ Clinic notice
-
-                                <!-- info icon + tooltip -->
-                                <span class="tip" id="tip-${a.AppointmentID}">
-                                  <button
-                                    type="button"
-                                    class="info-dot"
-                                    aria-label="Clinic notice details"
-                                    onclick="toggleTip(event, 'tip-${a.AppointmentID}')"
-                                  >i</button>
-
-                                  <span class="tip-arrow"></span>
-
-                                  <span class="tip-box">
-                                    <div class="font-semibold">This date is unavailable.</div>
-                                    ${prettyReq ? `<div class="mt-1">${prettyReq}</div>` : ``}
-                                    <div class="mt-2 opacity-90">
-                                      Please choose whether you would like to request a reschedule or cancel.
-                                    </div>
-                                  </span>
-                                </span>
-                              </span>
-                            ` : ``}
-                            </div>
-                        </div>
-                        <!-- RIGHT: actions -->
-                        <div class="flex items-center gap-2 shrink-0">
-                            <button onclick='openAppointmentModal(${JSON.stringify(a)})'
-                            class="button-style button-outline text-sm">
-                            View Details
-                            </button>
-                            ${canRequestCancel(a) ? `
-                              <button
-                                onclick="openRequestModal('${a.AppointmentID}', 'CANCEL')"
-                                class="button-style button-outline text-sm text-red-600">
-                                Request Cancel
-                              </button>
-                            ` : ``}
-
-                            ${canRequestReschedule(a) ? `
-                              <button
-                                onclick='openReschedPicker(${JSON.stringify(a)})'
-                                class="button-style button-outline text-sm">
-                                Request Reschedule
-                              </button>
-                            ` : ``}
-                            </div>
-                        </div>
-
-                        <!-- ACTION REQUIRED (clean panel below) -->
-                        ${a.ReceiptReuploadRequestedAt ? `
-                        <span class="badge-style bg-amber-100 text-amber-800">Needs action</span>
-                        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <div class="flex items-start gap-3">
-                            <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                <span class="text-amber-700 font-bold">!</span>
-                            </div>
-
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center justify-between gap-2">
-                                <p class="font-semibold text-amber-900">
-                                    Action required: Re-upload receipt
-                                </p>
-                                <span class="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
-                                    ${a.ReceiptReuploadCount || 0}/3 attempts
-                                </span>
-                                </div>
-
-                                <p class="mt-1 text-sm text-amber-800">
-                                ${a.ReceiptReuploadReason || "Your receipt is unclear. Please upload a clearer screenshot/photo."}
-                                </p>
-
-                                ${(a.ReceiptReuploadCount || 0) >= 3 ? `
-                                <p class="mt-2 text-sm font-medium text-red-600">
-                                    Limit reached. Please contact the clinic for assistance.
-                                </p>
-                                ` : `
-                                <div class="mt-3 flex flex-wrap items-center gap-2">
-                                    <button
-                                    onclick="openReceiptReuploadModal('${a.AppointmentID}')"
-                                    class="button-style bg-[#03555E] hover:bg-[#024449] text-white text-sm"
-                                    >
-                                    Re-upload Receipt
-                                    </button>
-                                    <p class="text-xs text-amber-700">
-                                    Tip: include reference number, amount, and date.
-                                    </p>
-                                </div>
-                                `}
-                            </div>
-                            </div>
-                        </div>
-                        ` : ``}
-                    </div>
-                    `;
-            }).join('');
+renderAppointmentsTable("upcoming-container", filteredAppointments, filterType);
         }
     }
 
@@ -905,16 +979,17 @@ function canRequestReschedule(appt) {
   // hard blocks
   if (["finished", "cancelled", "rejected"].includes(st)) return false;
 
-  // ✅ Clinic unavailable: always allow reschedule choice
+  // clinic-unavailable notice: always allow patient to choose action
   if (isClinicUnavailable(appt)) return true;
 
-  // don't allow if patient already has a pending request
+  // don't allow if there is already a pending request
   if (["reschedulerequested", "cancelrequested"].includes(st)) return false;
 
   // patient limit
   if (count >= 2) return false;
 
-  return ["pending", "approved", "rescheduled"].includes(st);
+  // ✅ only approved/rescheduled can request reschedule
+  return ["approved", "rescheduled"].includes(st);
 }
 
 function canRequestCancel(appt) {
@@ -937,14 +1012,14 @@ function isClinicUnavailable(appt) {
 }
 
   async function openAppointmentModal(appointment) {
+    isModalOpen = true;
   const modal = document.getElementById('appointmentModal');
   const modalContent = document.getElementById('modalContent');
   const addOnsHtml = formatAddOnsForDisplay(appointment.AddOns);
 
   const appointmentDate = new Date(appointment.AppointmentSchedule);
-  const formattedDate = appointmentDate.toLocaleDateString();
-  const formattedTime = appointmentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+  const formattedDate = fmtDateLong(appointmentDate);
+  const formattedTime = fmtTime(appointmentDate);
   // Fetch dentist name
   let dentistName = 'N/A';
   if (appointment.DentistID) {
@@ -972,8 +1047,9 @@ function isClinicUnavailable(appt) {
   // Request panel info
   const reqType = appointment.RequestType ? appointment.RequestType.toUpperCase() : "";
   const reqReasonText = formatRequestReason(appointment);
+  const isCancelReq = reqType === "CANCEL";
   const reqAt = appointment.RequestRequestedAt
-    ? new Date(appointment.RequestRequestedAt).toLocaleString()
+    ? fmtDateTimeLong(appointment.RequestRequestedAt)
     : "";
     // ✅ Receipt URL (for thumbnail + zoom)
 const receiptUrl = getReceiptPublicUrl(appointment.ReceiptImage);
@@ -986,7 +1062,6 @@ modalContent.innerHTML = `
     <div class="space-y-2">
       <div><strong>Transaction Reference:</strong> ${appointment.TransactionID || appointment.id}</div>
       <div><strong>Services:</strong> ${appointment.Service}</div>
-      <div><strong>Add-ons:</strong><br/> ${addOnsHtml}</div>
       <div><strong>Date:</strong> ${formattedDate}</div>
       <div><strong>Time:</strong> ${formattedTime}</div>
       <div><strong>Dentist:</strong> ${dentistName}</div>
@@ -997,9 +1072,18 @@ modalContent.innerHTML = `
       ${reschedReasonText ? `<div><strong>Reschedule / Cancel Reason:</strong> ${reschedReasonText}</div>` : ''}
 
 ${reqType ? `
-  <div class="mt-3 p-3 rounded-lg border bg-amber-50 border-amber-200">
+  <div class="mt-3 p-3 rounded-lg border
+  ${isCancelReq
+    ? "bg-red-50 border-red-200"
+    : "bg-amber-50 border-amber-200"}">
+    ${reqAt ? `
+  <div class="text-xs text-gray-600 mt-0.5">
+    Requested at: ${reqAt}
+  </div>
+` : ""}
     <div class="flex items-center justify-between gap-2">
-      <div class="text-sm font-semibold text-amber-900">
+      <div class="text-sm font-semibold
+  ${isCancelReq ? "text-red-900" : "text-amber-900"}">
         ${
           reqType === "CLINICUNAVAILABLE"
             ? "Clinic notice: schedule unavailable"
@@ -1008,11 +1092,11 @@ ${reqType ? `
                 : "Cancellation request")
         }
       </div>
-      ${reqAt ? `<div class="text-xs text-amber-700">${reqAt}</div>` : ""}
     </div>
 
     ${reqReasonText ? `
-      <div class="mt-1 text-sm text-amber-800">
+      <div class="mt-1 text-sm
+  ${isCancelReq ? "text-red-800" : "text-amber-800"}">
         <!-- compact by default -->
         <div id="req-text-${appointment.AppointmentID}" class="clamp-2">
           ${reqReasonText}
@@ -1060,6 +1144,7 @@ ${receiptUrl ? `
 }
 
 function closeModal() {
+  isModalOpen = false;
     const modal = document.getElementById('appointmentModal');
     modal.classList.add('hidden');
 }
@@ -1141,17 +1226,25 @@ document.addEventListener("click", () => {
 // Optional: Escape closes (desktop)
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
+    const rm = document.getElementById("requestModal");
+    if (rm && !rm.classList.contains("hidden")) closeRequestModal();
     document.querySelectorAll(".tip.tip-open").forEach(t => t.classList.remove("tip-open"));
   }
 });
+
+document.addEventListener("click", (e) => {
+  const modal = document.getElementById("requestModal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  if (e.target === modal) closeRequestModal(); // click backdrop
+});
+
 
 
 let receiptReuploadAppointmentId = null;
 
 function openReceiptReuploadModal(appointmentId) {
-  clearReceiptInlineMessage();
+  isModalOpen = true;
   receiptReuploadAppointmentId = appointmentId;
-  clearReceiptInlineMessage();
   clearReceiptInlineMessage();
   const file = document.getElementById("receiptReuploadFile");
   if (file) file.value = "";
@@ -1159,6 +1252,7 @@ function openReceiptReuploadModal(appointmentId) {
 }
 
 function closeReceiptReuploadModal() {
+  isModalOpen = false; 
   clearReceiptInlineMessage();
   document.getElementById("receiptReuploadModal").classList.add("hidden");
   receiptReuploadAppointmentId = null;
@@ -1183,28 +1277,24 @@ async function submitReceiptReupload() {
   const btn = document.getElementById("receiptReuploadSubmitBtn");
   const oldText = btn?.textContent;
   if (btn) { btn.disabled = true; btn.textContent = "Uploading..."; }
+  showLoading("Uploading your new receipt…", "Uploading Receipt");
+
 
   try {
     // 1) Read appointment to check attempt count
     const { data: appt, error: readErr } = await supabaseClient
       .from("Appointment")
-      .select("AppointmentID, ReceiptReuploadCount, ReceiptReuploadRequestedAt")
+      .select("AppointmentID, ReceiptReuploadRequestedAt")
       .eq("AppointmentID", receiptReuploadAppointmentId)
       .single();
 
     if (readErr) throw readErr;
 
-    const currentCount = appt?.ReceiptReuploadCount ?? 0;
-    if (currentCount >= 3) {
-      showReceiptInlineMessage("Re-upload limit reached (3). Please contact the clinic.");
-      return;
-    }
-
+    // Only allow upload if there is an active request
     if (!appt?.ReceiptReuploadRequestedAt) {
       showReceiptInlineMessage("No re-upload request found for this appointment.");
       return;
     }
-
     // 2) Upload file to Storage (overwrite by using a new timestamp path)
     const timestamp = Date.now();
     const cleanName = file.name.replace(/\s+/g, "_");
@@ -1217,23 +1307,26 @@ async function submitReceiptReupload() {
     if (uploadErr) throw uploadErr;
 
     // 3) Update appointment:
-    // - set new receipt image path
-    // - increment reupload count
-    // - clear request flags (so the banner disappears)
     const { error: updErr } = await supabaseClient
       .from("Appointment")
       .update({
         ReceiptImage: uploadData.path,
-        ReceiptReuploadCount: currentCount + 1,
+
+        // ❌ do NOT increment count here anymore
+        // ReceiptReuploadCount: currentCount + 1,
+
         ReceiptReuploadRequestedAt: null,
         ReceiptReuploadReason: null,
-        PaymentState: "DOWNPAYMENT PENDING REVIEW" // optional if you use it
+        PaymentState: "DOWNPAYMENT PENDING REVIEW"
       })
       .eq("AppointmentID", receiptReuploadAppointmentId);
 
     if (updErr) throw updErr;
 
-    showReceiptInlineMessage("Receipt re-uploaded successfully. Please wait for verification.", "success");
+   showMessage(
+  "Receipt re-uploaded successfully. Please wait for verification.",
+  "success"
+);
     closeReceiptReuploadModal();
 
     // refresh
@@ -1244,13 +1337,16 @@ async function submitReceiptReupload() {
     console.error(err);
     showReceiptInlineMessage("Upload failed. Please try again.");
   } finally {
+    hideLoading();
     if (btn) { btn.disabled = false; btn.textContent = oldText || "Upload"; }
   }
+  
 }
 let requestAppointmentId = null;
 let requestType = null;
 
 function openRequestModal(id, type) {
+  isModalOpen = true;
   requestAppointmentId = id;
   requestType = type;
   clearRequestInlineMessage();
@@ -1261,26 +1357,58 @@ function openRequestModal(id, type) {
   // reset inputs
   const presetEl = document.getElementById("requestReasonPreset");
   const textEl = document.getElementById("requestReasonText");
-  if (presetEl) presetEl.value = "";
-  if (textEl) textEl.value = "";
+  if (presetEl) {
+    presetEl.value = "";
+    presetEl.disabled = false;
+  }
+  if (textEl) {
+    textEl.value = "";
+    textEl.placeholder = "Additional details (optional)";
+  }
 
-  document.getElementById("requestModal").classList.remove("hidden");
+  // ✅ Detect if this appointment is a clinic notice
+  const appt = (allAppointments || []).find(a => String(a.AppointmentID) === String(id));
+  const clinicOverride = appt ? isClinicUnavailable(appt) : false;
+
+  if (clinicOverride) {
+    // auto-select and optionally lock it
+    if (presetEl) {
+      presetEl.value = "Clinic notice (schedule unavailable)";
+      presetEl.disabled = true; // ✅ makes it clear it’s clinic-initiated
+    }
+    if (textEl) {
+      textEl.placeholder = "Optional: add extra details (e.g., what time/day works for you).";
+    }
+  }
+
+  const m = document.getElementById("requestModal");
+if (m) {
+  m.style.display = "";          // reset any hard-close
+  m.classList.remove("hidden");
+  m.removeAttribute("aria-hidden");
+}
 }
 
 function closeRequestModal() {
-  clearRequestInlineMessage();
-  const modal = document.getElementById("requestModal");
-  if (modal) modal.classList.add("hidden");
+  isModalOpen = false;
+  clearRequestInlineMessage?.();
 
-  // reset inputs
+  const modal = document.getElementById("requestModal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+    modal.style.display = ""; // ✅ DO NOT set display:none
+  }
+
   const presetEl = document.getElementById("requestReasonPreset");
   const textEl = document.getElementById("requestReasonText");
-  if (presetEl) presetEl.value = "";
-  if (textEl) textEl.value = "";
+  if (presetEl) { presetEl.value = ""; presetEl.disabled = false; }
+  if (textEl) { textEl.value = ""; }
 
   requestAppointmentId = null;
   requestType = null;
 }
+
 
 async function submitRequest() {
   const preset = document.getElementById("requestReasonPreset")?.value || "";
@@ -1292,7 +1420,7 @@ async function submitRequest() {
   }
 
   const reason = preset + (text ? ` – ${text}` : '');
-
+  showLoading("Submitting your request…", "Please wait");
   try {
     const { error } = await supabaseClient
       .from("Appointment")
@@ -1323,7 +1451,7 @@ async function submitRequest() {
       });
     if (evErr) console.error("appointmentevents insert error (REQUEST):", evErr);
 
-    showRequestInlineMessage("Request submitted successfully.", "success");
+    showMessage("Request submitted successfully.", "success");
     setTimeout(() => closeRequestModal(), 600);
 
     await loadAppointments();
@@ -1331,21 +1459,35 @@ async function submitRequest() {
     console.error(err);
     showRequestInlineMessage("Failed to submit request.");
   }
+  finally {
+  hideLoading();
+}
 }
 
-function makeManilaDateTime(dateYmd, timeLabel) {
-  // dateYmd: YYYY-MM-DD
-  // timeLabel: "02:00 PM"
-  const [t, ampm] = timeLabel.split(" ");
-  let [hh, mm] = t.split(":").map(Number);
+function timeLabelTo24(timeLabel) {
+  // "09:00 AM" -> "09:00"
+  const [t, ampmRaw] = String(timeLabel || "").trim().split(/\s+/);
+  if (!t) return "";
+  const ampm = (ampmRaw || "").toUpperCase();
+
+  let [hh, mm] = t.split(":").map(n => parseInt(n, 10));
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return "";
+
   if (ampm === "PM" && hh !== 12) hh += 12;
   if (ampm === "AM" && hh === 12) hh = 0;
 
-  // build Manila time, convert to Date object
-  const d = new Date(`${dateYmd}T00:00:00+08:00`);
-  d.setHours(hh, mm, 0, 0);
-  return d;
+  const HH = String(hh).padStart(2, "0");
+  const MM = String(mm).padStart(2, "0");
+  return `${HH}:${MM}`;
 }
+
+function makeManilaDateTime(dateYmd, timeLabel) {
+  // Build a timestamp explicitly in Manila (+08:00) so it never depends on the browser timezone.
+  const hhmm = timeLabelTo24(timeLabel);
+  if (!dateYmd || !hhmm) return new Date(NaN);
+  return new Date(`${dateYmd}T${hhmm}:00+08:00`);
+}
+
 
 function intervalsOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && bStart < aEnd;
@@ -1537,6 +1679,7 @@ function getTodayManilaYmd() {
 }
 
 function openReschedPicker(appointment) {
+  isModalOpen = true;
   clearReschedInlineMessage();
   reschedTargetAppointment = appointment;
   reschedSelectedDate = "";
@@ -1546,20 +1689,36 @@ function openReschedPicker(appointment) {
   const dateEl = document.getElementById("reschedDate");
   if (dateEl) {
     dateEl.value = "";
-    dateEl.min = getTodayManilaYmd(); // ✅ block past dates
+    dateEl.min = getTodayManilaYmd();
   }
 
   // reset reason inputs
   const presetEl = document.getElementById('reschedReasonPreset');
   const textEl = document.getElementById('reschedReasonText');
-  if (presetEl) presetEl.value = '';
-  if (textEl) textEl.value = '';
+  if (presetEl) {
+    presetEl.value = '';
+    presetEl.disabled = false;
+  }
+  if (textEl) {
+    textEl.value = '';
+    textEl.placeholder = "Additional details (optional)";
+  }
 
-  // reset UI
+  // ✅ Clinic notice: auto-select and lock preset
+  if (isClinicUnavailable(appointment)) {
+    if (presetEl) {
+      presetEl.value = "Clinic notice (schedule unavailable)";
+      presetEl.disabled = true;
+    }
+    if (textEl) {
+      textEl.placeholder = "Optional: add your preferred new schedule.";
+    }
+  }
+
   renderReschedSlots();
-
   document.getElementById("reschedPickerModal").classList.remove("hidden");
 }
+
 
 function getManilaNow() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -1606,6 +1765,7 @@ function countAvailableSlotsForDate(dateYmd) {
 
 
 function closeReschedPicker() {
+  isModalOpen = false;
   clearReschedInlineMessage();
   document.getElementById("reschedPickerModal").classList.add("hidden");
   reschedTargetAppointment = null;
@@ -1699,7 +1859,8 @@ async function confirmReschedSelection() {
     requestedISO: requestedIso,
     reason: reason
   };
-
+showLoading("Submitting reschedule request…", "Please wait");
+try {
   const { error } = await supabaseClient
     .from("Appointment")
     .update({
@@ -1717,27 +1878,20 @@ async function confirmReschedSelection() {
     return;
   }
 
-  showReschedInlineMessage("Reschedule request submitted.", "success");
-  setTimeout(() => { closeReschedPicker(); }, 600);
+ showMessage("Reschedule request submitted.", "success");
 
-  // ✅ Email the clinic: patient requested reschedule (includes requested schedule + reason)
-const { error: evErr } = await supabaseClient
-  .from("appointmentevents")
-  .insert({
-    appointment_id: reschedTargetAppointment.AppointmentID,
-    event_type: "RESCHEDULE_REQUESTED",
-    payload: {
-      requestedDate: reschedSelectedDate,
-      requestedTime: reschedSelectedTime,
-      requestedISO: requestedIso,
-      reason
-    }
-  });
+  // insert event (optional)
+  const { error: evErr } = await supabaseClient
+    .from("appointmentevents")
+    .insert({
+      appointment_id: reschedTargetAppointment.AppointmentID,
+      event_type: "RESCHEDULE_REQUESTED",
+      payload
+    });
 
-if (evErr) console.error("appointmentevents insert error (RESCHEDULE_REQUESTED):", evErr);
+  if (evErr) console.error("appointmentevents insert error:", evErr);
 
-
-  // reset fields so next open is clean
+  // reset fields
   const presetEl = document.getElementById("reschedReasonPreset");
   const textEl = document.getElementById("reschedReasonText");
   if (presetEl) presetEl.value = "";
@@ -1746,6 +1900,14 @@ if (evErr) console.error("appointmentevents insert error (RESCHEDULE_REQUESTED):
   closeReschedPicker();
   await loadAppointments();
   loadDentistAppointments("upcoming");
+
+} catch (e) {
+  console.error(e);
+  showReschedInlineMessage("Failed to submit reschedule request.");
+} finally {
+  hideLoading(); // ✅ ONLY HERE
+}
+
 }
 
 function formatRequestReason(appointment) {
@@ -1757,21 +1919,33 @@ function formatRequestReason(appointment) {
   return `Reason: ${raw}`;
   }
 
-  if (type === "RESCHEDULE") {
-    try {
-      const obj = JSON.parse(raw);
-      const date = obj.requestedDate || "";
-      const time = obj.requestedTime || "";
-      const reason = obj.reason || "";
-      const line1 = (date && time) ? `Requested new schedule: ${date} at ${time}` : "";
-      const line2 = reason ? `Reason: ${reason}` : "";
-      return [line1, line2].filter(Boolean).join("<br/>");
-    } catch {
-      return raw;
-    }
-  }
+if (type === "RESCHEDULE") {
+  try {
+    const obj = JSON.parse(raw);
 
-  if (type === "CANCEL") return raw;
+    const dateYmd = obj.requestedDate || "";
+    const timeLbl = obj.requestedTime || "";
+    const reason = obj.reason || "";
+
+    // Prefer requestedISO if available; else build a Manila datetime from date+time
+    let dt = null;
+    if (obj.requestedISO) {
+      dt = new Date(obj.requestedISO);
+    } else if (dateYmd && timeLbl) {
+      dt = makeManilaDateTime(dateYmd, timeLbl); // uses +08:00
+    }
+
+    const pretty = dt && !isNaN(+dt) ? fmtDateTimeLong(dt) : (dateYmd && timeLbl ? `${dateYmd} at ${timeLbl}` : "");
+
+    const line1 = pretty ? `Requested new schedule: ${pretty}` : "";
+    const line2 = reason ? `Reason: ${reason}` : "";
+    return [line1, line2].filter(Boolean).join("<br/>");
+  } catch {
+    return raw;
+  }
+}
+
+  if (type === "CANCEL") return `Reason: ${raw}`;
   return raw;
 }
 
@@ -1782,7 +1956,9 @@ window.onReschedDateChange = onReschedDateChange;
 window.openReceiptReuploadModal = openReceiptReuploadModal;
 window.closeReceiptReuploadModal = closeReceiptReuploadModal;
 window.submitReceiptReupload = submitReceiptReupload;
-
+window.openRequestModal = openRequestModal;
+window.closeRequestModal = closeRequestModal;
+window.submitRequest = submitRequest;
 
 let toastTimeout = null;
 const timeSlots = [
@@ -1812,7 +1988,7 @@ function showReschedInlineMessage(message, type = "error") {
   const box = document.querySelector("#reschedPickerModal #reschedInlineMsg");
   if (!box) {
     // fallback
-    showToast(message, type === "success" ? "success" : "error");
+    showMessage(message, type === "success" ? "success" : "error");
     return;
   }
   box.textContent = message;
@@ -1832,7 +2008,7 @@ function showRequestInlineMessage(message, type = "error") {
   const box = document.querySelector("#requestModal #requestInlineMsg");
   if (!box) {
     // fallback
-    showToast(message, type === "success" ? "success" : "error");
+    showMessage(message, type === "success" ? "success" : "error");
     return;
   }
   box.textContent = message;
@@ -1852,7 +2028,7 @@ function clearRequestInlineMessage() {
 function showReceiptInlineMessage(message, type = "error") {
   const box = document.querySelector("#receiptReuploadModal #receiptInlineMsg");
   if (!box) {
-    showToast(message, type === "success" ? "success" : "error");
+    showMessage(message, type === "success" ? "success" : "error");
     return;
   }
   box.textContent = message;
@@ -1901,6 +2077,7 @@ function showToast(message, type = 'success') {
 }
 
 function openReceiptLightbox(url) {
+  isModalOpen = true;
   const lb = document.getElementById("receiptLightbox");
   const img = document.getElementById("receiptLightboxImg");
   if (!lb || !img) return;
@@ -1909,6 +2086,7 @@ function openReceiptLightbox(url) {
 }
 
 function closeReceiptLightbox() {
+   isModalOpen = false;
   const lb = document.getElementById("receiptLightbox");
   const img = document.getElementById("receiptLightboxImg");
   if (img) img.src = "";
@@ -1916,13 +2094,35 @@ function closeReceiptLightbox() {
 }
 
 
-window.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
-    if (!user) return;
+window.addEventListener("DOMContentLoaded", async () => {
+  const user = await checkAuth();
+  if (!user) return;
 
-    await loadNotifications();
-    await loadAppointments();
+  await loadNotifications();
+  await loadAppointments();
+
+  const requestModal = document.getElementById("requestModal");
+  const closeBtn = document.getElementById("requestCloseBtn");
+
+  if (closeBtn) closeBtn.addEventListener("click", closeRequestModal);
+
+  // click outside closes
+  if (requestModal) {
+    requestModal.addEventListener("click", (e) => {
+      if (e.target === requestModal) closeRequestModal();
+    });
+  }
+
+  startPatientAppointmentsRealtime();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopPatientAppointmentsRealtime();
+    else startPatientAppointmentsRealtime();
+  });
+
+  window.addEventListener("beforeunload", () => stopPatientAppointmentsRealtime());
 });
+
 
 
 </script>
@@ -1976,15 +2176,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 </div>
 
 <div id="requestModal"
- class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
- <div class="bg-white rounded-lg w-full max-w-sm p-5">
+ class="fixed inset-0 bg-black/50 hidden z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+ <div class="bg-white rounded-lg w-full max-w-sm p-5 relative max-h-[90vh] overflow-y-auto">
+    <button
+      id="requestCloseBtn"
+      type="button"
+      class="absolute top-3 right-3 z-[10000] w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-2xl leading-none flex items-center justify-center"
+      aria-label="Close"
+    >&times;</button>
 
   <h3 id="requestTitle" class="font-semibold text-lg mb-2"></h3>
 
   <label class="text-sm font-medium">Quick reason</label>
-  <select id="requestReasonPreset"
-    class="w-full p-2 border rounded mb-2">
+  <select id="requestReasonPreset" class="w-full p-2 border rounded mb-2">
     <option value="">Select a reason</option>
+
+    <!-- ✅ NEW: clinic-initiated -->
+    <option value="Clinic notice (schedule unavailable)">Clinic notice (schedule unavailable)</option>
+
     <option>Schedule conflict</option>
     <option>Personal emergency</option>
     <option>Health issue</option>
@@ -1999,7 +2208,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   <!-- Inline validation message (inside modal) -->
   <div id="requestInlineMsg" class="hidden text-sm rounded-md px-3 py-2 border mt-3"></div>
-
+  <div class="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+  <strong>Refund notice:</strong><br>
+  Appointment fees are generally non-refundable.
+  If your cancellation qualifies for a refund
+  (e.g., 24-hour policy or its clinic's fault),
+  the clinic will contact you to request your GCash or payment details.
+</div>
   <div class="flex justify-end gap-2 mt-4">
     <button onclick="closeRequestModal()" class="button-outline">Cancel</button>
     <button onclick="submitRequest()" class="button-style bg-[#03555E] hover:bg-[#024449] text-white">
@@ -2033,12 +2248,17 @@ window.addEventListener('DOMContentLoaded', async () => {
       <label class="text-sm font-medium">Reason (required)</label>
       <select id="reschedReasonPreset" class="w-full p-2 border rounded mt-1">
         <option value="">Select a reason</option>
+
+        <!-- ✅ NEW: clinic-initiated -->
+        <option value="Clinic notice (schedule unavailable)">Clinic notice (schedule unavailable)</option>
+
         <option>Schedule conflict</option>
         <option>Personal emergency</option>
         <option>Health issue</option>
         <option>Work / school conflict</option>
         <option>Other</option>
       </select>
+
 
       <textarea id="reschedReasonText"
         class="w-full border rounded p-2 text-sm mt-2"

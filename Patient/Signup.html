@@ -121,16 +121,19 @@
       <input id="addrBarangay" type="text" placeholder="Barangay" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" required />
       <p id="errAddrBarangay" class="text-red-500 text-xs mt-1"></p>
     </div>
-    <div>
-      <select id="addrCity" class="w-full border rounded px-3 py-2">
-        <option value="">Select City / Municipality</option>
-      </select>
-    </div>
-    <div>
-      <select id="addrProvince" class="w-full border rounded px-3 py-2">
-        <option value="">Select Province</option>
-      </select>
-    </div>
+      <div>
+        <select id="addrCity" class="w-full border rounded px-3 py-2">
+          <option value="">Select City / Municipality</option>
+        </select>
+        <p id="errAddrCity" class="text-red-500 text-xs mt-1"></p>
+      </div>
+
+      <div>
+        <select id="addrProvince" class="w-full border rounded px-3 py-2">
+          <option value="">Select Province</option>
+        </select>
+        <p id="errAddrProvince" class="text-red-500 text-xs mt-1"></p>
+      </div>
     <div>
       <input id="addrZip" type="text" inputmode="numeric" placeholder="ZIP (optional)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#03555E]" />
       <p id="errAddrZip" class="text-red-500 text-xs mt-1"></p>
@@ -179,8 +182,6 @@
           </label>
           <p id="errTerms" class="text-red-500 text-xs mt-1"></p>
         </div>
-
-        <div id="messageBox" class="hidden p-4 mb-4 rounded text-white"></div>
 
         <button type="submit"
           class="w-full bg-[#03555E] hover:bg-[#02464E] text-white py-3 rounded-lg font-medium">
@@ -333,6 +334,7 @@
     
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/feedback.js"></script>
   <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI"; // replace with your anon key
@@ -400,32 +402,8 @@ provinceSelect.addEventListener("change", () => {
     opt.textContent = city;
     citySelect.appendChild(opt);
   });
+  validateAddressLive();
 });
-
-
-
-    function showMessage(message, type = "error") {
-  const box = document.getElementById("messageBox");
-  if (!box) return;
-
-  box.textContent = message;
-
-  // Reset classes
-  box.className = "p-4 mb-4 rounded text-white";
-
-  // Apply type-specific styling
-  if (type === "success") box.classList.add("bg-green-500");
-  else if (type === "error") box.classList.add("bg-red-500");
-  else if (type === "info") box.classList.add("bg-blue-500");
-
-  box.classList.remove("hidden");
-
-  // Auto-hide after 3 seconds
-  setTimeout(() => {
-    box.classList.add("hidden");
-  }, 3000);
-}
-
 
     const form = document.getElementById('signup-form');
 
@@ -639,6 +617,9 @@ provinceSelect.addEventListener("change", () => {
     ["addrStreet","addrBarangay","addrCity","addrProvince","addrZip"].forEach(id=>{
       document.getElementById(id).addEventListener("input", validateAddressLive);
     });
+    document.getElementById("addrCity").addEventListener("change", validateAddressLive);
+    document.getElementById("addrProvince").addEventListener("change", validateAddressLive);
+
 
     document.getElementById("terms").addEventListener("change", validateTermsLive);
 
@@ -731,6 +712,7 @@ async function checkUsernameExists() {
 
       submitBtn.disabled = true;
       submitBtn.classList.add("opacity-60","cursor-not-allowed");
+      showLoading("Creating account…", "Please wait");
 
       try {
       const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
@@ -752,82 +734,50 @@ async function checkUsernameExists() {
         return;
       }
 
-      // ✅ If email confirmation is ON, session is usually null here
-        if (!authData?.session) {
-          const profile = {
-            UserAccountID: userId,
-            FirstName: firstName,
-            MiddleName: middleName,
-            LastName: lastName,
-            Username: username,
-            Email: email,
-            ContactNumber: phoneNumber,
-            BirthDate: birthDateISO,
-            Gender: document.getElementById("gender").value,
-            Address: address,
-            Role: "Patient"
-          };
+        // build profile payload (same fields you already collect)
+        const profile = {
+          user_id: userId,
+          FirstName: firstName,
+          MiddleName: middleName,
+          LastName: lastName,
+          Username: username,
+          Email: email,
+          ContactNumber: phoneNumber,
+          BirthDate: birthDateISO,
+          Gender: document.getElementById("gender").value,
+          Address: address,
+          Role: "patient"
+        };
 
-          const { error: pendErr } = await supabaseClient
-            .from("PendingProfiles")
-            .upsert([{
-              UserAccountID: userId,
-              ProfileData: profile
-            }]);
+        // Always create the UserAccount row via Edge Function
+        const { data: fnData, error: fnErr } = await supabaseClient.functions.invoke(
+          "create-useraccount",
+          { body: profile }
+        );
 
-          if (pendErr) {
-            console.error("PendingProfiles upsert failed:", pendErr);
-            showMessage("Account created but setup failed. Please contact support.", "error");
-            return;
-          }
-
-          console.log("SIGNUP origin:", window.location.origin);
-          console.log("Pending profile saved to DB:", profile);
-
-          showMessage("Account created! Please verify your email, then log in to finish setup.", "success");
-          form.reset();
-          populateYears();
-          populateDays();
+        if (fnErr) {
+          // If username taken, you'll get 409 with "Username already taken."
+          showMessage(fnErr.message || "Profile setup failed.", "error");
           return;
         }
 
-      // ✅ Only insert immediately if session exists (email confirm OFF)
-        const { error: insertError } = await supabaseClient
-          .from("UserAccount")
-          .insert([{
-            UserAccountID: userId,
-            FirstName: firstName,
-            MiddleName: middleName,
-            LastName: lastName,
-            Username: username,
-            Email: email,
-            ContactNumber: phoneNumber,
-            BirthDate: birthDateISO,
-            Gender: document.getElementById("gender").value,
-            Address: address,
-            Role: "Patient"
-          }]);
-
-
-      if (insertError) {
-        console.error(insertError);
-        showMessage(insertError.message || "Account created, but profile insert failed.", "error");
+        // keep your existing success message
+        showMessage("Account created! Please verify your email, then log in.", "success");
+        form.reset();
+        populateYears();
+        populateDays();
         return;
-      }
-
-      showMessage("Account created successfully! Please check your email to verify your account.", "success");
-      form.reset();
-      populateYears();
-      populateDays();
             } catch (err) {
               console.error(err);
               showMessage("Unexpected error during signup.", "error");
             } finally {
+              hideLoading();
               submitBtn.disabled = false;
               submitBtn.classList.remove("opacity-60","cursor-not-allowed");
             }
           });
 
   </script>
+</div>
 </body>
 </html>

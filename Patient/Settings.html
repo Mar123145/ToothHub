@@ -64,7 +64,7 @@
   <!-- App Shell (IDENTICAL layout to patient Dashboard) -->
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-house w-5"></i>
@@ -81,6 +81,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+        <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-credit-card w-5"></i>
@@ -111,11 +115,11 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-6">
-      <div class="max-w-3xl">
+<main class="flex-1 p-6">
+  <div class="max-w-xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
         <p class="text-gray-600 mb-6">Manage your account preferences</p>
-      </div>
+
 <section class="bg-white border rounded-2xl shadow-sm max-w-xl mb-6">
   <div class="px-6 py-4 border-b">
     <h2 class="text-lg font-semibold flex items-center gap-2">
@@ -125,14 +129,6 @@
   </div>
 
   <div class="p-6 space-y-4">
-    <div class="flex justify-between items-center">
-      <span>Email Notifications</span>
-      <label class="switch">
-        <input id="prefEmailNotif" type="checkbox" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
     <div class="flex justify-between items-center">
       <span>In-App Notifications</span>
       <label class="switch">
@@ -178,12 +174,13 @@
         class="w-full px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover">
         Verify Password
       </button>
-        <button
-      type="button"
-      onclick="cancelPasswordChange()"
-      class="w-full px-4 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover">
-      Cancel
-    </button>
+<button
+  type="button"
+  onclick="cancelPasswordChange()"
+  class="w-full px-4 py-2 rounded-lg border hover:bg-gray-50">
+  Cancel
+</button>
+
     </div>
 
     <!-- STEP 3: update password -->
@@ -209,31 +206,53 @@
 </div>
   </div>
 </section>
+
+
+
+</div>
     </main>
   </div>
-  <section class="bg-white border rounded-2xl shadow-sm max-w-xl mt-6">
-  <div class="px-6 py-4 border-b">
-    <h2 class="text-lg font-semibold flex items-center gap-2 text-red-600">
-      <i class="fa-solid fa-shield-halved"></i>
-      Security
-    </h2>
+  <!-- Sign out all devices modal -->
+<div id="logoutAllModal" class="fixed inset-0 hidden items-center justify-center z-50">
+  <div class="absolute inset-0 bg-black/40" onclick="closeLogoutAllModal()"></div>
+
+  <div class="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-xl border overflow-hidden">
+    <div class="px-6 py-4 border-b flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900">Sign out on all devices</h3>
+        <p class="text-sm text-gray-500">This is a security action</p>
+      </div>
+    </div>
+
+    <div class="px-6 py-4">
+      <p class="text-sm text-gray-700">
+        This will sign you out everywhere you’re currently logged in (other browsers/devices).
+        Other sessions will be logged out on their next refresh or request.
+      </p>
+
+      <div id="logoutAllMsg" class="hidden mt-4 text-sm rounded-lg px-4 py-3"></div>
+    </div>
+
+    <div class="px-6 py-4 border-t flex gap-2 justify-end">
+      <button
+        type="button"
+        class="px-4 py-2 rounded-lg border hover:bg-gray-50"
+        onclick="closeLogoutAllModal()">
+        Cancel
+      </button>
+
+      <button
+        id="confirmLogoutAllBtn"
+        type="button"
+        class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+        Sign out all
+      </button>
+    </div>
   </div>
-
-  <div class="p-6">
-    <p class="text-sm text-gray-600 mb-4">
-      Signing out on all devices will log you out everywhere you are currently signed in.
-    </p>
-
-    <button
-      id="btnLogoutAllDevices"
-      type="button"
-      class="w-full px-4 py-2 rounded-lg border border-red-300 text-red-700
-             hover:bg-red-50 transition-colors font-medium">
-      Sign out of all devices
-    </button>
-  </div>
-</section>
-
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -241,42 +260,49 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function checkAuth(redirect = true) {
-      const storedFirstName = localStorage.getItem("userFirstName");
-      const storedRole = localStorage.getItem("userRole");
-      const storedEmail = localStorage.getItem("userEmail");
+async function checkAuth(redirect = true) {
+  // ✅ Always validate Supabase session first (so global logout is respected)
+  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) console.error(sessionError);
 
-      if (storedFirstName && storedRole) {
-        return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
-      }
+  if (!session?.user) {
+    // session is gone => logout everywhere should be enforced
+    localStorage.clear();
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
 
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-      if (sessionError) console.error(sessionError);
+  // If we have cached user info, we can use it (but only after session is valid)
+  const storedFirstName = localStorage.getItem("userFirstName");
+  const storedRole = localStorage.getItem("userRole");
+  const storedEmail = localStorage.getItem("userEmail");
 
-      if (!session?.user) {
-        if (redirect) window.location.href = "/Login.html";
-        return null;
-      }
+  if (storedFirstName && storedRole && storedEmail) {
+    return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+  }
 
-      const { data: userData, error } = await supabaseClient
-        .from("UserAccount")
-        .select("*")
-        .eq("Email", session.user.email)
-        .maybeSingle();
+  // Otherwise fetch from DB once
+  const { data: userData, error } = await supabaseClient
+    .from("UserAccount")
+    .select("*")
+    .eq("Email", session.user.email)
+    .maybeSingle();
 
-      if (error || !userData) {
-        console.error(error || "No user data found");
-        if (redirect) window.location.href = "/Login.html";
-        return null;
-      }
+  if (error || !userData) {
+    console.error(error || "No user data found");
+    localStorage.clear();
+    if (redirect) window.location.href = "/Login.html";
+    return null;
+  }
 
-      localStorage.setItem("userFirstName", userData.FirstName);
-      localStorage.setItem("userRole", userData.Role);
-      localStorage.setItem("userEmail", userData.Email);
-      localStorage.setItem("userId", session.user.id);
+  localStorage.setItem("userFirstName", userData.FirstName);
+  localStorage.setItem("userRole", userData.Role);
+  localStorage.setItem("userEmail", userData.Email);
+  localStorage.setItem("userId", session.user.id);
 
-      return userData;
-    }
+  return userData;
+}
+
 
     async function logout() {
       await supabaseClient.auth.signOut();
@@ -284,77 +310,173 @@
       window.location.href = "/Login.html";
     }
 
-    async function loadNotifications() {
-      if (localStorage.getItem("prefBellNotif") === "false") return;
-      const bellBtn = document.getElementById("notifBellBtn");
-      if (!bellBtn) return;
+let logoutAllModal, logoutAllMsg, confirmLogoutAllBtn;
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
 
-      const { data: notifications, error } = await supabaseClient
-        .from("Notifications")
-        .select("*")
-        .eq("UserAccountID", userId)
-        .eq("Status", "Unread")
-        .order("DateSent", { ascending: false });
+function openLogoutAllModal() {
+  if (!logoutAllModal) return;
+  logoutAllMsg?.classList.add("hidden");
+  logoutAllModal.classList.remove("hidden");
+  logoutAllModal.classList.add("flex");
+}
 
-      if (error) return console.error(error);
+function closeLogoutAllModal() {
+  if (!logoutAllModal) return;
+  logoutAllModal.classList.add("hidden");
+  logoutAllModal.classList.remove("flex");
+}
 
-      const existingBadge = document.getElementById("notif-badge");
-      if (existingBadge) existingBadge.remove();
+function showLogoutAllMessage(type, text) {
+  if (!logoutAllMsg) return;
+  logoutAllMsg.className = "mt-4 text-sm rounded-lg px-4 py-3 border";
+  logoutAllMsg.classList.remove("hidden");
 
-      if (notifications && notifications.length > 0) {
-        const badge = document.createElement("span");
-        badge.id = "notif-badge";
+  if (type === "success") {
+    logoutAllMsg.classList.add("bg-green-50", "text-green-700", "border-green-200");
+  } else {
+    logoutAllMsg.classList.add("bg-red-50", "text-red-700", "border-red-200");
+  }
+  logoutAllMsg.textContent = text;
+}
+
+// Open modal when clicking the main button
+document.getElementById("btnLogoutAllDevices")?.addEventListener("click", () => {
+  openLogoutAllModal();
+});
+
+// Confirm action inside modal
+confirmLogoutAllBtn?.addEventListener("click", async () => {
+  confirmLogoutAllBtn.disabled = true;
+  confirmLogoutAllBtn.textContent = "Signing out...";
+
+  const { error } = await supabaseClient.auth.signOut({ scope: "global" });
+
+  if (error) {
+    showLogoutAllMessage("error", error.message || "Failed to sign out on all devices.");
+    confirmLogoutAllBtn.disabled = false;
+    confirmLogoutAllBtn.textContent = "Sign out all";
+    return;
+  }
+
+  showLogoutAllMessage("success", "Signed out on all devices. Redirecting...");
+  setTimeout(() => {
+    localStorage.clear();
+    window.location.href = "/Login.html";
+  }, 800);
+});
+
+
+
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
+
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
+
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
+
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
         badge.textContent = notifications.length;
-        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
-        bellBtn.appendChild(badge);
-      }
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
 
-      const prevDropdown = document.getElementById("notif-dropdown");
-      if (prevDropdown) prevDropdown.remove();
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
 
-      bellBtn.onclick = async () => {
-        let dropdown = document.getElementById("notif-dropdown");
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
         if (dropdown) return dropdown.remove();
 
-        dropdown = document.createElement("div");
-        dropdown.id = "notif-dropdown";
-        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
-        dropdown.style.maxHeight = "320px";
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
 
         if (!notifications || notifications.length === 0) {
-          const emptyMsg = document.createElement("div");
-          emptyMsg.className = "p-4 text-gray-500 text-sm";
-          emptyMsg.textContent = "No new notifications";
-          dropdown.appendChild(emptyMsg);
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
         } else {
-          notifications.forEach((n) => {
-            const item = document.createElement("button");
+          notifications.forEach(n => {
+            const item = document.createElement('button');
             item.type = "button";
-            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
-            item.textContent = n.Message;
-            item.addEventListener("click", async () => {
-              await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
-              dropdown.remove();
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
               loadNotifications();
             });
+
             dropdown.appendChild(item);
           });
+
         }
 
-        document.body.appendChild(dropdown);
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
 
-        const onDocClick = (e) => {
-          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener("click", onDocClick);
-          }
-        };
-        setTimeout(() => document.addEventListener("click", onDocClick), 0);
-      };
-    }
 
 const pwdMsg = document.getElementById("passwordMsg");
 const startBtn = document.getElementById("startChangePwd");
@@ -487,6 +609,31 @@ function initNotificationPrefs() {
     window.addEventListener("DOMContentLoaded", async () => {
       const user = await checkAuth();
       if (!user) return;
+      logoutAllModal = document.getElementById("logoutAllModal");
+logoutAllMsg = document.getElementById("logoutAllMsg");
+confirmLogoutAllBtn = document.getElementById("confirmLogoutAllBtn");
+
+document.getElementById("btnLogoutAllDevices")?.addEventListener("click", openLogoutAllModal);
+
+confirmLogoutAllBtn?.addEventListener("click", async () => {
+  confirmLogoutAllBtn.disabled = true;
+  confirmLogoutAllBtn.textContent = "Signing out...";
+
+  const { error } = await supabaseClient.auth.signOut({ scope: "global" });
+
+  if (error) {
+    showLogoutAllMessage("error", error.message || "Failed to sign out on all devices.");
+    confirmLogoutAllBtn.disabled = false;
+    confirmLogoutAllBtn.textContent = "Sign out all";
+    return;
+  }
+
+  showLogoutAllMessage("success", "Signed out on all devices. Redirecting...");
+  setTimeout(() => {
+    localStorage.clear();
+    window.location.href = "/Login.html";
+  }, 800);
+});
 
       // patient-only guard (same behavior expectation as patient dashboard)
       if (String(user.Role || "").toLowerCase() !== "patient") {
@@ -498,7 +645,5 @@ function initNotificationPrefs() {
       loadNotifications();
     });
   </script>
-
-
 </body>
 </html>

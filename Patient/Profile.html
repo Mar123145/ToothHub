@@ -112,7 +112,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-house w-5"></i>
@@ -129,6 +129,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+        <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-credit-card w-5"></i>
@@ -157,11 +161,11 @@
     </aside>
 
     <main class="flex-1 p-6">
-      <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
-      <p class="text-gray-600 mb-6">Manage your personal information</p>
-
       <div class="container mx-auto px-4 py-8">
             <div class="max-w-2xl mx-auto space-y-6">
+                
+                <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
+                <p class="text-gray-600 mb-6">Manage your personal information</p>
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title flex items-center justify-between">
@@ -175,15 +179,20 @@
                     </div>
                     <div class="card-content">
                         <div class="flex items-center gap-4">
-                            <div class="w-20 h-20 bg-[#03555E] rounded-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 text-white">
-                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </div>
+                          <div class="w-20 h-20 rounded-full overflow-hidden bg-[#03555E] flex items-center justify-center">
+                            <img id="profileImg" class="w-full h-full object-cover hidden" alt="Profile" />
+                            <svg id="profileFallbackIcon" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                              class="w-10 h-10 text-white">
+                              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                          </div>
+                              <input id="profileFileInput" type="file" accept="image/*" class="hidden" />
                             <div>
-                                <button class="button-style button-outline text-sm">
-                                    Change Photo
-                                </button>
+                              <button id="btnChangePhoto" type="button" class="button-style button-outline text-sm">
+                                Change Photo
+                              </button>
                                 <p class="text-sm text-gray-600 mt-1">JPG, PNG or GIF. Max size 2MB</p>
                             </div>
                         </div>
@@ -283,15 +292,44 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="mt-4">
-                                <label for="address" class="text-sm font-medium leading-none">Address</label>
-                                <textarea
-                                    id="address"
-                                    name="address"
-                                    disabled
-                                    class="input-style bg-gray-50-disabled h-20 resize-none"
-                                ></textarea>
-                            </div>
+                                <div class="mt-4">
+                                <label class="text-sm font-medium leading-none">Address</label>
+
+                                <div class="grid md:grid-cols-2 gap-3 mt-2">
+                                    <div class="md:col-span-2">
+                                    <label for="addrStreet" class="text-xs font-semibold tracking-wider text-gray-500">HOUSE NO. / STREET</label>
+                                    <input id="addrStreet" type="text" class="input-style bg-gray-50-disabled" disabled />
+                                    </div>
+
+                                    <div>
+                                    <label for="addrBarangay" class="text-xs font-semibold tracking-wider text-gray-500">BARANGAY</label>
+                                    <input id="addrBarangay" type="text" class="input-style bg-gray-50-disabled" disabled />
+                                    </div>
+
+                                    <div>
+                                    <label for="addrCity" class="text-xs font-semibold tracking-wider text-gray-500">CITY / MUNICIPALITY</label>
+                                    <select id="addrCity" class="input-style bg-gray-50-disabled" disabled>
+                                        <option value="">Select City / Municipality</option>
+                                    </select>
+                                    </div>
+
+                                    <div>
+                                    <label for="addrProvince" class="text-xs font-semibold tracking-wider text-gray-500">PROVINCE</label>
+                                    <select id="addrProvince" class="input-style bg-gray-50-disabled" disabled>
+                                        <option value="">Select Province</option>
+                                    </select>
+                                    </div>
+
+                                    <div>
+                                    <label for="addrZip" class="text-xs font-semibold tracking-wider text-gray-500">ZIP (OPTIONAL)</label>
+                                    <input id="addrZip" type="text" inputmode="numeric" class="input-style bg-gray-50-disabled" disabled />
+                                    </div>
+                                </div>
+
+                                <!-- Keep the old textarea hidden so nothing else breaks -->
+                                <textarea id="address" class="hidden"></textarea>
+                                </div>
+
                         </form>
                     </div>
                 </div>
@@ -319,7 +357,48 @@ const formInputs = document.querySelectorAll('#profileForm input, #profileForm t
 
 
 let currentUser = null;
+const PH_LOCATIONS = {
+  "Metro Manila": [
+    "Caloocan City","Las Piñas City","Makati City","Malabon City","Mandaluyong City",
+    "Manila","Marikina City","Muntinlupa City","Navotas City","Parañaque City",
+    "Pasay City","Pasig City","Pateros","Quezon City","San Juan City",
+    "Taguig City","Valenzuela City"
+  ],
+  "Cavite": [
+    "Bacoor","Cavite City","Dasmariñas","General Mariano Alvarez","General Trias",
+    "Imus","Indang","Kawit","Naic","Noveleta","Rosario","Silang","Tagaytay",
+    "Tanza","Trece Martires"
+  ],
+  "Laguna": [
+    "Alaminos","Bay","Biñan","Cabuyao","Calamba","Los Baños",
+    "San Pablo","San Pedro","Santa Rosa"
+  ],
+  "Bulacan": [
+    "Angat","Balagtas","Baliwag","Bocaue","Bulakan","Calumpit",
+    "Guiguinto","Hagonoy","Malolos","Marilao","Meycauayan",
+    "Norzagaray","Obando","Paombong","Plaridel","San Jose del Monte"
+  ]
+};
+const provinceSelect = document.getElementById("addrProvince");
+const citySelect = document.getElementById("addrCity");
 
+Object.keys(PH_LOCATIONS).forEach(province => {
+  const opt = document.createElement("option");
+  opt.value = province;
+  opt.textContent = province;
+  provinceSelect.appendChild(opt);
+});
+
+provinceSelect.addEventListener("change", () => {
+  citySelect.innerHTML = '<option value="">Select City / Municipality</option>';
+  const cities = PH_LOCATIONS[provinceSelect.value] || [];
+  cities.forEach(city => {
+    const opt = document.createElement("option");
+    opt.value = city;
+    opt.textContent = city;
+    citySelect.appendChild(opt);
+  });
+});
 async function checkAuth(redirect = true) {
     console.log("🔍 Running checkAuth...");
 
@@ -343,10 +422,10 @@ async function checkAuth(redirect = true) {
     }
 
     const { data: userData, error } = await supabaseClient
-        .from('UserAccount')
-        .select('*')
-        .eq('Email', session.user.email)
-        .maybeSingle();
+          .from('UserAccount')
+          .select('*')
+          .eq('UserAccountID', userId)
+          .single();
 
     if (error || !userData) {
         console.error(error || "No user data found");
@@ -418,6 +497,18 @@ async function loadUserProfile() {
     }
 
     currentUser = fullProfile;
+    setProfileImage(fullProfile.ProfileImageUrl || "");
+    if (fullProfile.ProfileImagePath) {
+  const { data, error } = await supabaseClient
+    .storage
+    .from("Logo")
+    .createSignedUrl(fullProfile.ProfileImagePath, 60 * 60);
+
+  if (!error) setProfileImage(data.signedUrl);
+  else setProfileImage("");
+} else {
+  setProfileImage("");
+}
 
     // Fill all form fields
     document.getElementById('firstName').value = fullProfile.FirstName || '';
@@ -427,7 +518,25 @@ async function loadUserProfile() {
     document.getElementById('phone').value = fullProfile.ContactNumber || '';
     document.getElementById('birthDate').value = fullProfile.BirthDate || '';
     document.getElementById('gender').value = fullProfile.Gender || '';
-    document.getElementById('address').value = fullProfile.Address || '';
+    const fullAddr = fullProfile.Address || '';
+    document.getElementById('address').value = fullAddr; // keep hidden textarea in sync
+
+    // Try to parse the exact format you used in Signup:
+    // `${street}, Brgy. ${barangay}, ${city}, ${province}${zip ? ' ' + zip : ''}`
+    const m = fullAddr.match(/^(.*?),\s*Brgy\.\s*(.*?),\s*(.*?),\s*(.*?)(?:\s(\d{4}))?\s*$/);
+
+    document.getElementById('addrStreet').value = m?.[1]?.trim() || '';
+    document.getElementById('addrBarangay').value = m?.[2]?.trim() || '';
+    const cityVal = m?.[3]?.trim() || '';
+    const provVal = m?.[4]?.trim() || '';
+    document.getElementById('addrZip').value = m?.[5]?.trim() || '';
+    const provinceSelect = document.getElementById("addrProvince");
+    const citySelect = document.getElementById("addrCity");
+
+    provinceSelect.value = provVal || "";
+    provinceSelect.dispatchEvent(new Event("change")); // populate city list
+    citySelect.value = cityVal || "";
+
 
     console.log("📝 Form filled with:", fullProfile);
 
@@ -463,6 +572,14 @@ editToggle.addEventListener('click', async () => {
         formInputs.forEach(input => {
             input.setAttribute('disabled', 'true');
             input.classList.add('bg-gray-50-disabled');
+            const addrStreet = document.getElementById("addrStreet").value.trim();
+            const addrBarangay = document.getElementById("addrBarangay").value.trim();
+            const addrCity = document.getElementById("addrCity").value.trim();
+            const addrProvince = document.getElementById("addrProvince").value.trim();
+            const addrZip = document.getElementById("addrZip").value.trim();
+
+            const address = `${addrStreet}, Brgy. ${addrBarangay}, ${addrCity}, ${addrProvince}${addrZip ? " " + addrZip : ""}`;
+            document.getElementById("address").value = address; // keep hidden textarea in sync
         });
 
         if (!currentUser) return alert("No user loaded.");
@@ -484,20 +601,112 @@ editToggle.addEventListener('click', async () => {
             .eq('UserAccountID', currentUser.UserAccountID);
 
         if (error) {
-            console.error(error);
-            return showMessage("❌ Failed to save changes. Please try again.", "error");
-        } else {
-            return showMessage("✅ Changes saved successfully!", "success");
-            await loadUserProfile();
+        console.error(error);
+        showMessage("❌ Failed to save changes. Please try again.", "error");
+        return;
         }
-    }
-});
+
+        showMessage("✅ Changes saved successfully!", "success");
+        await loadUserProfile();
+            }
+        });
 
 // Run on page load
-loadUserProfile();
-
 
 // ---- Shell helpers (Dashboard-consistent) ----
+
+function extFromName(name) {
+  const m = (name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : "png";
+}
+
+async function uploadProfilePhoto(file) {
+  const userAccountId = localStorage.getItem("userId");
+  if (!userAccountId) throw new Error("Missing userId");
+
+  // auth.uid == UserAccountID in your app ✅
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${userAccountId}/profile_${Date.now()}.${ext}`;
+
+  const { error: upErr } = await supabaseClient
+    .storage
+    .from("Logo")
+    .upload(path, file, { upsert: true, contentType: file.type || "image/*" });
+
+  if (upErr) throw upErr;
+
+  // save the path to UserAccount
+  const { error: dbErr } = await supabaseClient
+    .from("UserAccount")
+    .update({ ProfileImagePath: path })
+    .eq("UserAccountID", userAccountId);
+
+  if (dbErr) throw dbErr;
+
+  // signed url for displaying (bucket can remain private)
+  const { data: signed, error: signErr } = await supabaseClient
+    .storage
+    .from("Logo")
+    .createSignedUrl(path, 60 * 60);
+
+  if (signErr) throw signErr;
+
+  return signed.signedUrl;
+}
+
+
+function setProfileImage(url) {
+  const img = document.getElementById("profileImg");
+  const icon = document.getElementById("profileFallbackIcon");
+
+  if (!img || !icon) return;
+
+  if (!url) {
+    img.classList.add("hidden");
+    icon.classList.remove("hidden");
+    img.src = "";
+    return;
+  }
+
+  img.src = url;
+  img.onload = () => {
+    img.classList.remove("hidden");
+    icon.classList.add("hidden");
+  };
+  img.onerror = () => {
+    img.classList.add("hidden");
+    icon.classList.remove("hidden");
+  };
+}
+
+document.getElementById("btnChangePhoto")?.addEventListener("click", () => {
+  document.getElementById("profileFileInput")?.click();
+});
+
+document.getElementById("profileFileInput")?.addEventListener("change", async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showMessage("❌ Max file size is 2MB.", "error");
+    e.target.value = "";
+    return;
+  }
+
+  try {
+    showMessage("Uploading photo...", "success");
+    const url = await uploadProfilePhoto(file);
+    setProfileImage(url);
+    showMessage("✅ Profile photo updated!", "success");
+  } catch (err) {
+    console.error(err);
+    showMessage("❌ Upload failed. Check bucket policy/permissions.", "error");
+  } finally {
+    e.target.value = "";
+  }
+});
+
+
 async function logout() {
   try { await supabaseClient.auth.signOut(); } catch(e) {}
   localStorage.clear();
@@ -505,78 +714,120 @@ async function logout() {
 }
 
 async function loadNotifications() {
-    if (localStorage.getItem("prefBellNotif") === "false") return;
-  const bellBtn = document.getElementById("notifBellBtn");
-  if (!bellBtn) return;
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
 
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
 
-  const { data: notifications, error } = await supabaseClient
-    .from("Notifications")
-    .select("*")
-    .eq("UserAccountID", userId)
-    .eq("Status", "Unread")
-    .order("DateSent", { ascending: false });
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
 
-  if (error) { console.error(error); return; }
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-  const existingBadge = document.getElementById("notif-badge");
-  if (existingBadge) existingBadge.remove();
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
 
-  if (notifications && notifications.length > 0) {
-    const badge = document.createElement("span");
-    badge.id = "notif-badge";
-    badge.textContent = notifications.length;
-    badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
-    bellBtn.appendChild(badge);
-  }
+    if (error) return console.error(error);
 
-  const prevDropdown = document.getElementById("notif-dropdown");
-  if (prevDropdown) prevDropdown.remove();
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
 
-  bellBtn.onclick = async () => {
-    let dropdown = document.getElementById("notif-dropdown");
-    if (dropdown) return dropdown.remove();
-
-    dropdown = document.createElement("div");
-    dropdown.id = "notif-dropdown";
-    dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
-    dropdown.style.maxHeight = "320px";
-
-    if (!notifications || notifications.length === 0) {
-      const emptyMsg = document.createElement("div");
-      emptyMsg.className = "p-4 text-gray-500 text-sm";
-      emptyMsg.textContent = "No new notifications";
-      dropdown.appendChild(emptyMsg);
-    } else {
-      notifications.forEach((n) => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
-        item.textContent = n.Message;
-        item.addEventListener("click", async () => {
-          await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
-          dropdown.remove();
-          loadNotifications();
-        });
-        dropdown.appendChild(item);
-      });
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
+        badge.textContent = notifications.length;
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
     }
 
-    document.body.appendChild(dropdown);
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
 
-    const onDocClick = (e) => {
-      if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-        dropdown.remove();
-        document.removeEventListener("click", onDocClick);
-      }
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach(n => {
+            const item = document.createElement('button');
+            item.type = "button";
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
+              loadNotifications();
+            });
+
+            dropdown.appendChild(item);
+          });
+
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
     };
-    setTimeout(() => document.addEventListener("click", onDocClick), 0);
-  };
 }
 
 
+console.log("localStorage userId:", localStorage.getItem("userId"));
+supabaseClient.auth.getUser().then(({ data }) => {
+  console.log("auth.uid():", data?.user?.id);
+});
 
 window.addEventListener("DOMContentLoaded", async () => {
   await loadUserProfile();

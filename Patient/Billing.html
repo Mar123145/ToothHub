@@ -95,7 +95,7 @@
   </header>
 
   <div class="flex min-h-[calc(100vh-72px)]">
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-house w-5"></i>
@@ -112,6 +112,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+          <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <!-- active -->
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
@@ -199,7 +203,7 @@
       ✕
     </button>
 
-    <h2 class="text-lg font-semibold mb-4">Invoice Details</h2>
+    <h2 class="text-lg font-semibold mb-4">Appointment Payments</h2>
 
     <div id="invoiceDetailsContent" class="space-y-4 text-sm">
       <!-- Filled dynamically -->
@@ -327,7 +331,18 @@ async function loadAccountSummary(userId) {
   // 3) Sum PAID per appointment
   // - BILL payments reduce outstanding
   // - Appointment fee payments should count toward Total Paid, but should NOT reduce outstanding
-  const isApptFeeType = (t) => t === 'DOWNPAYMENT' || t === 'APPOINTMENT_FEE' || t === 'APPOINTMENTFEE';
+  const isApptFeeType = (t) => {
+  const x = String(t || '').toUpperCase();
+  return (
+    x === 'DOWNPAYMENT' ||
+    x === 'APPOINTMENT_FEE' ||
+    x === 'APPOINTMENTFEE' ||
+    x.includes('DOWNPAYMENT') || // e.g. BRACES_DOWNPAYMENT, ORTHO_DOWNPAYMENT
+    x.includes('APPOINTMENT FEE') ||
+    x.includes('APPT_FEE')
+  );
+};
+
 
   const billPaidByAppointment = {};
   let apptFeePaidTotal = 0;
@@ -344,34 +359,24 @@ async function loadAccountSummary(userId) {
       return;
     }
 
-    if (b.PaymentType === 'BILL') {
-      billPaidTotal += amt;
-      const appId = b.AppointmentID;
-      if (!billPaidByAppointment[appId]) billPaidByAppointment[appId] = 0;
-      billPaidByAppointment[appId] += amt;
-    }
+    const appId = b.AppointmentID;
+    if (!billPaidByAppointment[appId]) billPaidByAppointment[appId] = 0;
+    billPaidByAppointment[appId] += amt;
   });
 
+// ✅ Billing.js style: count PAID rows
+const paidBills = (bills || []).filter(b => String(b.PaymentStatus || "").toUpperCase() === "PAID");
 
-  let outstanding = 0;
-  let totalPaid = 0;
-  let totalInvoices = 0;
+// Total Paid = sum of PAID (all types)
+const totalPaid = paidBills.reduce((sum, b) => sum + Number(b.Amount || 0), 0);
 
-(appointments || []).forEach(appt => {
-  const total = Number(appt.TotalAmount || 0);
+// Total Invoices = count of PAID rows (same as "Paid Bills" in Billing.js)
+const totalInvoices = paidBills.length;
 
-  // only count invoices/outstanding when bill is defined
-  if (total <= 0) return;
+// optional: keep outstanding if you still want it (or set to 0 if not used)
+let outstanding = 0;
 
-  const paidForAppt = billPaidByAppointment[appt.AppointmentID] || 0;
-  const remaining = Math.max(total - paidForAppt, 0);
 
-  totalInvoices += 1;
-  // Total Paid shown to patient = Bill payments + Appointment fees
-  // (even if bill isn't issued yet, appointment fee still counts)
-  totalPaid = billPaidTotal + apptFeePaidTotal;
-  outstanding += remaining;
-});
 
 
   if (outstandingEl) outstandingEl.textContent = formatCurrency(outstanding);
@@ -380,23 +385,23 @@ async function loadAccountSummary(userId) {
 }
 
 function getTypeChip(type) {
-  // Support both legacy + newer enums
-  const isApptFee = type === 'DOWNPAYMENT' || type === 'APPOINTMENT_FEE' || type === 'APPOINTMENTFEE';
+  const x = String(type || '').toUpperCase();
+  const isApptFee =
+    x === 'DOWNPAYMENT' ||
+    x === 'APPOINTMENT_FEE' ||
+    x === 'APPOINTMENTFEE' ||
+    x.includes('DOWNPAYMENT');
+
   const label =
-    isApptFee
-      ? 'Appointment Fee'
-      : type === 'BILL'
-      ? 'Bill Payment'
-      : type || '';
+    isApptFee ? 'Appointment Fee' :
+    x === 'BILL' ? 'Bill Payment' :
+    (type || '');
 
-  const isDown = isApptFee;
   const baseClass = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium";
-  const color = isDown
-    ? "bg-blue-50 text-blue-700"
-    : "bg-emerald-50 text-emerald-700";
-
+  const color = isApptFee ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700";
   return `<span class="${baseClass} ${color}">${label}</span>`;
 }
+
 
 function getMethodChip(method) {
   if (!method) return '';
@@ -438,136 +443,214 @@ function getStatusChip(status) {
   `;
 }
 
-async function loadRecentInvoices(userId) {
-  const listEl = document.getElementById('invoiceList');
+// Store appointment cards in global array for "View details"
+let appointmentCards = [];
+let apptPage = 0;
+const apptPageSize = 10;
+let apptHasMore = true;
+
+async function loadRecentInvoices(userId, append = false ) {
+  const listEl = document.getElementById("invoiceList");
   if (!listEl) return;
 
   const { data, error } = await supabaseClient
-    .from('Billing')
+    .from("Appointment")
     .select(`
-      BillingID,
       AppointmentID,
-      Amount,
-      PaymentType,
-      PaymentMethod,
-      PaymentStatus,
-      DateIssued,
-      Appointment:AppointmentID (
-        Service,
-        AppointmentSchedule,
-        TotalAmount
+      AppointmentSchedule,
+      Service,
+      TransactionID,
+      TotalAmount,
+      Billing (
+        BillingID,
+        Amount,
+        PaymentType,
+        PaymentMethod,
+        PaymentStatus,
+        DateIssued
       )
     `)
-    .eq('UserAccountID', userId)
-    .order('DateIssued', { ascending: false })
-    .limit(10);
+    .eq("UserAccountID", userId)
+    .order("AppointmentSchedule", { ascending: false })
+    .range(
+      apptPage * apptPageSize,
+      apptPage * apptPageSize + apptPageSize
+    );
+    apptHasMore = data.length > apptPageSize;
+if (apptHasMore) data.pop(); // remove extra row
+
+    if (error) {
+      console.error("Error loading appointments for billing:", error);
+      listEl.innerHTML = `<p class="text-sm text-red-500">Failed to load billing.</p>`;
+      return;
+    }
+
 
   if (error) {
-    console.error('Error loading invoices:', error);
-    listEl.innerHTML = `<p class="text-sm text-red-500">Failed to load invoices.</p>`;
+    console.error("Error loading appointments for billing:", error);
+    listEl.innerHTML = `<p class="text-sm text-red-500">Failed to load billing.</p>`;
     return;
   }
 
   if (!data || data.length === 0) {
     listEl.innerHTML = `
       <div class="text-center py-8 text-gray-500">
-        <h3 class="text-base font-medium mb-1">No invoices yet</h3>
-        <p class="text-sm">Your billing history will appear here after your appointments.</p>
+        <h3 class="text-base font-medium mb-1">No records yet</h3>
+        <p class="text-sm">Your billing will appear here after your appointments.</p>
       </div>
     `;
     return;
   }
 
-  // Store in global array for "View details"
-  invoices = data.map(row => ({
-    billingId: row.BillingID,
-    appointmentId: row.AppointmentID,
-    amount: Number(row.Amount || 0),
-    paymentType: row.PaymentType,
-    paymentMethod: row.PaymentMethod,
-    paymentStatus: row.PaymentStatus,
-    dateIssued: row.DateIssued,
-    appointment: row.Appointment || null
+  const newCards = data.map((a) => ({
+    appointmentId: a.AppointmentID,
+    schedule: a.AppointmentSchedule,
+    service: a.Service,
+    transactionId: a.TransactionID,
+    totalAmount: Number(a.TotalAmount || 0),
+    billRows: Array.isArray(a.Billing) ? a.Billing : [],
   }));
 
-  const itemsHtml = invoices.map(inv => {
-    const appt = inv.appointment || {};
-    const dt = inv.dateIssued ? new Date(inv.dateIssued) : null;
+appointmentCards = append ? appointmentCards.concat(newCards) : newCards;
 
-    const dateStr = dt
-      ? dt.toLocaleDateString('en-PH', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : '';
 
-    const timeStr = dt
-      ? dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : '';
+const rowsHtml = appointmentCards.map((appt) => {
+  const schedStr = appt.schedule ? formatDateTimePHLong(appt.schedule) : "—";
+  const tx = appt.transactionId ? String(appt.transactionId) : "—";
 
-    const serviceText = appt.Service
-      ? `<div class="text-xs text-gray-400 truncate max-w-xs">${appt.Service}</div>`
-      : '';
+  const rows = (appt.billRows || []).slice();
+  const paidSoFar = rows
+    .filter((r) => String(r.PaymentStatus || "").toUpperCase() === "PAID")
+    .reduce((sum, r) => sum + Number(r.Amount || 0), 0);
 
-    return `
-      <div class="flex items-center justify-between py-3 border-b last:border-b-0">
-        <div class="flex flex-col">
-          <span class="text-sm font-semibold text-gray-800">
-            ${getTypeChip(inv.paymentType)}
-          </span>
-          <span class="text-xs text-gray-500 mt-1">
-            ${dateStr}${timeStr ? ' · ' + timeStr : ''}
-          </span>
-          ${serviceText}
+  // service cutoff like you did elsewhere
+  const serviceText = String(appt.service || "—");
+  const serviceSafe = serviceText.replaceAll('"', "&quot;");
+
+  return `
+    <tr class="border-b last:border-b-0 hover:bg-gray-50">
+      <td class="px-3 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">
+        ${schedStr}
+      </td>
+
+      <td class="px-3 py-3 text-sm text-gray-700">
+        <div class="truncate max-w-[420px]" title="${serviceSafe}">
+          ${appt.service ? appt.service : "—"}
         </div>
-        <div class="text-right space-y-1">
-          <div class="text-sm font-semibold text-gray-900">
-            ${formatCurrency(inv.amount)}
-          </div>
-          <div class="flex items-center justify-end gap-1">
-            ${getMethodChip(inv.paymentMethod)}
-            ${getStatusChip(inv.paymentStatus)}
-          </div>
-          <button
-            class="mt-1 inline-flex items-center px-2.5 py-1 rounded-lg border text-[11px] text-gray-700 hover:bg-gray-50"
-            onclick="openInvoiceDetails(${inv.billingId})"
-          >
-            View details
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
+      </td>
 
-  listEl.innerHTML = itemsHtml;
+      <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">
+        ${tx}
+      </td>
+
+      <td class="px-3 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">
+        ${formatCurrency(paidSoFar)}
+      </td>
+
+      <td class="px-3 py-3 whitespace-nowrap">
+        <button
+          class="inline-flex items-center px-3 py-1.5 rounded-lg border text-[11px] text-gray-700 hover:bg-gray-50"
+          onclick="openAppointmentDetails('${appt.appointmentId}')"
+        >
+          View details
+        </button>
+      </td>
+    </tr>
+  `;
+}).join("");
+
+const tableHtml = `
+  <div class="overflow-x-auto border rounded-xl bg-white">
+    <table class="w-full text-left table-fixed">
+      <thead class="bg-gray-100 text-xs text-gray-600 uppercase">
+        <tr>
+          <th class="px-3 py-2 whitespace-nowrap w-[220px]">Appointment</th>
+          <th class="px-3 py-2 w-[420px]">Service</th>
+          <th class="px-3 py-2 whitespace-nowrap">Transaction #</th>
+          <th class="px-3 py-2 whitespace-nowrap">Paid so far</th>
+          <th class="px-3 py-2 whitespace-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+  </div>
+`;
+
+
+const loadMoreHtml = apptHasMore
+  ? `
+    <div class="pt-4 flex justify-center">
+      <button
+        class="px-4 py-2 rounded-lg border text-sm text-gray-700 hover:bg-gray-50"
+        onclick="loadMoreInvoices()"
+      >
+        Load more
+      </button>
+    </div>
+  `
+  : "";
+
+if (append) {
+  listEl.insertAdjacentHTML("beforeend", tableHtml + loadMoreHtml);
+} else {
+  listEl.innerHTML = tableHtml + loadMoreHtml;
 }
 
-async function openInvoiceDetails(billingId) {
-  const inv = invoices.find(i => i.billingId === billingId);
-  if (!inv) return;
+}
 
-  currentInvoice = inv;
+async function loadMoreInvoices() {
+  apptPage += 1;
+  const userId = localStorage.getItem("userId");
+  await loadRecentInvoices(userId, true);
+}
 
-  const apptId = inv.appointmentId;
+function formatDateTimePHLong(value) {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    return d.toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return String(value);
+  }
+}
+
+async function openAppointmentDetails(appointmentId) {
+  // Fake an "invoice" object so your existing modal logic can still work
+  const appt = appointmentCards.find(a => a.appointmentId === appointmentId);
+  if (!appt) return;
+
+  // Reuse the same modal rendering logic by calling the same fetch path (AppointmentID based)
+  // We'll just call a new function that loads by appointment ID:
+  await openInvoiceDetailsByAppointmentId(appointmentId);
+}
+
+async function openInvoiceDetailsByAppointmentId(apptId) {
   const contentEl = document.getElementById('invoiceDetailsContent');
 
   try {
-    // 1) Get full appointment info (for totals)
+    // 1) Get full appointment info
     const { data: appt, error: apptErr } = await supabaseClient
       .from('Appointment')
       .select(`
         AppointmentID,
         AppointmentSchedule,
         Service,
-        TotalAmount
+        TotalAmount,
+        TransactionID
       `)
       .eq('AppointmentID', apptId)
       .single();
 
-    if (apptErr) {
-      console.error('Error loading appointment details:', apptErr);
-    }
+    if (apptErr) console.error('Error loading appointment details:', apptErr);
 
     // 2) Get all billing rows for this appointment
     const { data: billRows, error: billErr } = await supabaseClient
@@ -576,50 +659,14 @@ async function openInvoiceDetails(billingId) {
       .eq('AppointmentID', apptId)
       .order('DateIssued', { ascending: true });
 
-    if (billErr) {
-      console.error('Error loading billing rows for details:', billErr);
-    }
+    if (billErr) console.error('Error loading billing rows for details:', billErr);
 
-const totalAmount = Number(appt?.TotalAmount || 0);
-
-// Appointment Fee paid (support legacy + newer enums)
-const isApptFeeType2 = (t) => t === 'DOWNPAYMENT' || t === 'APPOINTMENT_FEE' || t === 'APPOINTMENTFEE';
-const appointmentFeePaid = (billRows || [])
-  .filter(b => b.PaymentStatus === 'PAID' && isApptFeeType2(b.PaymentType))
-  .reduce((sum, b) => sum + Number(b.Amount || 0), 0);
-
-// Bill payments paid
-const billPaid = (billRows || [])
-  .filter(b => b.PaymentStatus === 'PAID' && b.PaymentType === 'BILL')
-  .reduce((sum, b) => sum + Number(b.Amount || 0), 0);
-
-// Has dentist already issued a bill?
-const hasBillDefined = totalAmount > 0;
-
-// Remaining only makes sense if bill is defined
-const remaining = hasBillDefined ? Math.max(totalAmount - billPaid, 0) : 0;
-
-
-
-    const apptDate = appt?.AppointmentSchedule ? new Date(appt.AppointmentSchedule) : null;
-    const apptDateStr = apptDate
-      ? apptDate.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
-      : '—';
-
+    const apptDateStr = appt?.AppointmentSchedule ? formatDateTimePHLong(appt.AppointmentSchedule) : '—';
     const serviceText = appt?.Service || '—';
+    const tx = appt?.TransactionID ? String(appt.TransactionID) : "";
 
     const paymentsHtml = (billRows || []).map(b => {
-      const dt = b.DateIssued ? new Date(b.DateIssued) : null;
-      const dStr = dt
-        ? dt.toLocaleString('en-PH', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
-        : '';
-
+      const dStr = b.DateIssued ? formatDateTimePHLong(b.DateIssued) : '';
       return `
         <div class="flex items-center justify-between py-2 border-b last:border-b-0">
           <div class="flex flex-col">
@@ -637,42 +684,25 @@ const remaining = hasBillDefined ? Math.max(totalAmount - billPaid, 0) : 0;
       `;
     }).join('');
 
-contentEl.innerHTML = `
-  <div class="space-y-1">
-    <p><span class="font-medium">Appointment date:</span> ${apptDateStr}</p>
-    <p><span class="font-medium">Services:</span> ${serviceText}</p>
-  </div>
-
-  <div class="grid grid-cols-2 gap-3 text-sm">
-    <div class="p-3 rounded-lg bg-gray-50">
-      <div class="text-[11px] text-gray-500">Total Bill</div>
-      <div class="font-semibold text-gray-900">
-        ${hasBillDefined ? formatCurrency(totalAmount) : 'Not issued yet'}
+    contentEl.innerHTML = `
+      <div class="space-y-1">
+        <p><span class="font-medium">Appointment:</span> ${apptDateStr}</p>
+        ${tx ? `<p><span class="font-medium">Transaction #:</span> ${tx}</p>` : ""}
+        <p><span class="font-medium">Service:</span> ${serviceText}</p>
       </div>
-    </div>
 
-    <div class="p-3 rounded-lg bg-blue-50">
-      <div class="text-[11px] text-blue-700">Appointment Fee</div>
-      <div class="font-semibold text-blue-800">${formatCurrency(appointmentFeePaid)}</div>
-    </div>
+      <div class="pt-3">
+        <h3 class="text-sm font-semibold mb-2">Payments for this appointment</h3>
+        <div class="border rounded-lg divide-y">
+          ${paymentsHtml || '<div class="p-3 text-xs text-gray-500">No payments yet.</div>'}
+        </div>
+      </div>
+    `;
 
-  
-  </div>
-
-  <div class="pt-3">
-    <h3 class="text-sm font-semibold mb-2">Payment History</h3>
-    <div class="border rounded-lg divide-y">
-      ${paymentsHtml || '<div class="p-3 text-xs text-gray-500">No payments yet.</div>'}
-    </div>
-  </div>
-`;
-
-
-    const modal = document.getElementById('invoice-details-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-  } catch (err) {
-    console.error(err);
+    document.getElementById('invoice-details-modal').classList.remove('hidden');
+    document.getElementById('invoice-details-modal').classList.add('flex');
+  } catch (e) {
+    console.error(e);
   }
 }
 
@@ -686,79 +716,120 @@ function closeInvoiceDetails() {
 
 
 // Add Dashboard-style notifications dropdown + badge (Billing didn't have this before)
-    async function loadNotifications() {
-      if (localStorage.getItem("prefBellNotif") === "false") return;
-      const bellBtn = document.getElementById("notifBellBtn");
-      if (!bellBtn) return;
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
 
-      const { data: notifications, error } = await supabaseClient
-        .from("Notifications")
-        .select("*")
-        .eq("UserAccountID", userId)
-        .eq("Status", "Unread")
-        .order("DateSent", { ascending: false });
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
 
-      if (error) return console.error(error);
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-      const existingBadge = document.getElementById("notif-badge");
-      if (existingBadge) existingBadge.remove();
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
 
-      if (notifications && notifications.length > 0) {
-        const badge = document.createElement("span");
-        badge.id = "notif-badge";
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
         badge.textContent = notifications.length;
-        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
-        bellBtn.appendChild(badge);
-      }
-
-      const prevDropdown = document.getElementById("notif-dropdown");
-      if (prevDropdown) prevDropdown.remove();
-
-      bellBtn.onclick = async () => {
-        let dropdown = document.getElementById("notif-dropdown");
-        if (dropdown) return dropdown.remove();
-
-        dropdown = document.createElement("div");
-        dropdown.id = "notif-dropdown";
-        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
-        dropdown.style.maxHeight = "320px";
-
-        if (!notifications || notifications.length === 0) {
-          const emptyMsg = document.createElement("div");
-          emptyMsg.className = "p-4 text-gray-500 text-sm";
-          emptyMsg.textContent = "No new notifications";
-          dropdown.appendChild(emptyMsg);
-        } else {
-          notifications.forEach((n) => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
-            item.textContent = n.Message;
-            item.addEventListener("click", async () => {
-              await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
-              dropdown.remove();
-              loadNotifications();
-            });
-            dropdown.appendChild(item);
-          });
-        }
-
-        document.body.appendChild(dropdown);
-
-        const onDocClick = (e) => {
-          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener("click", onDocClick);
-          }
-        };
-        setTimeout(() => document.addEventListener("click", onDocClick), 0);
-      };
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
     }
 
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
+
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) return dropdown.remove();
+
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
+
+        if (!notifications || notifications.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
+        } else {
+          notifications.forEach(n => {
+            const item = document.createElement('button');
+            item.type = "button";
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
+              loadNotifications();
+            });
+
+            dropdown.appendChild(item);
+          });
+
+        }
+
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
+  apptPage = 0;
+appointmentCards = [];
+apptHasMore = true;
   const user = await checkAuth();
   if (!user) return;
 
@@ -782,7 +853,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-</script>
-
-  
+</script>  
 </body>
+</html>

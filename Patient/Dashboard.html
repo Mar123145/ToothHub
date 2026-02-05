@@ -63,7 +63,7 @@
   <!-- App Shell -->
   <div class="flex min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <!-- active page -->
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-custom-hover transition-colors">
@@ -81,6 +81,10 @@
         <a href="TreatmentRecords.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-file-lines w-5"></i>
           <span>Treatment Records</span>
+        </a>
+        <a href="MyTreatmentPlan.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i>
+          <span>Treatment Plan</span>
         </a>
         <a href="Billing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-credit-card w-5"></i>
@@ -250,7 +254,7 @@
         .from("Appointment")
         .select("*")
         .eq("UserAccountID", userId)
-        .eq("Status", "Approved")
+        .eq("Status", "Approved","Rescheduled")
         .gte("AppointmentSchedule", nowUTC)
         .order("AppointmentSchedule", { ascending: true });
 
@@ -371,81 +375,116 @@
       `;
     }
 
-    async function loadNotifications() {
-      // bell button
-      const bellBtn = document.getElementById("notifBellBtn");
-      if (!bellBtn) return;
+async function loadNotifications() {
+    // Small delay for rendering
+    await new Promise(r => setTimeout(r, 100));
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
+    // Get bell container
+    const bellContainer = document.getElementById('notifBellBtn');
+    if (!bellContainer) return console.warn("Bell icon container not found");
 
-      // unread notifications
-      const { data: notifications, error } = await supabaseClient
-        .from("Notifications")
-        .select("*")
-        .eq("UserAccountID", userId)
-        .eq("Status", "Unread")
-        .order("DateSent", { ascending: false });
+    const bellIcon = bellContainer.querySelector('svg, i'); // after lucide, it becomes SVG
+    // Attach click to the container so clicks on padding also work
+    if (!bellIcon) console.warn("Bell icon not found (icon may render later)");
 
-      if (error) return console.error(error);
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-      // badge
-      const existingBadge = document.getElementById("notif-badge");
-      if (existingBadge) existingBadge.remove();
+    // Fetch unread notifications
+    const { data: notifications, error } = await supabaseClient
+    .from('Notifications')
+    .select(`
+        NotificationID,
+        Message,
+        Status,
+        DateSent,
+        AppointmentID,
+        Appointment:AppointmentID (
+        AppointmentID,
+        UserAccountID,
+        User:UserAccountID (FirstName, LastName)
+        )
+    `)
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread')
+    .order('DateSent', { ascending: false });
 
-      if (notifications && notifications.length > 0) {
-        const badge = document.createElement("span");
-        badge.id = "notif-badge";
+    if (error) return console.error(error);
+
+    // Remove previous badge if exists
+    const existingBadge = document.getElementById('notif-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (notifications.length > 0) {
+        const badge = document.createElement('span');
+        badge.id = 'notif-badge';
         badge.textContent = notifications.length;
-        badge.className = "absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full";
-        bellBtn.appendChild(badge);
-      }
+        badge.className = 'absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-none text-white bg-red-600 rounded-full';
+        bellContainer.appendChild(badge);
+    }
 
-      // dropdown (remove if exists)
-      const prevDropdown = document.getElementById("notif-dropdown");
-      if (prevDropdown) prevDropdown.remove();
+    // Remove previous dropdown if exists
+    const prevDropdown = document.getElementById('notif-dropdown');
+    if (prevDropdown) prevDropdown.remove();
 
-      bellBtn.onclick = async () => {
-        let dropdown = document.getElementById("notif-dropdown");
+    bellContainer.onclick = async () => {
+        let dropdown = document.getElementById('notif-dropdown');
         if (dropdown) return dropdown.remove();
 
-        dropdown = document.createElement("div");
-        dropdown.id = "notif-dropdown";
-        dropdown.className = "absolute right-4 top-[72px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50";
-        dropdown.style.maxHeight = "320px";
+        dropdown = document.createElement('div');
+        dropdown.id = 'notif-dropdown';
+        dropdown.className = 'absolute right-0 top-[48px] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-auto z-50';
+        dropdown.style.maxHeight = '320px';
 
         if (!notifications || notifications.length === 0) {
-          const emptyMsg = document.createElement("div");
-          emptyMsg.className = "p-4 text-gray-500 text-sm";
-          emptyMsg.textContent = "No new notifications";
-          dropdown.appendChild(emptyMsg);
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'p-4 text-gray-500 text-sm';
+            emptyMsg.textContent = 'No new notifications';
+            dropdown.appendChild(emptyMsg);
         } else {
-          notifications.forEach((n) => {
-            const item = document.createElement("button");
+          notifications.forEach(n => {
+            const item = document.createElement('button');
             item.type = "button";
-            item.className = "w-full text-left p-4 border-b last:border-b-0 hover:bg-gray-50 text-gray-900";
-            item.textContent = n.Message;
-            item.addEventListener("click", async () => {
-              await supabaseClient.from("Notifications").update({ Status: "Read" }).eq("NotificationID", n.NotificationID);
-              dropdown.remove();
+            item.className =
+              'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+
+            const first = n.Appointment?.User?.FirstName ?? '';
+            const last  = n.Appointment?.User?.LastName ?? '';
+            const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+
+            const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+            item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+
+            item.addEventListener("click", async (e) => {
+              e.stopPropagation();
+
+              const { error: updErr } = await supabaseClient
+                .from("Notifications")
+                .update({ Status: "Read" })
+                .eq("NotificationID", n.NotificationID);
+
+              if (updErr) {
+                console.error("Failed to mark notification as read:", updErr);
+                return;
+              }
+
+              // Remove dropdown and refresh badge/list
+              const dd = document.getElementById("notif-dropdown");
+              if (dd) dd.remove();
+
               loadNotifications();
             });
+
             dropdown.appendChild(item);
           });
+
         }
 
-        document.body.appendChild(dropdown);
+        bellContainer.style.position = 'relative';
+        bellContainer.appendChild(dropdown);
+    };
+}
 
-        // close on outside click
-        const onDocClick = (e) => {
-          if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener("click", onDocClick);
-          }
-        };
-        setTimeout(() => document.addEventListener("click", onDocClick), 0);
-      };
-    }
 
     window.addEventListener("DOMContentLoaded", async () => {
       const user = await checkAuth();
