@@ -14,23 +14,37 @@
     .btn-solid {
       background-color: #03555E;
       color: #ffffff;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.18s ease, box-shadow 0.18s ease;
     }
     .btn-solid:hover {
-      background-color: #027990; /* different from header */
+      background-color: #027990;
       color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
     }
 
     .btn-outline-light {
       background-color: #ffffff;
-      color: #374151; /* gray-700 */
-      border: 1px solid #e5e7eb; /* gray-200 */
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.18s ease, box-shadow 0.18s ease;
     }
     .btn-outline-light:hover {
-      background-color: #e0f2f5; /* light teal-ish */
+      background-color: #e0f2f5;
       color: #03555E;
       border-color: #b9e3ea;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+    }
+
+    /* Premium card hover */
+    .card-hover {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.10);
+      border-color: rgba(3, 85, 94, 0.18);
     }
 
     /* Scroll animations */
@@ -52,7 +66,7 @@
   <header class="brand-bg text-white shadow-md sticky top-0 z-30">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center">
+        <div class="w-11 h-11 bg-white rounded-xl overflow-hidden flex items-center justify-center p-1">
           <img src="/Image/logo.png" alt="Logo" class="w-full h-full object-contain">
         </div>
         <div>
@@ -69,12 +83,10 @@
       </nav>
 
       <div class="flex gap-3">
-        <a href="login.html"
-           class="btn-outline-light px-4 py-2 rounded-lg text-sm">
+        <a href="login.html" class="btn-outline-light px-4 py-2 rounded-xl text-sm shadow-sm">
           Login
         </a>
-        <a href="/Patient/Signup.html"
-           class="btn-outline-light px-4 py-2 rounded-lg text-sm">
+        <a href="/Patient/Signup.html" class="btn-outline-light px-4 py-2 rounded-xl text-sm shadow-sm">
           Sign Up
         </a>
       </div>
@@ -82,11 +94,12 @@
   </header>
 
   <!-- Hero -->
-  <section class="bg-gradient-to-r from-[#03555E]/5 to-blue-100 py-16">
+  <section class="bg-gradient-to-r from-[#03555E]/6 to-blue-100 py-16">
     <div class="container mx-auto px-4 grid md:grid-cols-2 gap-10 items-center">
 
+      <!-- Left -->
       <div class="animate-on-scroll">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">
           A Simple Way to Manage Your Dental Appointments
         </h2>
 
@@ -94,27 +107,37 @@
           Book your visit, track your previous treatments, and view your records in one place.
         </p>
 
-        <div class="flex gap-3 mb-6">
-          <a href="login.html"
-             class="btn-solid px-6 py-3 rounded-lg text-sm shadow-md">
+        <div class="flex flex-wrap gap-3 mb-6">
+          <a href="login.html" class="btn-solid px-6 py-3 rounded-xl text-sm shadow-md">
             Book Now
           </a>
-          <a href="#services"
-             class="btn-outline-light px-6 py-3 rounded-lg text-sm">
+          <a href="#services" class="btn-outline-light px-6 py-3 rounded-xl text-sm">
             View Services
           </a>
         </div>
 
-      <!-- HERO IMAGE -->
-      <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[350px] animate-on-scroll">
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="px-3 py-1 rounded-full bg-white/70 border border-gray-200 text-gray-700">Online booking</span>
+          <span class="px-3 py-1 rounded-full bg-white/70 border border-gray-200 text-gray-700">Patient records</span>
+          <span class="px-3 py-1 rounded-full bg-white/70 border border-gray-200 text-gray-700">Email notifications</span>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[360px] animate-on-scroll relative">
         <img src="/Image/4.jpg" class="w-full h-full object-cover" alt="Clinic interior" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent"></div>
+        <div class="absolute bottom-4 left-4 right-4 text-white">
+          <p class="text-sm font-semibold">Happy Tooth Dae Dental Clinic</p>
+          <p class="text-xs opacity-90">Book in minutes with ToothHub</p>
+        </div>
       </div>
 
     </div>
   </section>
 
   <!-- Featured Service Slider -->
-  <section class="py-10 bg-white">
+  <section class="py-10 bg-white border-t border-gray-100">
     <div class="container mx-auto px-4 animate-on-scroll">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
         <div>
@@ -124,25 +147,23 @@
           </p>
         </div>
         <div class="flex gap-2 justify-end">
-          <button id="featuredPrev"
-                  class="btn-outline-light px-3 py-1 rounded-full text-sm">
+          <button id="featuredPrev" class="btn-outline-light px-3 py-1 rounded-full text-sm shadow-sm">
             ◀
           </button>
-          <button id="featuredNext"
-                  class="btn-outline-light px-3 py-1 rounded-full text-sm">
+          <button id="featuredNext" class="btn-outline-light px-3 py-1 rounded-full text-sm shadow-sm">
             ▶
           </button>
         </div>
       </div>
 
-      <div id="featuredCard" class="bg-gray-50 border border-gray-100 rounded-xl shadow-sm p-6 md:flex md:items-center md:justify-between gap-6">
+      <div id="featuredCard" class="bg-gradient-to-r from-white to-[#03555E]/5 border border-gray-100 rounded-2xl shadow-sm p-6 md:flex md:items-center md:justify-between gap-6">
         <!-- JS will fill this -->
       </div>
     </div>
   </section>
 
-  <!-- Services (8) -->
-  <section id="services" class="py-14 bg-white">
+  <!-- Services -->
+  <section id="services" class="py-14 bg-white border-t border-gray-100">
     <div class="container mx-auto px-4 animate-on-scroll">
 
       <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center">Services Offered</h2>
@@ -152,10 +173,11 @@
 
       <div id="servicesGrid" class="grid md:grid-cols-3 gap-6"></div>
 
+    </div>
   </section>
 
   <!-- Gallery -->
-  <section id="gallery" class="py-14 bg-gray-100">
+  <section id="gallery" class="py-14 bg-gray-100 border-t border-gray-200">
     <div class="container mx-auto px-4">
 
       <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">Clinic Gallery</h2>
@@ -164,46 +186,39 @@
       </p>
 
       <div class="grid md:grid-cols-3 gap-6">
-        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
-          <img src="/Image/3.jpg"
-               class="w-full h-auto max-h-[420px] object-contain"
-               alt="Clinic exterior" />
+        <div class="rounded-2xl overflow-hidden shadow-sm border animate-on-scroll card-hover bg-white">
+          <img src="/Image/3.jpg" class="w-full h-[320px] object-cover" alt="Clinic exterior" />
         </div>
-        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
-          <img src="/Image/2.jpg"
-               class="w-full h-auto max-h-[420px] object-contain"
-               alt="Clinic interior chairs" />
+        <div class="rounded-2xl overflow-hidden shadow-sm border animate-on-scroll card-hover bg-white">
+          <img src="/Image/2.jpg" class="w-full h-[320px] object-cover" alt="Clinic interior chairs" />
         </div>
-        <div class="rounded-xl overflow-hidden shadow-sm border animate-on-scroll flex items-center justify-center bg-black/5">
-          <img src="/Image/1.jpg"
-               class="w-full h-auto max-h-[420px] object-contain"
-               alt="Clinic poster" />
+        <div class="rounded-2xl overflow-hidden shadow-sm border animate-on-scroll card-hover bg-white">
+          <img src="/Image/1.jpg" class="w-full h-[320px] object-cover" alt="Clinic poster" />
         </div>
       </div>
     </div>
   </section>
 
   <!-- How It Works -->
-  <section id="how" class="py-14 bg-white">
+  <section id="how" class="py-14 bg-white border-t border-gray-100">
     <div class="container mx-auto px-4">
-
       <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">How It Works</h2>
 
       <div class="grid md:grid-cols-3 gap-6 mt-10">
-        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
-          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">1</div>
+        <div class="bg-white p-6 rounded-2xl text-center border shadow-sm animate-on-scroll card-hover">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center font-semibold brand-text">1</div>
           <h3 class="font-semibold mb-2">Create an Account</h3>
           <p class="text-sm text-gray-600">Sign up to start booking and viewing your records.</p>
         </div>
 
-        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
-          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">2</div>
+        <div class="bg-white p-6 rounded-2xl text-center border shadow-sm animate-on-scroll card-hover">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center font-semibold brand-text">2</div>
           <h3 class="font-semibold mb-2">Book a Service</h3>
           <p class="text-sm text-gray-600">Choose a service and an available time slot.</p>
         </div>
 
-        <div class="bg-gray-50 p-6 rounded-xl text-center border animate-on-scroll">
-          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center">3</div>
+        <div class="bg-white p-6 rounded-2xl text-center border shadow-sm animate-on-scroll card-hover">
+          <div class="w-12 h-12 bg-[#03555E]/10 rounded-full mx-auto mb-3 flex items-center justify-center font-semibold brand-text">3</div>
           <h3 class="font-semibold mb-2">Visit the Clinic</h3>
           <p class="text-sm text-gray-600">Your appointment and treatment details are stored in your account.</p>
         </div>
@@ -212,19 +227,19 @@
   </section>
 
   <!-- Visit + Map -->
-  <section id="visit" class="py-14">
+  <section id="visit" class="py-14 border-t border-gray-200">
     <div class="container mx-auto px-4">
 
       <h2 class="text-3xl font-bold mb-3 text-gray-900 text-center animate-on-scroll">Visit Us</h2>
 
       <div class="grid md:grid-cols-3 gap-6 mt-10">
-        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border animate-on-scroll card-hover">
           <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">🕒</div>
           <h3 class="font-semibold mb-2">Operating Hours</h3>
           <p class="text-sm text-gray-600">Mon–Sat: 9:00 AM – 5:00 PM<br>Sunday: By appointment</p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border animate-on-scroll card-hover">
           <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">📍</div>
           <h3 class="font-semibold mb-2">Location</h3>
           <p class="text-sm text-gray-600">
@@ -232,16 +247,15 @@
           </p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm text-center border animate-on-scroll">
+        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border animate-on-scroll card-hover">
           <div class="w-12 h-12 bg-[#03555E]/10 mx-auto mb-3 flex items-center justify-center rounded-xl">📞</div>
           <h3 class="font-semibold mb-2">Contact</h3>
           <p class="text-sm text-gray-600">0995 725 5676<br>0945 652 3674</p>
         </div>
       </div>
 
-      <!-- Map embed pinned by clinic name -->
       <div class="mt-10 animate-on-scroll">
-        <div class="rounded-xl overflow-hidden shadow-lg border">
+        <div class="rounded-2xl overflow-hidden shadow-lg border">
           <iframe
             src="https://www.google.com/maps?q=Happy+Tooth+Dae+Dental+Clinic&output=embed"
             width="100%"
@@ -265,7 +279,6 @@
   <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  
     // ====== Scroll Animations ======
     function observeAnimatedElements() {
       const observer = new IntersectionObserver(
@@ -287,197 +300,197 @@
       });
     }
 
-    // ====== Featured Service Slider ======
-// ====== Service Data (same as booking, but homepage uses only categories) ======
-const mainServices = [
-  { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", category: "Cleaning", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [] },
-  { id: 6, name: "Whitening (In-clinic Session)", category: "Whitening", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [] },
-  { id: 4, name: "Root Canal (Anterior / Single Canal)", category: "Root Canal", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
+    // ====== Service Data (same as booking, but homepage uses only categories) ======
+    const mainServices = [
+      { id: 1, name: "Oral Prophylaxis (Basic Cleaning)", category: "Cleaning", durationMinutes: 45, basePrice: 1200, allowedAddOnIds: [] },
+      { id: 6, name: "Whitening (In-clinic Session)", category: "Whitening", durationMinutes: 60, basePrice: 5500, allowedAddOnIds: [] },
+      { id: 4, name: "Root Canal (Anterior / Single Canal)", category: "Root Canal", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
 
-  { id: 401, name: "Simple Extraction – Anterior / Premolar", category: "Extraction", durationMinutes: 30, basePrice: 1500, allowedAddOnIds: [901, 902, 903] },
-  { id: 402, name: "Simple Extraction – Molar", category: "Extraction", durationMinutes: 45, basePrice: 2000, allowedAddOnIds: [901, 902, 903] },
-  { id: 403, name: "Complicated Extraction", category: "Extraction", durationMinutes: 60, basePrice: 3000, allowedAddOnIds: [901, 902, 903] },
+      { id: 401, name: "Simple Extraction – Anterior / Premolar", category: "Extraction", durationMinutes: 30, basePrice: 1500, allowedAddOnIds: [901, 902, 903] },
+      { id: 402, name: "Simple Extraction – Molar", category: "Extraction", durationMinutes: 45, basePrice: 2000, allowedAddOnIds: [901, 902, 903] },
+      { id: 403, name: "Complicated Extraction", category: "Extraction", durationMinutes: 60, basePrice: 3000, allowedAddOnIds: [901, 902, 903] },
 
-  { id: 501, name: "Restoration – 1 Surface", category: "Restoration", durationMinutes: 45, basePrice: 1500, allowedAddOnIds: [904, 905] },
-  { id: 502, name: "Restoration – 2 Surfaces", category: "Restoration", durationMinutes: 60, basePrice: 2000, allowedAddOnIds: [904, 905] },
-  { id: 503, name: "Restoration – 3 Surfaces", category: "Restoration", durationMinutes: 75, basePrice: 2500, allowedAddOnIds: [904, 905] },
+      { id: 501, name: "Restoration – 1 Surface", category: "Restoration", durationMinutes: 45, basePrice: 1500, allowedAddOnIds: [904, 905] },
+      { id: 502, name: "Restoration – 2 Surfaces", category: "Restoration", durationMinutes: 60, basePrice: 2000, allowedAddOnIds: [904, 905] },
+      { id: 503, name: "Restoration – 3 Surfaces", category: "Restoration", durationMinutes: 75, basePrice: 2500, allowedAddOnIds: [904, 905] },
 
-  { id: 201, name: "Fixed Bridge (Porcelain Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
-  { id: 202, name: "Fixed Bridge (Plastic Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 75, basePrice: 5000, allowedAddOnIds: [] },
-  { id: 203, name: "Direct Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 10000, allowedAddOnIds: [] },
-  { id: 204, name: "Indirect Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [] },
+      { id: 201, name: "Fixed Bridge (Porcelain Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 90, basePrice: 7000, allowedAddOnIds: [] },
+      { id: 202, name: "Fixed Bridge (Plastic Crown) – per tooth", category: "Bridge / Veneer", durationMinutes: 75, basePrice: 5000, allowedAddOnIds: [] },
+      { id: 203, name: "Direct Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 10000, allowedAddOnIds: [] },
+      { id: 204, name: "Indirect Veneer – per tooth", category: "Bridge / Veneer", durationMinutes: 60, basePrice: 2500, allowedAddOnIds: [] },
 
-  { id: 301, name: "Removable Partial Denture (Upper & Lower)", category: "Denture", durationMinutes: 120, basePrice: 10000, allowedAddOnIds: [] },
-  { id: 302, name: "Complete Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 12000, allowedAddOnIds: [] },
-  { id: 303, name: "Flexible Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
-  { id: 304, name: "Ivocap Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
+      { id: 301, name: "Removable Partial Denture (Upper & Lower)", category: "Denture", durationMinutes: 120, basePrice: 10000, allowedAddOnIds: [] },
+      { id: 302, name: "Complete Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 12000, allowedAddOnIds: [] },
+      { id: 303, name: "Flexible Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
+      { id: 304, name: "Ivocap Denture (Upper & Lower)", category: "Denture", durationMinutes: 150, basePrice: 20000, allowedAddOnIds: [] },
 
-  { id: 5, name: "Orthodontic Consultation / Check-up", category: "Orthodontics", durationMinutes: 30, basePrice: 0, allowedAddOnIds: [] },
-];
+      { id: 5, name: "Orthodontic Consultation / Check-up", category: "Orthodontics", durationMinutes: 30, basePrice: 0, allowedAddOnIds: [] },
+    ];
 
-const categoryOrder = [
-  "Cleaning",
-  "Extraction",
-  "Restoration",
-  "Root Canal",
-  "Orthodontics",
-  "Whitening",
-  "Bridge / Veneer",
-  "Denture"
-];
+    const categoryOrder = [
+      "Cleaning",
+      "Extraction",
+      "Restoration",
+      "Root Canal",
+      "Orthodontics",
+      "Whitening",
+      "Bridge / Veneer",
+      "Denture"
+    ];
 
-// Homepage display (generalized names + descriptions)
-const categoryDisplay = {
-  "Cleaning": {
-    title: "Oral Prophylaxis",
-    desc: "Cleaning, scaling, and polishing for maintenance and prevention."
-  },
-  "Extraction": {
-    title: "Extraction",
-    desc: "Removal of teeth that cannot be kept or are causing problems."
-  },
-  "Restoration": {
-    title: "Restoration",
-    desc: "Tooth-colored fillings to restore function and shape."
-  },
-  "Root Canal": {
-    title: "Root Canal Treatment",
-    desc: "Treatment for infected pulp to help keep the tooth."
-  },
-  "Orthodontics": {
-    title: "Orthodontic Consultation",
-    desc: "Consultation and check-up for orthodontic concerns."
-  },
-  "Whitening": {
-    title: "Whitening",
-    desc: "In-clinic whitening to lighten tooth shade."
-  },
-  "Bridge / Veneer": {
-    title: "Bridge / Veneer",
-    desc: "Restorative and cosmetic options for tooth repair or replacement."
-  },
-  "Denture": {
-    title: "Denture",
-    desc: "Removable denture options based on assessment and patient needs."
-  }
-};
+    const categoryDisplay = {
+      "Cleaning": {
+        title: "Oral Prophylaxis",
+        desc: "Cleaning, scaling, and polishing for maintenance and prevention."
+      },
+      "Extraction": {
+        title: "Extraction",
+        desc: "Removal of teeth that cannot be kept or are causing problems."
+      },
+      "Restoration": {
+        title: "Restoration",
+        desc: "Tooth-colored fillings to restore function and shape."
+      },
+      "Root Canal": {
+        title: "Root Canal Treatment",
+        desc: "Treatment for infected pulp to help keep the tooth."
+      },
+      "Orthodontics": {
+        title: "Orthodontic Consultation",
+        desc: "Consultation and check-up for orthodontic concerns."
+      },
+      "Whitening": {
+        title: "Whitening",
+        desc: "In-clinic whitening to lighten tooth shade."
+      },
+      "Bridge / Veneer": {
+        title: "Bridge / Veneer",
+        desc: "Restorative and cosmetic options for tooth repair or replacement."
+      },
+      "Denture": {
+        title: "Denture",
+        desc: "Removable denture options based on assessment and patient needs."
+      }
+    };
 
-function peso(n) {
-  return `₱${Number(n).toLocaleString('en-PH')}`;
-}
+    function peso(n) {
+      return `₱${Number(n).toLocaleString('en-PH')}`;
+    }
 
 function categoryPriceLabel(category) {
-  const items = mainServices.filter(s => s.category === category);
-  if (!items.length) return "—";
+  const arr = (mainServices || []).filter(s => s.category === category);
+  if (!arr.length) return "—";
 
-  // If everything is zero (like Orthodontics consultation), show "Consult / Free"
-  const prices = items.map(s => Number(s.basePrice || 0));
-  const max = Math.max(...prices);
+  const prices = arr
+    .map(s => Number(s.basePrice || 0))
+    .filter(n => n > 0);
+
+  if (!prices.length) return "Consultation";
+
   const min = Math.min(...prices);
-
-  if (max === 0) return "Consultation";
-  if (min === max) return peso(max);
-  return `${peso(min)} – ${peso(max)}`;
-}
-
-// ====== Services Grid Renderer (generalized, ordered) ======
-function renderServicesGrid() {
-  const grid = document.getElementById("servicesGrid");
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  categoryOrder.forEach(cat => {
-    const meta = categoryDisplay[cat];
-    if (!meta) return;
-
-    const price = categoryPriceLabel(cat);
-
-    const card = document.createElement("div");
-    card.className = "bg-gray-50 border border-gray-100 p-6 rounded-xl shadow-sm flex flex-col animate-on-scroll";
-
-    card.innerHTML = `
-      <h3 class="text-lg font-bold mb-2">${meta.title}</h3>
-      <p class="text-gray-600 text-sm mb-4">${meta.desc}</p>
-      <div class="flex justify-between items-center mt-auto">
-        <span class="text-xl font-bold brand-text">${price}</span>
-        <a href="login.html" class="btn-solid px-3 py-1.5 rounded-lg text-xs">Book</a>
-      </div>
-    `;
-
-    grid.appendChild(card);
-  });
-}
-
-// ====== Featured Service Slider (generated, no Odontectomy) ======
-let featuredServices = [];
-let featuredIndex = 0;
-
-function buildFeaturedFromCategories() {
-  // pick a nice set (you can keep all, or limit to 6)
-  const pick = categoryOrder; 
-
-  featuredServices = pick
-    .filter(cat => categoryDisplay[cat])
-    .map(cat => ({
-      title: categoryDisplay[cat].title,
-      price: categoryPriceLabel(cat),
-      description: categoryDisplay[cat].desc,
-      note: "Create an account to book this service."
-    }));
-
-  featuredIndex = 0;
-}
-
-function renderFeatured() {
-  const card = document.getElementById("featuredCard");
-  const item = featuredServices[featuredIndex];
-  if (!card || !item) return;
-
-  card.innerHTML = `
-    <div class="flex-1 mb-4 md:mb-0">
-      <p class="text-xs text-gray-500 mb-2">Service ${featuredIndex + 1} of ${featuredServices.length}</p>
-      <h3 class="text-xl font-bold mb-2">${item.title}</h3>
-      <p class="text-gray-700 text-sm mb-3">${item.description}</p>
-      <p class="text-gray-500 text-xs mb-4">${item.note}</p>
-      <div class="flex items-center gap-3">
-        <span class="text-2xl font-bold brand-text">${item.price}</span>
-        <a href="login.html" class="btn-solid px-4 py-1.5 rounded-lg text-xs">
-          Book this service
-        </a>
-      </div>
-    </div>
-  `;
-}
-
-function nextFeatured() {
-  featuredIndex = (featuredIndex + 1) % featuredServices.length;
-  renderFeatured();
-}
-
-function prevFeatured() {
-  featuredIndex = (featuredIndex - 1 + featuredServices.length) % featuredServices.length;
-  renderFeatured();
+  return `Starts from ${peso(min)}`;
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
-  const btnPrev = document.getElementById("featuredPrev");
-  const btnNext = document.getElementById("featuredNext");
-  if (btnPrev) btnPrev.addEventListener("click", prevFeatured);
-  if (btnNext) btnNext.addEventListener("click", nextFeatured);
+    // ====== Services Grid Renderer (generalized, ordered) ======
+    function renderServicesGrid() {
+      const grid = document.getElementById("servicesGrid");
+      if (!grid) return;
 
-  // Render dynamic services + featured
-  renderServicesGrid();
-  buildFeaturedFromCategories();
-  renderFeatured();
+      grid.innerHTML = "";
 
-  // Re-observe animations (new cards are inserted dynamically)
-  observeAnimatedElements();
+      categoryOrder.forEach(cat => {
+        const meta = categoryDisplay[cat];
+        if (!meta) return;
 
-  loadReviews();
-});
+        const price = categoryPriceLabel(cat);
 
+        const card = document.createElement("div");
+        card.className = "bg-white border border-gray-100 p-6 rounded-2xl shadow-sm flex flex-col animate-on-scroll card-hover";
+
+        card.innerHTML = `
+          <h3 class="text-lg font-bold mb-2">${meta.title}</h3>
+          <p class="text-gray-600 text-sm mb-4">${meta.desc}</p>
+          <div class="flex justify-between items-center mt-auto">
+            <span class="text-xl font-bold brand-text">${price}</span>
+            <a href="login.html" class="btn-solid px-3 py-1.5 rounded-xl text-xs shadow-sm">Book</a>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ====== Featured Service Slider ======
+    let featuredServices = [];
+    let featuredIndex = 0;
+
+    function buildFeaturedFromCategories() {
+      const pick = categoryOrder;
+
+      featuredServices = pick
+        .filter(cat => categoryDisplay[cat])
+        .map(cat => ({
+          title: categoryDisplay[cat].title,
+          price: categoryPriceLabel(cat),
+          description: categoryDisplay[cat].desc,
+          note: "Create an account to book this service."
+        }));
+
+      featuredIndex = 0;
+    }
+
+    function renderFeatured() {
+      const card = document.getElementById("featuredCard");
+      const item = featuredServices[featuredIndex];
+      if (!card || !item) return;
+
+      card.innerHTML = `
+        <div class="flex-1 mb-4 md:mb-0">
+          <p class="text-xs text-gray-500 mb-2">Service ${featuredIndex + 1} of ${featuredServices.length}</p>
+          <h3 class="text-xl font-bold mb-2">${item.title}</h3>
+          <p class="text-gray-700 text-sm mb-3">${item.description}</p>
+          <p class="text-gray-500 text-xs mb-4">${item.note}</p>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl font-bold brand-text">${item.price}</span>
+            <a href="login.html" class="btn-solid px-4 py-2 rounded-xl text-xs shadow-sm">
+              Book this service
+            </a>
+          </div>
+        </div>
+
+        <div class="hidden md:flex items-center justify-center w-40 h-28 rounded-2xl bg-white border border-gray-100">
+          <div class="text-center">
+            <div class="text-3xl">🦷</div>
+            <div class="text-xs text-gray-600 mt-1">Featured</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function nextFeatured() {
+      featuredIndex = (featuredIndex + 1) % featuredServices.length;
+      renderFeatured();
+    }
+
+    function prevFeatured() {
+      featuredIndex = (featuredIndex - 1 + featuredServices.length) % featuredServices.length;
+      renderFeatured();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const btnPrev = document.getElementById("featuredPrev");
+      const btnNext = document.getElementById("featuredNext");
+      if (btnPrev) btnPrev.addEventListener("click", prevFeatured);
+      if (btnNext) btnNext.addEventListener("click", nextFeatured);
+
+      renderServicesGrid();
+      buildFeaturedFromCategories();
+      renderFeatured();
+
+      // Observe animations (including dynamically inserted cards)
+      observeAnimatedElements();
+    });
   </script>
 
 </body>

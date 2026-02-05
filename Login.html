@@ -103,6 +103,19 @@
     setTimeout(() => box.classList.add("hidden"), 3000);
   }
 
+function showLoading(text = "Loading…") {
+  const overlay = document.getElementById("loadingOverlay");
+  const label = document.getElementById("loadingText");
+  if (label) label.textContent = text;
+  if (overlay) overlay.classList.remove("hidden");
+}
+
+function hideLoading() {
+  const overlay = document.getElementById("loadingOverlay");
+  if (overlay) overlay.classList.add("hidden");
+}
+
+
   const loginForm = document.getElementById("loginForm");
 
   loginForm.addEventListener("submit", async (e) => {
@@ -119,7 +132,7 @@
 
     try {
       // Show loading
-showMessage("Logging in... please wait", "info");
+showLoading("Logging in…");
 submitBtn.disabled = true;
 
 const safeIdentifier = identifier.replaceAll('"', '\\"');
@@ -134,10 +147,12 @@ if (!safeIdentifier.includes("@")) {
     .maybeSingle();
 
   if (uErr) {
+    hideLoading();
     submitBtn.disabled = false;
     return showMessage("Error fetching username: " + uErr.message, "error");
   }
   if (!u) {
+    hideLoading();
     submitBtn.disabled = false;
     return showMessage("No account found with that username.", "error");
   }
@@ -152,47 +167,17 @@ const { data, error } = await supabaseClient.auth.signInWithPassword({
 });
 
 if (error) {
+  hideLoading();
   submitBtn.disabled = false;
   return showMessage("Login failed: " + error.message, "error");
 }
 
 // 2) Require verified email  
 if (!data.user.email_confirmed_at) {
+  hideLoading();
   submitBtn.disabled = false;
   return showMessage("Please verify your email before logging in.", "error");
 }
-
-// ✅ Finish signup from DB (PendingProfiles → UserAccount)
-const { data: pend, error: pendFetchErr } = await supabaseClient
-  .from("PendingProfiles")
-  .select("ProfileData")
-  .eq("UserAccountID", data.user.id)
-  .maybeSingle();
-
-if (pendFetchErr) {
-  console.error("PendingProfiles fetch failed:", pendFetchErr);
-}
-
-if (pend?.ProfileData) {
-  const profile = pend.ProfileData;
-
-  const { error: insErr } = await supabaseClient
-    .from("UserAccount")
-    .insert([profile]);
-
-  if (insErr) {
-    console.error("UserAccount insert failed:", insErr);
-    submitBtn.disabled = false;
-    return showMessage("Profile setup failed: " + insErr.message, "error");
-  }
-
-  // cleanup
-  await supabaseClient
-    .from("PendingProfiles")
-    .delete()
-    .eq("UserAccountID", data.user.id);
-}
-
 
 // 4) Now fetch UserAccount row (it should exist now)
 const { data: userData, error: fetchError } = await supabaseClient
@@ -202,6 +187,7 @@ const { data: userData, error: fetchError } = await supabaseClient
   .maybeSingle();
 
 if (fetchError || !userData) {
+  hideLoading();
   submitBtn.disabled = false;
   return showMessage("Login succeeded but profile not found. Please contact support.", "error");
 }
@@ -210,23 +196,41 @@ if (fetchError || !userData) {
 localStorage.setItem("userFirstName", userData.FirstName);
 localStorage.setItem("userRole", userData.Role);
 localStorage.setItem("userId", userData.UserAccountID);
+localStorage.setItem("userAccountId", userData.UserAccountID);
+localStorage.setItem("userEmail", userData.Email);
 
-showMessage("Login successful! Redirecting...", "success");
+showLoading("Redirecting…"); 
 
 // 6) Redirect
 setTimeout(() => {
-  if (userData.Role === "secretary") window.location.href = "Secretary/Dashboard.html";
-  else if (userData.Role === "dentist") window.location.href = "Dentist/Dashboard.html";
+  const role = (userData.Role || "").toLowerCase();
+  if (role === "secretary") window.location.href = "Secretary/Dashboard.html";
+  else if (role === "dentist") window.location.href = "Dentist/Dashboard.html";
   else window.location.href = "Patient/Dashboard.html";
 }, 1000);
 
     } catch (err) {
       console.error(err);
+      hideLoading();
       showMessage("Unexpected error occurred.", "error");
       submitBtn.disabled = false;
     }
   });
 </script>
+
+<!-- Fullscreen Loading Overlay -->
+<div id="loadingOverlay" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-lg px-6 py-5 flex flex-col items-center gap-3 min-w-[220px]">
+    <svg class="w-8 h-8 animate-spin text-[#03555E]" viewBox="0 0 24 24" fill="none">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    <div id="loadingText" class="text-gray-700 font-medium">Loading…</div>
+    <div class="text-xs text-gray-500">Please wait</div>
+  </div>
+</div>
+
 
 </body>
 </html>
