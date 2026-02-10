@@ -218,7 +218,8 @@
     patient: null,
     medicalRecord: {},
     appointments: [],
-    historyFilter: "all"   
+    historyFilter: "all",
+    historyLimit: 5    
 };
 
 // ===== Appointment Record modal state (Dentist) =====
@@ -304,8 +305,21 @@ function safeStatusMeta(s) {
     }
 
 function setHistoryFilter(status) {
-  setState({ historyFilter: status });
+  setState({
+    historyFilter: status,
+    historyLimit: 5   // 👈 reset on filter change
+  });
 }
+
+
+function showMoreHistory() {
+  setState({ historyLimit: state.historyLimit + 5 });
+}
+
+function showLessHistory() {
+  setState({ historyLimit: 5 });
+}
+
 
 function highlightHistoryFilter(active) {
   document.querySelectorAll(".hist-filter-btn").forEach(btn => {
@@ -1473,6 +1487,9 @@ function renderMainContent() {
 
       return s === f;
     });
+
+    const visibleAppointments = apptList.slice(0, state.historyLimit);
+    const hasMore = apptList.length > state.historyLimit;
     return `
     <main class="flex-grow">
         <div class="max-w-6xl mx-auto px-4 lg:px-6 py-6 space-y-6">
@@ -1584,7 +1601,7 @@ function renderMainContent() {
                         ${
                             apptList.length === 0
                                 ? `<p class="text-sm text-gray-500">No appointments found for this filter.</p>`
-                                : apptList.map(a => {
+                                : visibleAppointments.map(a => {
                                         const dentist = a.Dentist
                                             ? `Dr. ${a.Dentist.FirstName || ''} ${a.Dentist.LastName || ''}`.trim()
                                             : 'N/A';
@@ -1610,6 +1627,28 @@ function renderMainContent() {
                                     .join('')
                         }
                     </div>
+                    ${hasMore ? `
+  <div class="flex justify-center pb-6">
+    <button
+      type="button"
+      onclick="showMoreHistory()"
+      class="text-sm font-medium text-[#03555E] hover:underline"
+    >
+      See more
+    </button>
+  </div>
+` : (state.historyLimit > 5 ? `
+  <div class="flex justify-center pb-6">
+    <button
+      type="button"
+      onclick="showLessHistory()"
+      class="text-sm font-medium text-gray-500 hover:underline"
+    >
+      Show less
+    </button>
+  </div>
+` : ``)}
+
                 </section>
             </form>
         </div>
@@ -2120,19 +2159,41 @@ async function loadNotifications() {
       emptyMsg.textContent = 'No new notifications';
       dropdown.appendChild(emptyMsg);
     } else {
-      notifications.forEach(n => {
-        const item = document.createElement('div');
-        item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-        const first = n.Appointment?.User?.FirstName ?? '';
-        const last  = n.Appointment?.User?.LastName ?? '';
-        const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-        const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-        item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-        dropdown.appendChild(item);
-      });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
     }
 
     bellContainer.style.position = 'relative';

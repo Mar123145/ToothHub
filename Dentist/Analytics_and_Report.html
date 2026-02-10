@@ -368,19 +368,41 @@ async function loadNotifications() {
             emptyMsg.textContent = 'No new notifications';
             dropdown.appendChild(emptyMsg);
         } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-                const first = n.Appointment?.User?.FirstName ?? '';
-                const last  = n.Appointment?.User?.LastName ?? '';
-                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-                dropdown.appendChild(item);
-            });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
         }
 
         bellContainer.style.position = 'relative';

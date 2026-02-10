@@ -602,8 +602,8 @@
   <div class="border rounded-xl p-4 bg-white">
     <div class="flex items-center justify-between gap-2 flex-wrap">
       <div>
-        <p class="font-semibold text-gray-900">Extra services performed</p>
-        <p class="text-xs text-gray-500">Additional procedures done during the visit (each with its own price).</p>
+        <p class="font-semibold text-gray-900">Extra services performed / Add ons</p>
+        <p class="text-xs text-gray-500">Additional procedures done during the visit.</p>
       </div>
 
       <button type="button"
@@ -614,26 +614,6 @@
     </div>
 
     <div id="extra-services-wrap" class="mt-3 space-y-2"></div>
-  </div>
-
-  <!-- SECTION: Add-ons -->
-  <div class="border rounded-xl p-4 bg-white">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="font-semibold text-gray-900">Add-ons</p>
-        <p class="text-xs text-gray-500">Small extras (materials, optional items) added to the main service.</p>
-      </div>
-
-      <button id="addons-add-btn" type="button"
-        class="px-3 py-2 rounded-lg bg-[#03555E] text-white text-sm hover:bg-[#024449]"
-        onclick="addAddonRow()">
-        + Add add-on
-      </button>
-    </div>
-
-    <div class="mt-3 border-t pt-3">
-      <div id="finish-addons" class="space-y-2"></div>
-    </div>
   </div>
 
   <!-- TOTAL -->
@@ -891,6 +871,41 @@ let currentFinishStep = 1;
 let pendingTreatmentFiles = []; // File[]
 let uploadedTreatmentFiles = []; // existing from DB to render list
 
+// DB-driven services catalog (legacy_id is used only if you still need it elsewhere)
+let SERVICES = [];              // [{legacyId, name, category, durationMinutes, basePrice, description}]
+let SERVICES_BY_NAME = new Map();
+
+async function loadServicesCatalog() {
+  const { data, error } = await supabaseClient
+    .from("services")
+    .select("legacy_id,name,category,duration_minutes,base_price,description,is_active,sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("loadServicesCatalog error:", error);
+    SERVICES = [];
+    SERVICES_BY_NAME = new Map();
+    return;
+  }
+
+  SERVICES = (data || []).map(s => ({
+    legacyId: s.legacy_id,
+    name: s.name,
+    category: s.category,
+    durationMinutes: Number(s.duration_minutes || 0),
+    basePrice: Number(s.base_price || 0),
+    description: s.description || ""
+  }));
+
+  SERVICES_BY_NAME = new Map(SERVICES.map(s => [String(s.name || ""), s]));
+}
+
+function getServiceNames() {
+  return SERVICES.map(s => s.name).filter(Boolean);
+}
+
+
 function goToFinishStep(step) {
   // Guard: step 2 requires medical saved; step 3 requires treatment saved
   if (step === 3 && !finishSteps.treatmentSaved) return;
@@ -922,18 +937,34 @@ function unlockTab(id, can) {
 
 function lockPricingUI(lock) {
   const base = document.getElementById('finish-base-price');
-  const addBtn = document.getElementById('addons-add-btn');
-  const addonsWrap = document.getElementById('finish-addons');
   const finishBtn = document.getElementById('finish-confirm-btn');
 
+  // lock base
   if (base) base.disabled = lock;
-  if (addBtn) addBtn.disabled = lock;
-  if (addonsWrap) addonsWrap.style.opacity = lock ? '.5' : '1';
+
+  // lock "Add extra service" + all inputs in extra services
+  const extraWrap = document.getElementById('extra-services-wrap');
+  const addExtraBtn = document.querySelector('#finish-step-3 button[onclick="addExtraServiceRow()"]');
+
+  if (addExtraBtn) {
+    addExtraBtn.disabled = lock;
+    addExtraBtn.style.opacity = lock ? '.5' : '1';
+  }
+
+  if (extraWrap) {
+    extraWrap.style.opacity = lock ? '.5' : '1';
+    extraWrap.querySelectorAll('select,input,button').forEach(el => {
+      el.disabled = lock;
+    });
+  }
+
+  // lock finish button
   if (finishBtn) {
     finishBtn.disabled = lock;
     finishBtn.style.opacity = lock ? '.5' : '1';
   }
 }
+
 
 
 // ---------------- ToothChart (vanilla JS, same numbering + styling as TreatmentRecords) ----------------
@@ -1158,14 +1189,18 @@ const SERVICE_CATALOG = MAIN_SERVICES.map(s => s.name);
 function populateServiceSelect(selectEl, selectedValue = "") {
   if (!selectEl) return;
 
+  const list = getServiceNamesForPerformed();
   const otherVal = "__OTHER__";
+
+
   selectEl.innerHTML =
     `<option value="">Select service…</option>` +
-    SERVICE_CATALOG.map(s => {
-      const sel = (s === selectedValue) ? "selected" : "";
-      return `<option ${sel} value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
+    list.map(name => {
+      const sel = (name === selectedValue) ? "selected" : "";
+      return `<option ${sel} value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
     }).join("") +
     `<option value="${otherVal}">Other (not listed)…</option>`;
+    
 }
 
 
@@ -1179,14 +1214,15 @@ function addExtraServiceRow(prefill = { name: "", price: "" }) {
   html.className = "flex gap-2 items-center";
   html.dataset.rowId = rowId;
 
+const list = getServiceNamesForPerformed();
+
 html.innerHTML = `
   <div class="flex-1 space-y-2">
     <select class="extra-service-name w-full border rounded-lg px-3 py-2 text-sm bg-white">
       <option value="">Select service…</option>
-      ${SERVICE_CATALOG.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("")}
+      ${list.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
       <option value="__OTHER__">Other (not listed)…</option>
     </select>
-
     <input class="extra-service-other hidden w-full border rounded-lg px-3 py-2 text-sm"
       placeholder="Type the service (not in the list)..." />
   </div>
@@ -1201,50 +1237,80 @@ html.innerHTML = `
   </button>
 `;
 
-
-  wrap.appendChild(html);
-
 const nameSel = html.querySelector(".extra-service-name");
 const priceIn = html.querySelector(".extra-service-price");
 const otherIn = html.querySelector(".extra-service-other");
+
+wrap.appendChild(html);
 
 if (priceIn) {
   priceIn.dataset.manual = "0";
   priceIn.addEventListener("input", () => {
     priceIn.dataset.manual = "1";
-  });
-}
-  
-if (nameSel && priceIn) {
-  nameSel.addEventListener("change", () => {
-    // If switching service, and price wasn't manually edited, follow the starting price
-    if (priceIn.dataset.manual !== "1") {
-      const svc = MAIN_SERVICES.find(s => s.name === nameSel.value);
-      if (svc) priceIn.value = svc.basePrice;
-      else priceIn.value = ""; // if blank / Other
-    }
     computeFinishTotal();
+    refreshBracesPlanBtnLive();
   });
 }
 
-  if (nameSel) nameSel.value = prefill.name || "";
-  if (priceIn) priceIn.value = prefill.price ?? "";
-
-
-if (nameSel && otherIn) {
+if (nameSel) {
   nameSel.addEventListener("change", () => {
-    priceIn.dataset.manual = "0";
     const isOther = nameSel.value === "__OTHER__";
-    otherIn.classList.toggle("hidden", !isOther);
-    if (!isOther) otherIn.value = "";
+
+    if (otherIn) {
+      otherIn.classList.toggle("hidden", !isOther);
+      if (!isOther) otherIn.value = "";
+    }
+
+    if (priceIn) priceIn.dataset.manual = "0";
+
+    if (priceIn && !isOther) {
+      const svc = SERVICES_BY_NAME.get(String(nameSel.value || ""));
+      priceIn.value = svc ? String(svc.basePrice) : "";
+    }
+
     computeFinishTotal();
+    refreshBracesPlanBtnLive();
   });
 }
 
-  html.querySelectorAll("select,input").forEach(el =>
+if (otherIn) {
+  otherIn.addEventListener("input", () => {
+    computeFinishTotal();
+    refreshBracesPlanBtnLive();
+  });
+}
+
+// AFTER wrap.appendChild(html); and after nameSel/priceIn/otherIn are defined
+
+// --- APPLY PREFILL ---
+if (priceIn && prefill?.price !== undefined) {
+  priceIn.value = String(prefill.price ?? "");
+  priceIn.dataset.manual = "1"; // treat as manual when loaded from DB
+}
+
+if (nameSel && prefill?.name) {
+  const n = String(prefill.name || "").trim();
+  const inList = SERVICES_BY_NAME.has(n);
+
+  if (inList) {
+    nameSel.value = n;
+    if (otherIn) otherIn.classList.add("hidden");
+  } else {
+    nameSel.value = "__OTHER__";
+    if (otherIn) {
+      otherIn.classList.remove("hidden");
+      otherIn.value = n;
+    }
+  }
+}
+
+
+// keep this if you want, but it’s redundant once the above is correct
+html.querySelectorAll("select,input").forEach(el =>
   el.addEventListener("input", computeFinishTotal)
 );
 computeFinishTotal();
+
 }
 
 function removeExtraServiceRow(rowId) {
@@ -1253,6 +1319,7 @@ function removeExtraServiceRow(rowId) {
   const row = wrap.querySelector(`[data-row-id="${rowId}"]`);
   if (row) row.remove();
   computeFinishTotal(); // ✅ add this
+  refreshBracesPlanBtnLive();
 }
 
 window.addExtraServiceRow = addExtraServiceRow;
@@ -1401,23 +1468,16 @@ if (sel) {
 
 function peso(amount) {
   const n = Number(amount || 0);
-  return `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `₱${n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 }
+
 
 function computeFinishTotal() {
   const base = Number(document.getElementById('finish-base-price')?.value || 0);
 
-  // add-ons
-  const addonRows = Array.from(document.querySelectorAll('.addon-row'));
-  const addons = addonRows.map(row => {
-    const name = row.querySelector('.addon-name')?.value?.trim() || '';
-    const price = Number(row.querySelector('.addon-price')?.value || 0);
-    return { name, price };
-  }).filter(a => a.name || a.price > 0);
-
-  const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-
-  // extra services
   const extraRows = Array.from(document.querySelectorAll('#extra-services-wrap > div'));
   const extraServices = extraRows.map(row => {
     const sel = row.querySelector('.extra-service-name');
@@ -1430,48 +1490,14 @@ function computeFinishTotal() {
     return { kind: "service", name, price };
   }).filter(x => x.name || x.price > 0);
 
-
-  const extraTotal = extraServices.reduce((sum, x) => sum + (Number(x.price) || 0), 0);
-
-  const total = base + addonsTotal + extraTotal;
+  const extraTotal = extraServices.reduce((sum, x) => sum + x.price, 0);
+  const total = base + extraTotal;
 
   document.getElementById('finish-total').textContent = peso(total);
-  return { base, addons, extraServices, total };
+  return { base, extraServices, total };
 }
 
 
-function addAddonRow(prefill = { name: '', price: '' }) {
-  const wrap = document.getElementById('finish-addons');
-  const row = document.createElement('div');
-  row.className = 'addon-row grid grid-cols-12 gap-2 items-center';
-
-  row.innerHTML = `
-    <input type="text"
-      class="addon-name col-span-7 border rounded-lg px-3 py-2 text-sm"
-      placeholder="Add-on name"
-      value="${prefill.name || ''}"
-    />
-    <input type="number" min="0" step="0.01"
-      class="addon-price col-span-4 border rounded-lg px-3 py-2 text-sm"
-      placeholder="₱"
-      value="${prefill.price || ''}"
-    />
-    <button type="button"
-      class="col-span-1 text-gray-400 hover:text-red-600"
-      title="Remove"
-    >✕</button>
-  `;
-
-  row.querySelector('button').addEventListener('click', () => {
-    row.remove();
-    computeFinishTotal();
-  });
-
-  row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', computeFinishTotal));
-
-  wrap.appendChild(row);
-  computeFinishTotal();
-}
 
 async function openFinishModal(appointmentId, filter) {
   finishContext.appointmentId = appointmentId;
@@ -1539,19 +1565,27 @@ const mainSel = document.getElementById("finish-main-service");
 const mainOther = document.getElementById("finish-main-service-other");
 
 if (mainSel && mainOther) {
-mainSel.onchange = () => {
-  const isOther = mainSel.value === "__OTHER__";
-  mainOther.classList.toggle("hidden", !isOther);
-  if (!isOther) mainOther.value = "";
+  mainSel.onchange = async () => {
+    const isOther = mainSel.value === "__OTHER__";
+    mainOther.classList.toggle("hidden", !isOther);
+    if (!isOther) mainOther.value = "";
 
-  const svc = MAIN_SERVICES.find(s => s.name === mainSel.value);
-  if (svc) {
-    document.getElementById("finish-base-price").value = svc.basePrice;
-    computeFinishTotal();
-  }
-};
-
+const svc = SERVICES_BY_NAME.get(String(mainSel.value || ""));
+if (svc) {
+  document.getElementById("finish-base-price").value = String(svc.basePrice);
+  computeFinishTotal();
 }
+
+    // ✅ instantly refresh the braces plan button visibility
+    await refreshBracesPlanBtnLive();
+  };
+
+  // ✅ If "Other" is selected, typing should also update button instantly
+  mainOther.addEventListener("input", () => {
+    refreshBracesPlanBtnLive();
+  });
+}
+
 
 
 // Clear extra services UI
@@ -1563,11 +1597,11 @@ let existing = safeParseAddons(appt?.AddOns);
 existing
   .filter(x => x && x.kind === "service")
   .forEach(x => addExtraServiceRow({ name: x.name || "", price: x.price ?? "" }));
+  await refreshBracesPlanBtnLive();
 
 
 // reset fields FIRST
 document.getElementById('finish-base-price').value = '';
-document.getElementById('finish-addons').innerHTML = '';
 document.getElementById('finish-error').classList.add('hidden');
 document.getElementById('finish-error').textContent = '';
 document.getElementById('finish-total').textContent = peso(0);
@@ -1584,9 +1618,6 @@ const installInfo = document.getElementById("pricing-install-info");
 // default show pricing
 if (pricingForm) pricingForm.classList.remove("hidden");
 if (installInfo) installInfo.classList.add("hidden");
-
-  // Optional: start with one row
-  // addAddonRow();
 
   document.getElementById('finish-base-price').oninput = computeFinishTotal;
 
@@ -1648,165 +1679,186 @@ document.getElementById("finish-main-service-other")?.classList.add("hidden");
   document.getElementById("finish-main-service-other")?.classList.add("hidden");
 const other = document.getElementById("finish-main-service-other");
 if (other) other.value = "";
-
+refreshBracesPlanBtnLive();
 }
 
 
 
 async function confirmFinishAppointment(clickedBtn) {
-  const errBox = document.getElementById('finish-error');
-  const btn = clickedBtn || document.querySelector('.finish-confirm-btn');
+  const errBox = document.getElementById("finish-error");
+  const btn = clickedBtn || document.querySelector(".finish-confirm-btn");
+
+  const showErr = (msg) => {
+    if (errBox) {
+      errBox.textContent = msg;
+      errBox.classList.remove("hidden");
+    }
+    try { showMessage(msg, "error"); } catch {}
+  };
+
+  const clearErr = () => {
+    if (errBox) errBox.classList.add("hidden");
+  };
+
   if (!btn) {
     console.warn("Finish button not found.");
     return;
   }
 
+  const dentistId = localStorage.getItem("userId");
+  if (!dentistId || !finishContext?.appointmentId) return;
 
-  const dentistId = localStorage.getItem('userId');
-  if (!dentistId || !finishContext.appointmentId) return;
+  const appt = finishContext?.appointment;
+  if (!appt) {
+    showErr("Appointment context is missing. Please close and reopen the modal.");
+    return;
+  }
 
-  const { base, addons, total } = computeFinishTotal();
+  clearErr();
 
-  // --- MAIN SERVICE CHANGE ---
-const currentMain = (finishContext.appointment?.Service || finishContext.appointment?.ServiceType || "").trim();
+  // ---------- totals ----------
+  const { base, extraServices, total } = computeFinishTotal();
 
-const sel = document.getElementById("finish-main-service");
-const other = document.getElementById("finish-main-service-other");
+  // Allow 0 only for braces installation
+  const kind = getOrthoProcKind(appt);
+  if (total <= 0 && kind !== "INSTALL") {
+    showErr("Please set a valid price before finishing.");
+    return;
+  }
 
-let chosenMain = (sel?.value || "").trim();
+  // ---------- main service (performed) ----------
+  const currentMain = String(appt.Service || appt.ServiceType || "").trim();
 
-if (chosenMain === "__OTHER__") {
-  chosenMain = (other?.value || "").trim();
-}
+  const sel = document.getElementById("finish-main-service");
+  const other = document.getElementById("finish-main-service-other");
 
-const finalMainService = chosenMain || currentMain;
+  let chosenMain = String(sel?.value || "").trim();
+  if (chosenMain === "__OTHER__") chosenMain = String(other?.value || "").trim();
 
-// --- EXTRA SERVICES ---
-const extraRows = Array.from(document.querySelectorAll('#extra-services-wrap > div'));
+  const finalMainService = chosenMain || currentMain;
 
-const extraServices = extraRows.map(row => {
-  const sel = row.querySelector('.extra-service-name');
-  const other = row.querySelector('.extra-service-other');
-
-  let name = (sel?.value || '').trim();
-  if (name === "__OTHER__") name = (other?.value || '').trim();
-
-  const price = Number(row.querySelector('.extra-service-price')?.value || 0);
-
-  return { kind: "service", name, price };
-}).filter(x => x.name || x.price > 0);
-
-// Merge with existing AddOns: keep normal addons, replace service extras
+  // Merge with existing AddOns: keep normal addons, replace service extras
 const mergedAddOns = [
-  ...(addons || []).map(a => ({ kind: "addon", name: a.name, price: a.price })), // tag them
   ...extraServices
 ];
 
+  // ---------- braces performed-services enforcement ----------
+  // NOTE: performed legacy ids are based on what dentist selected in this modal
+  const performedIds = getPerformedLegacyIdsLive();
 
-    const kind = getOrthoProcKind(finishContext.appointment);
+  // Installation must not be selectable as performed service here
+  if (performedIds.includes(701)) {
+    showErr("Braces Installation cannot be added as a performed service here.");
+    return;
+  }
 
-    // Allow 0 only for braces installation
-    if (total <= 0 && kind !== "INSTALL") {
-      errBox.textContent = 'Please set a valid price before finishing.';
-      errBox.classList.remove('hidden');
+  // Adjustment requires ACTIVE plan; if yes, link appointment to it
+  if (performedIds.includes(702)) {
+    let planId = null;
+    try {
+      planId = await getActiveBracesPlanId(appt.UserAccountID);
+    } catch (e) {
+      console.error("getActiveBracesPlanId error:", e);
+      showErr("Could not verify braces plan. Please try again.");
       return;
     }
-  const breakdown = {
-    baseServicePrice: base,
-    addons,
-    computedTotal: total,
-    setByDentistId: dentistId,
-    setAt: new Date().toISOString(),
-  };
 
-  btn.disabled = true;
-  const old = btn.textContent;
-  btn.textContent = 'Saving...';
+    if (!planId) {
+      showErr("Braces Adjustment can only be recorded when the braces treatment plan is ACTIVE.");
+      return;
+    }
 
-  // IMPORTANT:
-  // Requires Appointment.TotalAmount column.
-  // PriceBreakdown is optional (remove if you don't have it).
-  showLoading("Finishing appointment…", "Please wait");
-  try{
-const { data: updatedRows, error } = await supabaseClient
-  .from('Appointment')
-  .update({
-    Service: finalMainService,
-    TotalAmount: total,
-    AddOns: mergedAddOns,
-    Status: 'Finished',
-  })
-  .eq('AppointmentID', finishContext.appointmentId)
-  .eq('DentistID', dentistId)
-  .select('AppointmentID, Status, AddOns');
+    if (!appt.TreatmentPlanID || appt.TreatmentPlanID !== planId) {
+      const { error: upErr } = await supabaseClient
+        .from("Appointment")
+        .update({ TreatmentPlanID: planId })
+        .eq("AppointmentID", appt.AppointmentID);
 
-
-  // IMPORTANT: PostgREST can return no error even if 0 rows matched (e.g. DentistID mismatch or RLS).
-  if (!error && (!updatedRows || updatedRows.length === 0)) {
-    const msg = "No rows were updated. Check DentistID/userId mismatch or RLS policy.";
-    console.warn(msg);
-    errBox.textContent = msg;
-    errBox.classList.remove('hidden');
-    showMessage(msg, 'error');
-    return;
-  }
-
-  if (error) {
-    console.error(error);
-    showMessage("Failed to finish appointment.", "error");
-    errBox.textContent = "Failed to finish appointment.";
-    errBox.classList.remove('hidden');
-    return;
-  }
-
-showMessage("Appointment finished and price saved.", "success");
-
-// ✅ cache before closeFinishModal() resets finishContext
-const appt = finishContext.appointment;
-const planId = appt?.TreatmentPlanID;
-const serviceTypeId = Number(appt?.ServiceType);
-const refreshFilter = finishContext.filter || "today";
-
-// ✅ Auto-activate braces plan when Installation (701) is finished
-try {
-  const isInstall701 = serviceTypeId === 701;
-
-  if (planId && isInstall701) {
-    const { data: planRow, error: planErr } = await supabaseClient
-      .from("TreatmentPlan")
-      .select("Status")
-      .eq("TreatmentPlanID", planId)
-      .maybeSingle();
-
-    if (!planErr && planRow) {
-      const st = String(planRow.Status || "").toUpperCase();
-      if (st === "PROPOSED") {
-        const { error: actErr } = await supabaseClient
-          .from("TreatmentPlan")
-          .update({ Status: "ACTIVE" })
-          .eq("TreatmentPlanID", planId);
-
-        if (actErr) console.error("Activate plan error:", actErr);
+      if (upErr) {
+        console.error("Link plan error:", upErr);
+        showErr("Could not link appointment to braces plan. Please try again.");
+        return;
       }
+
+      appt.TreatmentPlanID = planId; // keep local in sync
     }
   }
-} catch (e) {
-  console.error("Plan activation block failed:", e);
-}
 
-closeFinishModal();
+  // ---------- SAVE (only now lock UI) ----------
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = "Saving...";
+  showLoading("Finishing appointment…", "Please wait");
 
-// Refresh list using the cached filter
-const searchQuery = document.getElementById('searchAppointments').value;
-await loadDentistAppointments(refreshFilter, searchQuery);
+  try {
+    const { data: updatedRows, error } = await supabaseClient
+      .from("Appointment")
+      .update({
+        Service: finalMainService,
+        TotalAmount: total,
+        AddOns: mergedAddOns,
+        Status: "Finished",
+      })
+      .eq("AppointmentID", finishContext.appointmentId)
+      .eq("DentistID", dentistId)
+      .select("AppointmentID, Status, AddOns, TreatmentPlanID, ServiceType");
 
+    if (!error && (!updatedRows || updatedRows.length === 0)) {
+      showErr("No rows were updated. Check DentistID/userId mismatch or RLS policy.");
+      return;
+    }
 
-}finally {
-  hideLoading();
-  btn.disabled = false;
-  btn.textContent = old;
+    if (error) {
+      console.error(error);
+      showErr("Failed to finish appointment.");
+      return;
+    }
+
+    showMessage("Appointment finished and price saved.", "success");
+
+    // cache before closeFinishModal() resets finishContext
+    const savedAppt = updatedRows?.[0] || appt;
+    const planId = savedAppt?.TreatmentPlanID || appt?.TreatmentPlanID;
+    const serviceTypeId = Number(savedAppt?.ServiceType || appt?.ServiceType);
+    const refreshFilter = finishContext.filter || "today";
+
+    // Auto-activate braces plan when Installation (701) is finished
+    try {
+      const isInstall701 = serviceTypeId === 701;
+      if (planId && isInstall701) {
+        const { data: planRow, error: planErr } = await supabaseClient
+          .from("TreatmentPlan")
+          .select("Status")
+          .eq("TreatmentPlanID", planId)
+          .maybeSingle();
+
+        if (!planErr && planRow) {
+          const st = String(planRow.Status || "").toUpperCase();
+          if (st === "PROPOSED") {
+            const { error: actErr } = await supabaseClient
+              .from("TreatmentPlan")
+              .update({ Status: "ACTIVE" })
+              .eq("TreatmentPlanID", planId);
+
+            if (actErr) console.error("Activate plan error:", actErr);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Plan activation block failed:", e);
+    }
+
+    closeFinishModal();
+
+    const searchQuery = document.getElementById("searchAppointments")?.value || "";
+    await loadDentistAppointments(refreshFilter, searchQuery);
+  } finally {
+    hideLoading();
+    btn.disabled = false;
+    btn.textContent = oldText;
   }
 }
+
 
 function setStepStatus(id, ok, textOk = 'Done') {
   const el = document.getElementById(id);
@@ -1816,6 +1868,24 @@ function setStepStatus(id, ok, textOk = 'Done') {
     ? 'text-xs font-semibold text-green-700'
     : 'text-xs font-semibold text-red-600';
 }
+
+function showFinishError(msg) {
+  const errBox = document.getElementById("finish-error");
+  if (errBox) {
+    errBox.textContent = msg;
+    errBox.classList.remove("hidden");
+  }
+  showMessage(msg, "error");
+}
+
+function formatPrice(amount) {
+  const n = Number(amount) || 0;
+  return n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 
 function lockTreatment(lock) {
   const btn = document.getElementById('tr-save-btn');
@@ -1828,6 +1898,46 @@ function lockPrice(lock) {
   document.getElementById('finish-confirm-btn').disabled = lock;
   document.getElementById('finish-confirm-btn').style.opacity = lock ? '.5' : '1';
 }
+
+function getServiceNamesForPerformed() {
+  // remove Braces Installation from “performed services”
+  return SERVICES
+    .filter(s => Number(s.legacyId) !== 701)     // 👈 exclude install
+    .map(s => s.name)
+    .filter(Boolean);
+}
+
+function getPerformedLegacyIdsLive() {
+  const ids = [];
+
+  // main performed service
+  const mainName = getSelectedMainServiceNameLive?.() || "";
+  const mainSvc = SERVICES_BY_NAME.get(mainName);
+  if (mainSvc?.legacyId != null) ids.push(Number(mainSvc.legacyId));
+
+  // extra performed services
+  const extras = getSelectedExtraServiceNamesLive?.() || [];
+  extras.forEach(n => {
+    const svc = SERVICES_BY_NAME.get(String(n || ""));
+    if (svc?.legacyId != null) ids.push(Number(svc.legacyId));
+  });
+
+  return ids;
+}
+
+async function getActiveBracesPlanId(patientId) {
+  const { data, error } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("TreatmentPlanID, Status")
+    .eq("UserAccountID", patientId)
+    .eq("PlanType", "BRACES")
+    .eq("Status", "ACTIVE")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.TreatmentPlanID || null;
+}
+
 
 function refreshFinishLocks() {
   // Medical is view-only; mark as Done if it exists, otherwise "Missing"
@@ -2291,39 +2401,44 @@ async function maybeShowCreateBracesPlanBtn(appointment) {
   const serviceName = String(appointment?.Service || appointment?.ServiceType || "");
   const s = serviceName.toLowerCase();
   const isOrtho = s.includes("orthodontic") || s.includes("braces");
+
+  console.log("[bracesBtn] serviceName =", serviceName, "isOrtho =", isOrtho);
+
   if (!isOrtho) {
     btn.classList.add("hidden");
+    btn.title = "Select a braces/orthodontic service to enable this.";
     return;
   }
 
   const userAccountId = appointment.UserAccountID;
-  const dentistId = appointment.DentistID;
 
-  const { data: existing } = await supabaseClient
+  const { data: existing, error } = await supabaseClient
     .from("TreatmentPlan")
-    .select("TreatmentPlanID")
+    .select("TreatmentPlanID, Status")
     .eq("UserAccountID", userAccountId)
     .eq("PlanType", "BRACES")
     .in("Status", ["PROPOSED", "ACTIVE"])
     .maybeSingle();
 
+  console.log("[bracesBtn] existing plan =", existing, "error =", error);
+
   if (existing) {
     btn.classList.add("hidden");
+    btn.title = "Patient already has an ACTIVE/PROPOSED braces plan.";
     return;
   }
 
   btn.classList.remove("hidden");
   btn.disabled = false;
+  btn.title = "";
 
-  // ✅ show the pre-treatment UI instead of inserting immediately
-  btn.onclick = () => {
-    openPretreatModal({
-      appointment,
-      userAccountId,
-      dentistId
-    });
-  };
+  btn.onclick = () => openPretreatModal({
+    appointment,
+    userAccountId,
+    dentistId: appointment.DentistID
+  });
 }
+
 
 
 let pretreatItems = [];
@@ -2450,7 +2565,7 @@ async function saveBracesPlanWithPretreat() {
       }
     }
 
-    showMessage("Braces treatment plan created with pre-treatment requirements.", "success");
+    showMessage("Braces treatment plan created.", "success");
     closePretreatModal();
 
     // hide the original button so it matches your existing behavior
@@ -2461,6 +2576,46 @@ async function saveBracesPlanWithPretreat() {
     hideLoading();
     btn.disabled = false;
   }
+}
+
+function getSelectedMainServiceNameLive() {
+  const currentMain = (finishContext.appointment?.Service || finishContext.appointment?.ServiceType || "").trim();
+
+  const sel = document.getElementById("finish-main-service");
+  const other = document.getElementById("finish-main-service-other");
+
+  let chosen = (sel?.value || "").trim();
+  if (chosen === "__OTHER__") chosen = (other?.value || "").trim();
+
+  return (chosen || currentMain || "").trim();
+}
+
+function getSelectedExtraServiceNamesLive() {
+  const rows = Array.from(document.querySelectorAll('#extra-services-wrap > div'));
+  return rows.map(row => {
+    const sel = row.querySelector('.extra-service-name');
+    const other = row.querySelector('.extra-service-other');
+    let name = (sel?.value || '').trim();
+    if (name === "__OTHER__") name = (other?.value || '').trim();
+    return name;
+  }).filter(Boolean);
+}
+
+async function refreshBracesPlanBtnLive() {
+  if (!finishContext?.appointment) return;
+
+  const main = getSelectedMainServiceNameLive();
+  const extras = getSelectedExtraServiceNamesLive();
+
+  // Combine so maybeShowCreateBracesPlanBtn() can detect "braces"/"orthodontic"
+  const combinedServiceLabel = [main, ...extras].filter(Boolean).join(" / ");
+
+  const apptPreview = {
+    ...finishContext.appointment,
+    Service: combinedServiceLabel
+  };
+
+  await maybeShowCreateBracesPlanBtn(apptPreview);
 }
 
 
@@ -3000,33 +3155,18 @@ function safeParseAddons(addonsRaw) {
   }
 }
 
-function sumAddonPrices(addons) {
-  return (addons || []).reduce((sum, a) => sum + (Number(a?.price) || 0), 0);
-}
 
 function hydratePricingFromAppointment(appt) {
-  const wrap = document.getElementById('finish-addons');
-  if (wrap) wrap.innerHTML = '';
-
-  const addons = safeParseAddons(appt?.AddOns);
-  addons
-  .filter(a => !a?.kind || a.kind === "addon")
-  .forEach(a => addAddonRow({ name: a?.name || '', price: a?.price ?? '' }));
-
-  // ✅ If TotalAmount exists, use it as the base price (since you're not breaking it into base+addons)
-  const totalAmount = Number(appt?.TotalAmount || 0);
-  const addonsOnly = (addons || []).filter(a => !a?.kind || a.kind === "addon");
-  const addonsTotal = sumAddonPrices(addonsOnly);
-
   const baseInput = document.getElementById('finish-base-price');
+  const totalAmount = Number(appt?.TotalAmount || 0);
+
   if (baseInput) {
-    // Base = TotalAmount - addonsTotal (never below 0)
-    const computedBase = Math.max(totalAmount - addonsTotal, 0);
-    baseInput.value = computedBase ? String(computedBase) : '';
+    baseInput.value = totalAmount ? String(totalAmount) : '';
   }
 
   computeFinishTotal();
 }
+
 
         // =================================================================================
         // *** END OF USER-PROTECTED BLOCK (loadDentistAppointments) - MODIFIED FOR RENDER/SEARCH ***
@@ -3038,6 +3178,7 @@ function hydratePricingFromAppointment(appt) {
 
           
             const userData = await checkAuth(false);
+            await loadServicesCatalog();
             const dentistId = userData ? userData.UserAccountID : null;
             const searchInput = document.getElementById('searchAppointments');
             
@@ -3152,19 +3293,41 @@ async function loadNotifications() {
             emptyMsg.textContent = 'No new notifications';
             dropdown.appendChild(emptyMsg);
         } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-                const first = n.Appointment?.User?.FirstName ?? '';
-                const last  = n.Appointment?.User?.LastName ?? '';
-                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-                dropdown.appendChild(item);
-            });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
         }
 
         bellContainer.style.position = 'relative';

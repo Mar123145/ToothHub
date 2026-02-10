@@ -74,6 +74,24 @@
       gap: 10px;
     }
   }
+
+  /* Range calendar day button */
+.reco-day {
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0;
+  font-size: 0.85rem;
+  transition: transform 0.06s ease, background 0.12s ease, border-color 0.12s ease;
+}
+.reco-day:hover { background: #f9fafb; transform: translateY(-1px); }
+.reco-day:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* Range states */
+.reco-inrange { background: #ecfeff; border-color: #67e8f9; }
+.reco-start, .reco-end { background: #03555E; color: white; border-color: #03555E; }
+.reco-today { outline: 2px solid rgba(3,85,94,0.25); outline-offset: 2px; }
+
   </style>
 </head>
 
@@ -201,9 +219,9 @@
   <button id="menuClose" class="hidden" aria-hidden="true"></button>
 
   <!-- Plan Progress Modal -->
-  <div id="planModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+  <div id="planModal" class="fixed inset-0 hidden items-center justify-center bg-black/50 backdrop-blur-sm z-50">
     <div class="bg-white w-[95%] max-w-4xl rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
-      <div class="px-5 py-4 border-b flex items-start justify-between gap-4">
+      <div class="px-5 py-4 border-b bg-white/90 backdrop-blur flex items-start justify-between gap-4">
         <div>
           <h2 class="text-lg font-bold text-gray-900">Treatment Plan Progress</h2>
           <p id="planModalSubtitle" class="text-sm text-gray-600 mt-1">Loading...</p>
@@ -214,6 +232,24 @@
       </div>
 
       <div class="p-5 space-y-4 overflow-y-auto">
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <div class="rounded-xl border bg-white p-4">
+    <div class="text-xs text-gray-500">Diagnostic</div>
+    <div id="mini-diag" class="text-sm font-semibold text-gray-900 mt-1">—</div>
+  </div>
+  <div class="rounded-xl border bg-white p-4">
+    <div class="text-xs text-gray-500">Pre-treatment</div>
+    <div id="mini-pretreat" class="text-sm font-semibold text-gray-900 mt-1">—</div>
+  </div>
+  <div class="rounded-xl border bg-white p-4">
+    <div class="text-xs text-gray-500">Installation</div>
+    <div id="mini-install" class="text-sm font-semibold text-gray-900 mt-1">—</div>
+  </div>
+</div>
+
+
         <!-- Current Clinical Status (case-level summary) -->
           <div class="rounded-xl border bg-white overflow-hidden">
             <div class="px-4 py-3 border-b flex items-center justify-between gap-3">
@@ -256,6 +292,10 @@
               </div>
             </div>
           </div>
+
+                 <div id="progress-diagnostic" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
+          Loading diagnostic...
+        </div>
         
           <!-- Pre-treatment Checklist -->
 <div class="rounded-xl border bg-white overflow-hidden">
@@ -265,43 +305,6 @@
       <div id="pretreat-summary" class="text-xs text-gray-500 mt-1">—</div>
     </div>
   </div>
-
-  <!-- Add requirement form (hidden by default) -->
-  <div id="pretreat-add-wrap" class="hidden p-4 border-b bg-gray-50">
-    <div class="grid md:grid-cols-3 gap-3">
-      <div class="md:col-span-1">
-        <label class="text-xs text-gray-600">Service name</label>
-        <input id="pretreat-service-name" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-               placeholder="e.g., Dental Cleaning" />
-      </div>
-
-      <div class="md:col-span-1">
-        <label class="text-xs text-gray-600">Tooth numbers (optional)</label>
-        <input id="pretreat-toothnumbers" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-               placeholder="e.g., 36, 37" />
-      </div>
-
-      <div class="md:col-span-1">
-        <label class="text-xs text-gray-600">Notes (optional)</label>
-        <input id="pretreat-notes" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-               placeholder="Short note…" />
-      </div>
-    </div>
-
-    <div class="mt-3 flex justify-end gap-2">
-      <button id="pretreat-add-cancel" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-100">
-        Cancel
-      </button>
-      <button id="pretreat-add-btn" class="px-3 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm">
-        Add
-      </button>
-    </div>
-
-    <div class="text-[11px] text-gray-500 mt-2">
-      (If you already store serviceid/servicename via a picker, we can replace this with a dropdown later.)
-    </div>
-  </div>
-
   <!-- Readiness banner -->
   <div id="pretreat-banner" class="px-4 py-3 border-b text-sm hidden"></div>
 
@@ -309,11 +312,73 @@
   <div class="text-sm text-gray-500">Loading…</div>
 </div>
 </div>
+<div id="install-reco-card" class="rounded-xl border bg-white overflow-hidden">
+  <div class="px-4 py-3 border-b flex items-start justify-between gap-3">
+    <div>
+      <div class="font-semibold text-gray-900">Earliest Recommended Installation Date</div>
+      <div class="text-xs text-gray-500 mt-1">Guide the patient when to book braces installation.</div>
+    </div>
+    <button id="install-reco-save"
+      class="px-3 py-2 rounded-lg bg-custom-primary text-white hover:bg-custom-hover text-sm">
+      Save
+    </button>
+  </div>
+
+  <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+<!-- Hidden real inputs (still used for save/load) -->
+<input id="install-reco-start" type="date" class="hidden" />
+<input id="install-reco-end" type="date" class="hidden" />
+
+<!-- Pretty range picker UI -->
+<div class="sm:col-span-2">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="min-w-0">
+      <div class="text-xs text-gray-500">Recommended start date</div>
+      <div id="reco-range-label" class="text-sm font-semibold text-gray-900">—</div>
+      <div id="reco-range-hint" class="text-xs text-gray-500 mt-0.5">
+        Pick the earliest date the patient may book braces installation.
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="setRecoPresetWeeks(2)">Start after 2 weeks</button>
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="setRecoPresetWeeks(3)">Start after 3 weeks</button>
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="setRecoPresetWeeks(4)">Start after 4 weeks</button>
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="clearRecoRange()">Clear</button>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-xl border bg-gray-50 p-3">
+    <div class="flex items-center justify-between mb-2">
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-white"
+        onclick="recoCalMove(-1)">‹</button>
+
+      <div class="text-sm font-semibold text-gray-900" id="reco-cal-month">—</div>
+
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm hover:bg-white"
+        onclick="recoCalMove(1)">›</button>
+    </div>
+
+    <div class="grid grid-cols-7 text-center text-xs text-gray-500 mb-2 select-none">
+      <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+    </div>
+
+    <div id="reco-cal-grid" class="grid grid-cols-7 gap-2"></div>
+  </div>
+</div>
 
 
-        <div id="progress-diagnostic" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
-          Loading diagnostic...
-        </div>
+    <div class="sm:col-span-2">
+      <label class="text-xs text-gray-600">Note</label>
+      <textarea id="install-reco-note" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm min-h-[80px]"
+        placeholder="e.g., after extractions healed / after cleaning / after diagnostic review"></textarea>
+    </div>
+  </div>
+</div>
 
         <div id="progress-install" class="p-4 rounded-xl border bg-gray-50 text-sm text-gray-700">
           Loading installation...
@@ -456,10 +521,15 @@
       const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
       return s.includes("diagnostic") || s.includes("consult");
     }
-    function isInstallAppt(a) {
-      const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
-      return s.includes("installation") || s.includes("bonding") || s.includes("brace") && s.includes("install");
-    }
+function isInstallAppt(a) {
+  const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
+
+  const isOrtho = s.includes("brace") || s.includes("braces") || s.includes("orthodont");
+  const isInstall = s.includes("installation") || s.includes("install") || s.includes("bonding");
+
+  return isOrtho && isInstall;
+}
+
     function isAdjustmentAppt(a) {
       const s = String(a?.Service || a?.ServiceType || "").toLowerCase();
       return s.includes("adjustment");
@@ -485,6 +555,20 @@
       renderPlans(filtered);
     }
 
+function setRecoPresetWeeks(weeks) {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  const todayIso = todayISODatePH();
+
+  const start = addDays(todayIso, weeks * 7);
+
+  if (startEl) startEl.value = start;
+  if (endEl)   endEl.value = ""; // ✅ no window
+
+  updateRecoRangeLabel();
+  renderRecoCalendar();
+}
+
   async function loadPreTreatments(planId) {
   const body = document.getElementById("pretreat-body");
   const summary = document.getElementById("pretreat-summary");
@@ -495,7 +579,7 @@
 
   const { data, error } = await supabaseClient
     .from("treatmentplanpretreatment")
-    .select("pretreatmentid, serviceid, servicename, status, createdat, completedat")
+    .select("pretreatmentid, serviceid, servicename, toothnumbers, notes, status, createdat, completedat")
     .eq("treatmentplanid", planId)
     .order("createdat", { ascending: true });
 
@@ -510,6 +594,7 @@
 
   const rows = data || [];
   renderPreTreatments(rows);
+  return rows;
 }
 
 function renderPreTreatments(rows) {
@@ -555,6 +640,9 @@ function renderPreTreatments(rows) {
     const st = String(r.status || "PENDING").toUpperCase();
     const isPending = String(r.status || "").toLowerCase() === "pending";
 const proof = findProofAppointmentForPretreat(r);
+const proofInfo = proof?.AppointmentSchedule
+  ? `Proof: ${fmtDateLong(proof.AppointmentSchedule)} (${String(proof.Status||"").toUpperCase()})`
+  : "";
 const isFinished = proof && String(proof.Status).toLowerCase() === "finished";
 
 const viewBtn = proof ? `
@@ -565,9 +653,32 @@ const viewBtn = proof ? `
 ` : "";
 
     return `
-      <div class="rounded-xl border bg-white p-4 flex items-start justify-between gap-3">
+      <div class="rounded-xl border bg-white p-4 flex items-start justify-between gap-3 relative overflow-hidden">
+  <div class="absolute left-0 top-0 h-full w-1 ${isPending ? "bg-amber-400" : "bg-green-500"}"></div>
+
         <div class="min-w-0">
-          <div class="font-semibold text-gray-900 truncate">${escapeHtml(r.servicename || "—")}</div>
+          <div class="font-semibold text-gray-900 truncate flex items-center gap-2">
+  <i class="fa-solid fa-clipboard-check text-gray-400"></i>
+  ${escapeHtml(r.servicename || "—")}
+</div>
+
+
+
+          ${(r.toothnumbers || r.notes) ? `
+            <div class="mt-3 rounded-lg border bg-amber-50/60 px-3 py-2">
+              ${r.toothnumbers ? `
+                <div class="text-sm text-gray-900">
+                  <span class="font-semibold">Teeth:</span> ${escapeHtml(r.toothnumbers)}
+                </div>
+              ` : ""}
+
+              ${r.notes ? `
+                <div class="text-sm text-gray-900 mt-1">
+                  <span class="font-semibold">Notes:</span> ${escapeHtml(r.notes)}
+                </div>
+              ` : ""}
+            </div>
+          ` : ""}
           <div class="mt-2">
             <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold border ${pretreatBadge(st)}">${st}</span>
           </div>
@@ -598,20 +709,23 @@ function parseServiceTypeIds(serviceType) {
 }
 
 function findProofAppointmentForPretreat(r) {
-  const sid = Number(r.serviceid);
-  if (!sid) return null;
+  const name = String(r.servicename || "").toLowerCase();
+  if (!name) return null;
 
   const matches = (modalAppts || []).filter(a => {
     if (String(a.TreatmentPlanID) !== String(window.__currentPlanId)) return false;
-    const ids = parseServiceTypeIds(a.ServiceType);
-    return ids.includes(sid);
+
+    const svc = String(a.Service || a.ServiceType || "").toLowerCase();
+    return svc.includes(name);
   });
 
-  // Prefer Finished appointment if available
-  return matches.find(a => String(a.Status).toLowerCase() === "finished")
-      || matches[0]
-      || null;
+  return (
+    matches.find(a => String(a.Status).toLowerCase() === "finished") ||
+    matches[0] ||
+    null
+  );
 }
+
 
 
 async function setPretreatStatus(pretreatmentId, status) {
@@ -681,7 +795,7 @@ async function addPretreatRequirement(planId) {
 
   document.getElementById("pretreat-add-wrap")?.classList.add("hidden");
 
-  await loadPreTreatments(planId);
+  const pretreatRows = await loadPreTreatments(planId);
 }
   
 
@@ -989,13 +1103,20 @@ async function saveClinicalStatus(planId) {
 
       if (!modal) return;
 
+      
+
       modal.classList.remove("hidden");
       modal.classList.add("flex");
 
       if (subtitle) subtitle.textContent = `Patient: ${patientName}`;
       window.__currentPlanId = planId;
-      await loadPreTreatments(planId);
+      const pretreatRows = await loadPreTreatments(planId);
       await loadClinicalStatus(planId);
+
+      await loadInstallRecommendation(planId);
+
+      const recoSave = document.getElementById("install-reco-save");
+      if (recoSave) recoSave.onclick = () => saveInstallRecommendation(planId);
 
       // attach save handler (rebind each time modal opens)
       const saveBtn = document.getElementById("clinical-status-save");
@@ -1011,6 +1132,8 @@ async function saveClinicalStatus(planId) {
       if (sumCount) sumCount.textContent = "—";
       if (sumTotal) sumTotal.textContent = "—";
       if (sumLast) sumLast.textContent = "—";
+
+      
 
       // Load appointments under plan (same rule as patient side)
       const { data: appts, error } = await supabaseClient
@@ -1038,7 +1161,7 @@ async function saveClinicalStatus(planId) {
 
       modalAppts = appts || [];
       window.appts = modalAppts;
-      await loadPreTreatments(planId);
+      const pretreatRows2 = await loadPreTreatments(planId);
 
       // ✅ Include SourceAppointmentID diagnostic even if not linked by TreatmentPlanID
 const planRow = (allPlans || []).find(p => String(p.TreatmentPlanID) === String(planId));
@@ -1119,6 +1242,12 @@ if (sourceId) {
         .filter(isInstallAppt)
         .sort((a,b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule))[0];
 
+        console.log(
+  "[DEBUG] Install candidate:",
+  install?.Service || install?.ServiceType || "NONE",
+  install?.Status || "NO STATUS"
+);
+
       if (installBox) {
         if (!install) {
           installBox.innerHTML = `
@@ -1151,6 +1280,18 @@ if (sourceId) {
         }
       }
 
+const recoCard = document.getElementById("install-reco-card");
+console.log("[DEBUG] recoCard found?", !!recoCard, recoCard?.className);
+if (recoCard) {
+  const installFinished = install
+    ? String(install.Status || "").toLowerCase() === "finished"
+    : false;
+
+  recoCard.classList.toggle("hidden", installFinished);
+    console.log("[DEBUG] installFinished =", installFinished);
+  console.log("[DEBUG] recoCard hidden now?", recoCard.classList.contains("hidden"));
+}
+
       // Adjustments: FINISHED only
       const adjustments = modalAppts
         .filter(a => isAdjustmentAppt(a) && String(a.Status || "").toLowerCase() === "finished")
@@ -1163,6 +1304,21 @@ if (sourceId) {
       if (sumTotal) sumTotal.textContent = money(totalRevenue);
       if (sumLast) sumLast.textContent = lastAdj ? fmtDateLong(lastAdj.AppointmentSchedule) : "—";
       if (countEl) countEl.textContent = `${adjustments.length} record(s)`;
+
+const miniDiag = document.getElementById("mini-diag");
+const miniPre  = document.getElementById("mini-pretreat");
+const miniInst = document.getElementById("mini-install");
+
+if (miniDiag) miniDiag.textContent = diagFinished ? "Finished" : (diagScheduled ? "Scheduled" : "Not found");
+if (miniInst) miniInst.textContent = install ? String(install.Status || "—").toUpperCase() : "Not found";
+
+const rowsForCounts = pretreatRows2 || pretreatRows || [];
+const totalPretreat = rowsForCounts.length;
+const donePretreat  = rowsForCounts.filter(r => String(r.status || "").toLowerCase() === "done").length;
+
+if (miniPre) miniPre.textContent = totalPretreat ? `${donePretreat}/${totalPretreat} done` : "No requirements";
+
+
 
 function renderAdjustmentsPage() {
   const body = document.getElementById("progress-adjustments-body");
@@ -1490,6 +1646,34 @@ async function openTRModal(appointmentId) {
   }
 });
 }
+
+async function openLatestFinishedTRForPlan(planId) {
+  // Prefer FINISHED appointments under this plan
+  const finished = (modalAppts || [])
+    .filter(a =>
+      String(a.TreatmentPlanID) === String(planId) &&
+      String(a.Status || "").toLowerCase() === "finished"
+    )
+    .sort((a, b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule));
+
+  if (finished.length) {
+    return openTRModal(finished[0].AppointmentID);
+  }
+
+  // Fallback: if no finished, allow opening the most recent approved/rescheduled/pending
+  const any = (modalAppts || [])
+    .filter(a => String(a.TreatmentPlanID) === String(planId))
+    .sort((a, b) => new Date(b.AppointmentSchedule) - new Date(a.AppointmentSchedule));
+
+  if (any.length) {
+    // This will likely show “No treatment record found” until finished — but user can still check.
+    return openTRModal(any[0].AppointmentID);
+  }
+
+  showMessage("No appointments found for this plan yet.", "warning");
+}
+
+
 async function uploadTRFiles(treatmentRecordId) {
   const inp = document.getElementById("trUploadInput");
   const files = Array.from(inp?.files || []);
@@ -1529,6 +1713,244 @@ async function uploadTRFiles(treatmentRecordId) {
       modal.classList.add("hidden");
       modal.classList.remove("flex");
     }
+
+
+function todayISODatePH() {
+  // date input wants YYYY-MM-DD (no time)
+  const now = new Date();
+  const ph = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const y = ph.getFullYear();
+  const m = String(ph.getMonth() + 1).padStart(2, "0");
+  const d = String(ph.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// ---- Simple range calendar state ----
+let recoCalCursor = (() => {
+  const now = new Date();
+  const ph = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  return new Date(ph.getFullYear(), ph.getMonth(), 1);
+})();
+
+function isoFromDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+function phTodayDateObj() {
+  const now = new Date();
+  const ph = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  return new Date(ph.getFullYear(), ph.getMonth(), ph.getDate());
+}
+
+function fmtDateShort(yyyy_mm_dd) {
+  if (!yyyy_mm_dd) return "—";
+  const [y, m, d] = yyyy_mm_dd.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("en-PH", { month: "short", day: "2-digit", year: "numeric" });
+}
+
+function updateRecoRangeLabel() {
+  const startEl = document.getElementById("install-reco-start");
+  const label   = document.getElementById("reco-range-label");
+  const s = startEl?.value || "";
+  if (!label) return;
+  label.textContent = s ? fmtDateShort(s) : "—";
+}
+
+
+function clearRecoRange() {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  if (startEl) startEl.value = "";
+  if (endEl) endEl.value = "";
+  updateRecoRangeLabel();
+  renderRecoCalendar();
+}
+
+function setRecoPreset(daysForward) {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  const todayIso = todayISODatePH();
+
+  if (startEl) startEl.value = todayIso;
+  if (endEl)   endEl.value   = addDays(todayIso, daysForward);
+
+  updateRecoRangeLabel();
+  renderRecoCalendar();
+}
+
+
+function recoCalMove(monthDelta) {
+  recoCalCursor = new Date(recoCalCursor.getFullYear(), recoCalCursor.getMonth() + monthDelta, 1);
+  renderRecoCalendar();
+}
+
+function renderRecoCalendar() {
+  const grid = document.getElementById("reco-cal-grid");
+  const monthLabel = document.getElementById("reco-cal-month");
+  if (!grid || !monthLabel) return;
+
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  const start = startEl?.value || "";
+  const end   = endEl?.value || "";
+
+  const year = recoCalCursor.getFullYear();
+  const month = recoCalCursor.getMonth();
+
+  monthLabel.textContent = recoCalCursor.toLocaleDateString("en-PH", { month: "long", year: "numeric" });
+
+  const first = new Date(year, month, 1);
+  const last  = new Date(year, month + 1, 0);
+
+  const startWeekday = first.getDay(); // 0=Sun
+  const daysInMonth = last.getDate();
+
+  const today = phTodayDateObj();
+  const todayIso = isoFromDate(today);
+
+  // Build cells
+  grid.innerHTML = "";
+
+  // blanks
+  for (let i = 0; i < startWeekday; i++) {
+    const blank = document.createElement("div");
+    grid.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dt = new Date(year, month, day);
+    const iso = isoFromDate(dt);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "reco-day";
+
+    // disable past dates
+    if (dt < today) btn.disabled = true;
+
+    // labels
+    btn.textContent = String(day);
+
+    // range styles
+    if (iso === todayIso) btn.classList.add("reco-today");
+    if (start && iso === start) btn.classList.add("reco-start");
+
+btn.onclick = () => {
+  if (startEl) startEl.value = iso;
+  if (endEl) endEl.value = "";   // keep end empty; no window
+  updateRecoRangeLabel();
+  renderRecoCalendar();
+};
+
+    grid.appendChild(btn);
+  }
+}
+
+// Hook calendar refresh after loadInstallRecommendation() fills the hidden inputs
+const __oldLoadInstallRecommendation = loadInstallRecommendation;
+loadInstallRecommendation = async function(planId) {
+  await __oldLoadInstallRecommendation(planId);
+  updateRecoRangeLabel();
+
+  // If saved dates exist, show that month; else current month
+  const startEl = document.getElementById("install-reco-start");
+  const s = startEl?.value || "";
+  if (s) {
+    const [y, m] = s.split("-").map(Number);
+    recoCalCursor = new Date(y, m - 1, 1);
+  }
+  renderRecoCalendar();
+};
+
+
+function addDays(yyyy_mm_dd, days) {
+  if (!yyyy_mm_dd) return "";
+  const [y, m, d] = yyyy_mm_dd.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + days);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function setRecoWeeks(weeks) {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+
+  const base = startEl?.value || todayISODatePH();
+  const start = addDays(base, weeks * 7);
+  const end   = addDays(start, 14); // window length (2 weeks) — adjust if you want 7 days instead
+
+  if (startEl) startEl.value = start;
+  if (endEl) endEl.value = end;
+}
+
+async function loadInstallRecommendation(planId) {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  const noteEl  = document.getElementById("install-reco-note");
+
+  const { data, error } = await supabaseClient
+    .from("TreatmentPlan")
+    .select("InstallRecommendStart, InstallRecommendEnd, InstallRecommendNote")
+    .eq("TreatmentPlanID", planId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Load install recommendation error:", error);
+    return;
+  }
+
+  if (startEl) startEl.value = data?.InstallRecommendStart || "";
+  if (endEl)   endEl.value   = data?.InstallRecommendEnd || "";
+  if (noteEl)  noteEl.value  = data?.InstallRecommendNote || "";
+}
+
+async function saveInstallRecommendation(planId) {
+  const startEl = document.getElementById("install-reco-start");
+  const endEl   = document.getElementById("install-reco-end");
+  const noteEl  = document.getElementById("install-reco-note");
+
+  const start = String(startEl?.value || "").trim() || null;
+  const end   = String(endEl?.value || "").trim() || null;
+  const note  = String(noteEl?.value || "").trim() || null;
+
+  // optional guard: end must be >= start
+  if (start && end && end < start) {
+    showMessage("End date must be after Start date.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("install-reco-save");
+  const old = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+
+  const { error } = await supabaseClient
+    .from("TreatmentPlan")
+    .update({
+      InstallRecommendStart: start,
+      InstallRecommendEnd: end,
+      InstallRecommendNote: note,
+      InstallRecommendUpdatedAt: new Date().toISOString(),
+    })
+    .eq("TreatmentPlanID", planId);
+
+  if (btn) { btn.disabled = false; btn.textContent = old || "Save"; }
+
+  if (error) {
+    console.error("Save install recommendation error:", error);
+    showMessage("Failed to save recommendation.", "error");
+    return;
+  }
+
+  showMessage("Recommendation saved.", "success");
+}
+
 
     // ---------- Notifications (reuse your existing pattern) ----------
  async function loadNotifications() {
@@ -1598,42 +2020,47 @@ async function uploadTRFiles(treatmentRecordId) {
             emptyMsg.textContent = 'No new notifications';
             dropdown.appendChild(emptyMsg);
         } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-                const first = n.Appointment?.User?.FirstName ?? '';
-                const last  = n.Appointment?.User?.LastName ?? '';
-                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-                dropdown.appendChild(item);
-            });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
         }
 
         bellContainer.style.position = 'relative';
         bellContainer.appendChild(dropdown);
     };
 }
-
-function findProofAppointmentForPretreat(r) {
-  const sid = Number(r.serviceid);
-  if (!sid) return null;
-
-  return (modalAppts || []).find(a => {
-    const samePlan = String(a.TreatmentPlanID || "") === String(window.__currentPlanId || "");
-    if (!samePlan) return false;
-
-    const ids = parseServiceTypeIds(a.ServiceType);
-    return ids.includes(sid); // ✅ works for "3,4"
-  }) || null;
-}
-
-
-
-
 
     // ---------- Init ----------
     window.addEventListener("DOMContentLoaded", async () => {

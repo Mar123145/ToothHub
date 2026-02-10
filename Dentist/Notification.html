@@ -123,18 +123,27 @@
         <div class="grid gap-6 max-w-4xl mx-auto">
             
             <div class="rounded-xl border bg-white shadow-lg">
-                <div class="p-6 border-b flex justify-between items-center">
-                    <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                        <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
-                        Recent Notifications
-                    </h2>
-                    
-                    <div class="filter-group" id="filter-buttons">
-                        <button id="filter-all" class="filter-button" data-status="">All</button>
-                        <button id="filter-unread" class="filter-button" data-status="Unread">Unread</button>
-                        <button id="filter-read" class="filter-button" data-status="Read">Read</button>
-                    </div>
-                </div>
+<div class="p-6 border-b flex justify-between items-center">
+  <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+    <i data-lucide="bell" class="w-5 h-5 text-primary"></i>
+    Recent Notifications
+  </h2>
+
+  <div class="flex items-center gap-3">
+    <button
+      onclick="markAllAsRead()"
+      class="text-xs px-3 py-1.5 rounded-md border border-primary text-primary hover:bg-primary/5">
+      Mark all as read
+    </button>
+
+    <div class="filter-group" id="filter-buttons">
+      <button id="filter-all" class="filter-button" data-status="">All</button>
+      <button id="filter-unread" class="filter-button" data-status="Unread">Unread</button>
+      <button id="filter-read" class="filter-button" data-status="Read">Read</button>
+    </div>
+  </div>
+</div>
+
                 <div class="p-6" id="recent-notifications-content">
                     <div id="empty-state" class="text-center py-12 text-gray-500">
                         <i data-lucide="bell" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
@@ -231,19 +240,41 @@ async function loadNotifications() {
             emptyMsg.textContent = 'No new notifications';
             dropdown.appendChild(emptyMsg);
         } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-                const first = n.Appointment?.User?.FirstName ?? '';
-                const last  = n.Appointment?.User?.LastName ?? '';
-                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-                dropdown.appendChild(item);
-            });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
         }
 
         bellContainer.style.position = 'relative';
@@ -260,6 +291,28 @@ async function logout() {
   window.location.href = "/Login.html";
 }
 
+async function markAllAsRead() {
+  const userId =
+    localStorage.getItem('userAccountId') ||
+    localStorage.getItem('userId');
+
+  if (!userId) return;
+
+  const { error } = await supabaseClient
+    .from('Notifications')
+    .update({ Status: 'Read' })
+    .eq('UserAccountID', userId)
+    .eq('Status', 'Unread');
+
+  if (error) {
+    console.error("Failed to mark all as read:", error);
+    return;
+  }
+
+  // Refresh everything
+  await loadNotifications();   // bell badge
+  await renderNotifications(); // list
+}
 
 
 

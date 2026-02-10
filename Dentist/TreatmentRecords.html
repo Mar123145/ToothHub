@@ -403,7 +403,7 @@ function TreatmentRecordsPage() {
     const [previewFile, setPreviewFile] = useState(null); // { url, filename, mimetype }
     const [isEditing, setIsEditing] = useState(false);
     const originalSnapshotRef = useRef(null);
-
+    const [expandedPatientId, setExpandedPatientId] = useState(null);
 
     // --- Auth check ---
     useEffect(() => {
@@ -785,6 +785,27 @@ const filteredAppointments = appointments.filter((a) => {
   return isFinished || isTodayApprovedOrRescheduled;
 });
 
+// ✅ Group appointments by patient (for cleaner UI)
+const groupedByPatient = filteredAppointments.reduce((acc, a) => {
+  const pid = a.UserAccountID || a.Patient?.UserAccountID || "unknown";
+  const name = a.Patient
+    ? `${a.Patient.FirstName || ""} ${a.Patient.LastName || ""}`.trim()
+    : "Unknown Patient";
+
+  if (!acc[pid]) {
+    acc[pid] = {
+      patientId: pid,
+      patientName: name,
+      items: [],
+    };
+  }
+
+  acc[pid].items.push(a);
+  return acc;
+}, {});
+
+const patientGroups = Object.values(groupedByPatient);
+
 
     // --- ESC to close modal (Unchanged) ---
     useEffect(() => {
@@ -843,80 +864,77 @@ useEffect(() => {
                 </Card>
 
                <div className="space-y-4">
-    {filteredAppointments.length > 0 ? (
-        filteredAppointments.map((a) => {
-            const statusStyles = getStatusStyles(a.Status);
-            const patientName = a.Patient
-                ? `${a.Patient.FirstName} ${a.Patient.LastName}`
-                : 'Unknown Patient';
+{patientGroups.length > 0 ? (
+  patientGroups.map((g) => {
+    const isOpen = expandedPatientId === g.patientId;
 
-            return (
-                <Card
-                    key={a.AppointmentID}  // ✅ use real ID, not a.id
-                    className="cursor-pointer hover:shadow-lg transition-all duration-200 border-none shadow-sm"
+    return (
+      <Card key={g.patientId} className="border-none shadow-sm">
+        <CardContent className="pt-6">
+          {/* Patient header */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-between text-left"
+            onClick={() => setExpandedPatientId(isOpen ? null : g.patientId)}
+          >
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{g.patientName}</h3>
+              <p className="text-sm text-gray-500">
+                {g.items.length} record(s)
+              </p>
+            </div>
+
+            <span className="text-sm font-medium text-[#03555E]">
+              {isOpen ? "Hide" : "View"}
+            </span>
+          </button>
+
+          {/* Patient appointments list */}
+          {isOpen && (
+            <div className="mt-4 space-y-3 border-t pt-4">
+              {g.items.map((a) => {
+                const statusStyles = getStatusStyles(a.Status);
+
+                return (
+                  <div
+                    key={a.AppointmentID}
+                    className="p-4 rounded-xl border hover:shadow-sm transition cursor-pointer"
                     onClick={() => {
-                        setSelectedAppointment(a);
-                        setIsEditing(false);
-                        originalSnapshotRef.current = null;
+                      setSelectedAppointment(a);
+                      setIsEditing(false);
+                      originalSnapshotRef.current = null;
                     }}
-                    
-                >
-                    <CardContent className="pt-6">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div className="flex-1">
-                                {/* Patient Name */}
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">
-                                    {patientName}
-                                </h3>
-
-                                {/* Service */}
-                                <p className="text-[#03555E] font-medium mb-3">
-                                    {a.Service}
-                                </p>
-
-                                <p className="text-sm text-gray-600 mb-2">
-                                  Dentist:{" "}
-                                  <span className="font-semibold text-gray-700">
-                                    {a.Dentist
-                                      ? `${a.Dentist.FirstName || ""} ${a.Dentist.LastName || ""}`.trim()
-                                      : "—"}
-                                  </span>
-                                </p>
-
-                                {/* Appointment Details */}
-                                <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-gray-600">
-                                    <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
-                                        <Calendar className="w-4 h-4" />
-                                        {new Date(a.AppointmentSchedule).toLocaleDateString()}
-                                    </div>
-                                    <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
-                                        <span>⏰</span>
-                                        {new Date(a.AppointmentSchedule).toLocaleTimeString([], {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Status & Actions */}
-                            <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto mt-2 md:mt-0">
-                                <span
-                                    className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 border ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}
-                                >
-                                    <CheckCircle className="w-4 h-4" />
-                                    {a.Status || 'Pending'}
-                                </span>
-                                <Button className="bg-[#03555E] hover:bg-[#024449] text-xs md:text-sm">
-                                    View Details
-                                </Button>
-                            </div>
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 truncate">
+                          {a.Service}
                         </div>
-                    </CardContent>
-                </Card>
-            );
-        })
-    ) : (
+                        <div className="text-sm text-gray-600">
+                          {new Date(a.AppointmentSchedule).toLocaleDateString()} •{" "}
+                          {new Date(a.AppointmentSchedule).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium border ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}
+                      >
+                        {a.Status || "Pending"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  })
+) : (
         <Card>
             <CardContent className="pt-12">
                 <div className="text-center py-8 text-gray-500">
@@ -1751,19 +1769,41 @@ async function loadNotifications() {
             emptyMsg.textContent = 'No new notifications';
             dropdown.appendChild(emptyMsg);
         } else {
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
+notifications.forEach(n => {
+  const item = document.createElement('button');
+  item.type = "button";
+  item.className =
+    'w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer text-sm text-gray-700';
 
-                const first = n.Appointment?.User?.FirstName ?? '';
-                const last  = n.Appointment?.User?.LastName ?? '';
-                const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
+  const first = n.Appointment?.User?.FirstName ?? '';
+  const last  = n.Appointment?.User?.LastName ?? '';
+  const patientName = `${first} ${last}`.trim() || 'Unknown Patient';
 
-                const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
-                item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
+  const originalMsg = n.Message || `You have a new approved appointment for patient ${patientName}`;
+  item.textContent = originalMsg.replace(/patient\s*ID\s*[a-f0-9-]{8,}/i, `patient ${patientName}`);
 
-                dropdown.appendChild(item);
-            });
+  item.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const { error: updErr } = await supabaseClient
+      .from("Notifications")
+      .update({ Status: "Read" })
+      .eq("NotificationID", n.NotificationID);
+
+    if (updErr) {
+      console.error("Failed to mark notification as read:", updErr);
+      return;
+    }
+
+    // close dropdown + refresh badge/list
+    const dd = document.getElementById("notif-dropdown");
+    if (dd) dd.remove();
+    loadNotifications();
+  });
+
+  dropdown.appendChild(item);
+});
+
         }
 
         bellContainer.style.position = 'relative';
