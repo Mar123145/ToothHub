@@ -254,7 +254,7 @@
         .from("Appointment")
         .select("*")
         .eq("UserAccountID", userId)
-        .eq("Status", "Approved","Rescheduled")
+        .in("Status", ["Approved", "Rescheduled"])
         .gte("AppointmentSchedule", nowUTC)
         .order("AppointmentSchedule", { ascending: true });
 

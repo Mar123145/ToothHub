@@ -591,7 +591,22 @@ ${pretreatExists ? `
                     <p class="text-xs text-gray-500 mt-2">
                       ${readyForInstall ? "You may now book braces installation." : "Complete the pre-treatment requirements first."}
                     </p>
+                    ${(plan.InstallRecommendStart && !progress.installDone) ? `
+  <div class="mt-3 p-3 rounded-xl border bg-sky-50 text-sky-900 text-sm">
+    <div class="font-semibold">Dentist recommendation</div>
+    <div class="text-xs mt-1">
+      You may start booking installation on:
+      <span class="font-semibold">${fmtDate(plan.InstallRecommendStart)}</span>
+    </div>
+    ${plan.InstallRecommendNote ? `
+      <div class="text-xs text-sky-800 mt-2">
+        Note: ${esc(plan.InstallRecommendNote)}
+      </div>
+    ` : ""}
+  </div>
+` : ""}
                     `
+                    
                 }
                 </div>
             </div>

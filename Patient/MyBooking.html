@@ -1606,6 +1606,81 @@ async function fetchDentistUnavailableOnDate(dentistId, dateYmd) {
   return intervals;
 }
 
+let serviceMap = new Map(); // legacy_id -> { durationMinutes }
+
+async function loadServiceMap() {
+  const { data, error } = await supabaseClient
+    .from("services")
+    .select("legacy_id, duration_minutes")
+    .eq("is_active", true)
+    .not("legacy_id", "is", null);
+
+  if (error) {
+    console.error("loadServiceMap error:", error);
+    serviceMap = new Map();
+    return;
+  }
+
+  serviceMap = new Map(
+    (data || []).map(s => [
+      Number(s.legacy_id),
+      { durationMinutes: Number(s.duration_minutes || 0) }
+    ])
+  );
+}
+
+async function loadDentistsFromDb() {
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("UserAccountID, FirstName, LastName, is_active, Role")
+    .eq("is_active", true)
+    .ilike("Role", "dentist")
+    .order("FirstName", { ascending: true });
+
+  if (error) {
+    console.error("loadDentistsFromDb error:", error);
+    return [];
+  }
+
+  return (data || []).map(d => ({
+    userAccountId: d.UserAccountID,
+    name: `${d.FirstName} ${d.LastName}`,
+    is_active: d.is_active
+  }));
+}
+
+
+function getAppointmentDurationMin(appt) {
+  // 1️⃣ Prefer stored end time (most accurate)
+  try {
+    const s = new Date(appt.AppointmentSchedule);
+    const e = appt.endschedule ? new Date(appt.endschedule) : null;
+    if (e && +e > +s) {
+      return Math.max(15, Math.round((e - s) / 60000));
+    }
+  } catch {}
+
+  // 2️⃣ Fallback: compute from ServiceType using services table
+  const raw = appt.ServiceType;
+  if (raw) {
+    const ids = String(raw)
+      .split(",")
+      .map(x => Number(x.trim()))
+      .filter(Number.isFinite);
+
+    const total = ids.reduce((sum, id) => {
+      const svc = serviceMap.get(id);
+      return sum + (svc?.durationMinutes || 0);
+    }, 0);
+
+    if (total > 0) return total;
+  }
+
+  // 3️⃣ Last resort fallback
+  return 60;
+}
+
+
 
 function renderReschedSlots() {
   const grid = document.getElementById("reschedTimeSlots");
@@ -1623,12 +1698,7 @@ function renderReschedSlots() {
   const nowPlus1h = new Date(nowManila.getTime() + 60 * 60000);
 
   // estimate duration: try to derive from existing appointment, else 60 mins
-  let durationMin = 60;
-  try {
-    const s = new Date(reschedTargetAppointment.AppointmentSchedule);
-    const e = reschedTargetAppointment.endschedule ? new Date(reschedTargetAppointment.endschedule) : null;
-    if (e && +e > +s) durationMin = Math.max(15, Math.round((e - s) / 60000));
-  } catch {}
+  let durationMin = getAppointmentDurationMin(reschedTargetAppointment);
 
   const isToday = reschedSelectedDate === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 
@@ -1678,7 +1748,7 @@ function getTodayManilaYmd() {
   return manila.toLocaleDateString("en-CA"); // YYYY-MM-DD
 }
 
-function openReschedPicker(appointment) {
+async function openReschedPicker(appointment) {
   isModalOpen = true;
   clearReschedInlineMessage();
   reschedTargetAppointment = appointment;
@@ -1715,6 +1785,39 @@ function openReschedPicker(appointment) {
     }
   }
 
+  // reset dentist selection
+  reschedSelectedDentistId = "";
+  const dd = document.getElementById("reschedDentist");
+  if (dd) {
+    dd.innerHTML = `<option value="">Keep current dentist</option><option value="">Loading dentists…</option>`;
+  }
+
+  try {
+    // reuse your dentist loader (same idea as Appointment.html transfer)
+    if (!Array.isArray(window.dentists) || window.dentists.length === 0) {
+      window.dentists = await loadDentistsFromDb(); // must exist in MyBooking.html
+    }
+
+    if (dd) {
+      dd.innerHTML = `<option value="">Keep current dentist</option>` + (window.dentists || [])
+        // if you have is_active available in this dataset, keep only active:
+        .filter(d => d.is_active === true || d.is_active === undefined) 
+        .map(d => `<option value="${d.userAccountId}">Dr. ${escapeHtml(d.name)}</option>`)
+        .join("");
+
+      dd.onchange = async () => {
+        reschedSelectedDentistId = dd.value || "";
+        // re-fetch blocks for selected date if already chosen
+        if (reschedSelectedDate) await onReschedDateChange();
+      };
+    }
+  } catch (e) {
+    console.error("Failed to load dentists:", e);
+    if (dd) dd.innerHTML = `<option value="">Keep current dentist</option>`;
+  }
+
+
+
   renderReschedSlots();
   document.getElementById("reschedPickerModal").classList.remove("hidden");
 }
@@ -1729,14 +1832,7 @@ function getTodayManilaYmd() {
 }
 
 function getReschedDurationMin() {
-  // same logic you already use in renderReschedSlots()
-  let durationMin = 60;
-  try {
-    const s = new Date(reschedTargetAppointment.AppointmentSchedule);
-    const e = reschedTargetAppointment.endschedule ? new Date(reschedTargetAppointment.endschedule) : null;
-    if (e && +e > +s) durationMin = Math.max(15, Math.round((e - s) / 60000));
-  } catch {}
-  return durationMin;
+  return reschedTargetAppointment ? getAppointmentDurationMin(reschedTargetAppointment) : 60;
 }
 
 function countAvailableSlotsForDate(dateYmd) {
@@ -1793,17 +1889,19 @@ async function onReschedDateChange() {
   }
 
   // dentist-based blocking using the appointment’s DentistID
+  const dentistToCheck = reschedSelectedDentistId || reschedTargetAppointment.DentistID;
+
   const bookedIntervals = await fetchBookedForDentistOnDate(
-    reschedTargetAppointment.DentistID,
+    dentistToCheck,
     reschedSelectedDate,
     reschedTargetAppointment.AppointmentID
   );
 
-  // ✅ ALSO block dentist schedule (DentistAvailability)
   const unavailableIntervals = await fetchDentistUnavailableOnDate(
-    reschedTargetAppointment.DentistID,
+    dentistToCheck,
     reschedSelectedDate
   );
+
 
   // Combine
   reschedBookedIntervals = [...bookedIntervals, ...unavailableIntervals];
@@ -1857,7 +1955,8 @@ async function confirmReschedSelection() {
     requestedDate: reschedSelectedDate,
     requestedTime: reschedSelectedTime,
     requestedISO: requestedIso,
-    reason: reason
+    reason: reason,
+    preferredDentistId: reschedSelectedDentistId || null
   };
 showLoading("Submitting reschedule request…", "Please wait");
 try {
@@ -2099,6 +2198,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (!user) return;
 
   await loadNotifications();
+  await loadServiceMap();
   await loadAppointments();
 
   const requestModal = document.getElementById("requestModal");
@@ -2227,6 +2327,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 <div id="reschedPickerModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
   <div class="bg-white rounded-lg w-full max-w-md p-5">
+    <div class="mt-2">
+  <label class="block text-sm font-medium text-gray-700">Preferred dentist (optional)</label>
+  <select id="reschedDentist" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+    <option value="">Keep current dentist</option>
+  </select>
+</div>
     <div class="flex items-center justify-between mb-3">
       <h3 class="font-semibold text-lg">Choose new date & time</h3>
       <button onclick="closeReschedPicker()" class="text-gray-500 hover:text-gray-700">&times;</button>
