@@ -92,7 +92,9 @@ canvas {
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
@@ -866,56 +868,52 @@ async function openModal(appointmentId) {
   const appt = todaysAppointments.find(x => x.appointmentId === appointmentId);
   if (!appt) return;
 
-  // Reset UI first
-  clearMedicalFormUI();
+  // ✅ define mode BEFORE using it
+  const mode = document.getElementById("statusFilter")?.value || "today";
+
+  // ✅ only clear for non-finished
+  if (mode !== "finished") {
+    clearMedicalFormUI();
+  }
 
   document.getElementById("modalHeaderTitle").innerText = `Assessment Form - ${appt.patientName}`;
   document.getElementById("modalPatientName").innerText = appt.patientName;
   document.getElementById("modalDentist").innerText = appt.dentistName;
 
-  // optional if you already added service
   const svcEl = document.getElementById("modalService");
   if (svcEl) svcEl.innerText = appt.service || "—";
 
-  // store current appointment id for saving later
   const modal = document.getElementById("formModal");
   modal.dataset.appointmentId = appointmentId;
 
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 
-  // If viewing FINISHED appointments, make the medical form read-only
-  const mode = document.getElementById("statusFilter")?.value || "today";
   const readOnly = (mode === "finished");
   lockMedicalFormUI(readOnly);
 
-  // Load existing record (if any)
   const existing = await loadMedicalRecordIntoForm(appointmentId);
-  if (!existing) {
-    const mode = document.getElementById('statusFilter')?.value || 'today';
-    if (mode !== 'finished') {
-      await prefillMedicalFromLastRecord(appt.userAccountId);
-    }
+
+  if (!existing && mode !== "finished") {
+    await prefillMedicalFromLastRecord(appt.userAccountId);
   }
 
-
-  // Update save button text if you want
   const btn = document.getElementById("btnSaveForm");
   if (btn) {
-    const mode2 = document.getElementById('statusFilter')?.value || 'today';
-    if (mode2 === 'finished') {
-      btn.innerText = 'Read-only';
+    if (mode === "finished") {
+      btn.innerText = "Read-only";
       btn.disabled = true;
-      btn.classList.add('opacity-70');
+      btn.classList.add("opacity-70");
     } else {
-      btn.innerText = existing ? 'Update Form' : 'Save Form';
+      btn.innerText = existing ? "Update Form" : "Save Form";
       btn.disabled = false;
-      btn.classList.remove('opacity-70');
+      btn.classList.remove("opacity-70");
     }
   }
 
   lucide.createIcons();
 }
+
 
 
 async function openConsent() {
@@ -1319,6 +1317,7 @@ async function loadMedicalRecordIntoForm(appointmentId) {
   setVal("alerts", data.MedicalAlert);
   setVal("heightCm", data.HeightCm);
   setVal("weightKg", data.WeightKg);
+  setVal("bloodPressure", data.BloodPressure);
 
   // Fill conditions JSON
   const condObj = data.MedicalConditions || {};
@@ -1886,7 +1885,6 @@ async function prefillMedicalFromLastRecord(userAccountId) {
   setVal("alerts", data.MedicalAlert);
   setVal("heightCm", data.HeightCm);
   setVal("weightKg", data.WeightKg);
-  setVal("bloodPressure", data.BloodPressure);
 
   // conditions
   const condObj = data.MedicalConditions || {};

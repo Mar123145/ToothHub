@@ -325,49 +325,28 @@ function openApptModal(billingId) {
   const issuedAt = formatDateTime(row.DateIssued);
   const amount = Number(row.Amount || 0);
 
-  const { addons, extraServices } = splitAddOns(appt.AddOns);
+  const { combined } = getExtraServicesCombined(appt.AddOns);
 
-  const extraHtml = extraServices.length
-    ? `
-      <div class="rounded-xl border p-4">
-        <div class="font-semibold text-gray-900 mb-2">Additional Services</div>
-        <div class="space-y-2">
-          ${extraServices.map(a => `
-            <div class="flex items-center justify-between text-sm">
-              <span>${escapeHtml(a?.name || "Service")}</span>
-              <span class="font-semibold">${formatCurrency2(a?.price || 0)}</span>
-            </div>
-          `).join("")}
-        </div>
+const extrasHtml = combined.length
+  ? `
+    <div class="rounded-xl border p-4">
+      <div class="font-semibold text-gray-900 mb-2">Additional Services / Add-ons</div>
+      <div class="space-y-2">
+        ${combined.map(a => `
+          <div class="flex items-center justify-between text-sm">
+            <span>${escapeHtml(a?.name || "Item")}</span>
+            <span class="font-semibold">${formatCurrency2(a?.price || 0)}</span>
+          </div>
+        `).join("")}
       </div>
-    `
-    : `
-      <div class="rounded-xl border p-4">
-        <div class="font-semibold text-gray-900 mb-1">Additional Services</div>
-        <div class="text-sm text-gray-500">None</div>
-      </div>
-    `;
-
-  const addonsHtml = addons.length
-    ? `
-      <div class="rounded-xl border p-4">
-        <div class="font-semibold text-gray-900 mb-2">Add-ons</div>
-        <div class="space-y-2">
-          ${addons.map(a => `
-            <div class="flex items-center justify-between text-sm">
-              <span>${escapeHtml(a?.name || "Add-on")}</span>
-              <span class="font-semibold">${formatCurrency2(a?.price || 0)}</span>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `
-    : `
-      <div class="rounded-xl border p-4">
-        <div class="font-semibold text-gray-900 mb-1">Add-ons</div>
-        <div class="text-sm text-gray-500">No add-ons</div>
-      </div>
-    `;
+    </div>
+  `
+  : `
+    <div class="rounded-xl border p-4">
+      <div class="font-semibold text-gray-900 mb-1">Extra Services / Add-ons</div>
+      <div class="text-sm text-gray-500">None</div>
+    </div>
+  `;
 
 
   const content = document.getElementById("appt-modal-content");
@@ -426,8 +405,7 @@ function openApptModal(billingId) {
         <span class="font-semibold">${escapeHtml(issuedAt)}</span>
       </div>
     </div>
-    ${extraHtml}
-    ${addonsHtml}
+${extrasHtml}
   `;
 
   const modal = document.getElementById("appt-modal");
@@ -630,6 +608,21 @@ function splitAddOns(raw) {
   };
 }
 
+function getExtraServicesCombined(raw) {
+  const all = safeParseAddons(raw);
+
+  // Combine both legacy add-ons and new extra services into one bucket
+  const combined = all
+    .map(x => ({
+      name: (x?.name || "").trim(),
+      price: Number(x?.price || 0)
+    }))
+    .filter(x => x.name || x.price > 0);
+
+  const total = combined.reduce((s, x) => s + x.price, 0);
+  return { combined, total };
+}
+
 
     async function loadToIssue() {
         // Get billing appointment IDs to exclude
@@ -700,52 +693,27 @@ function openIssueModal(context) {
 
   const { appt, patientName, total } = context;
 
-  // Compute addons AFTER we have appt + total
-  const { addons, extraServices } = splitAddOns(appt.AddOns);
 
-  const addonsTotal = addons.reduce((s, a) => s + Number(a?.price || 0), 0);
-  const extraTotal  = extraServices.reduce((s, a) => s + Number(a?.price || 0), 0);
+const { combined, total: extrasTotal } = getExtraServicesCombined(appt.AddOns);
+const base = Math.max(0, Number(total || 0) - extrasTotal);
 
-  const base = Math.max(0, Number(total || 0) - addonsTotal - extraTotal);
-
-  const addonsNames = addons
-  .map(a => (a?.name || "").trim())
-  .filter(Boolean)
-  .join(", ");
-
-const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-ons";
-
-  const addonsHtml = addons.length
-    ? `
-      <div class="rounded-xl border p-4 bg-gray-50 mt-3">
-        <div class="font-semibold text-gray-900 mb-2">Add-ons</div>
-        <div class="space-y-2">
-          ${addons.map(a => `
-            <div class="flex items-center justify-between text-sm">
-              <span>${escapeHtml(a?.name || "Add-on")}</span>
-              <span class="font-semibold">${peso(a?.price || 0)}</span>
-            </div>
-          `).join("")}
-        </div>
+const extrasLines = combined.length
+  ? combined.map(i => `
+      <div class="trow">
+        <div>Extra Service / Add-on: ${escapeHtml(i?.name || "Item")}</div>
+        <div><b>${formatCurrency2(i?.price || 0)}</b></div>
       </div>
-    `
-    : `<div class="text-sm text-gray-500 mt-2">No add-ons</div>`;
+    `).join("")
+  : "";
 
-    const extraHtml = extraServices.length
+const extrasTotalLine = combined.length
   ? `
-    <div class="rounded-xl border p-4 bg-gray-50 mt-3">
-      <div class="font-semibold text-gray-900 mb-2">Additional Services</div>
-      <div class="space-y-2">
-        ${extraServices.map(a => `
-          <div class="flex items-center justify-between text-sm">
-            <span>${escapeHtml(a?.name || "Service")}</span>
-            <span class="font-semibold">${peso(a?.price || 0)}</span>
-          </div>
-        `).join("")}
-      </div>
+    <div class="trow">
+      <div><b>Extra Services / Add-ons Total</b></div>
+      <div><b>${formatCurrency2(extrasTotal)}</b></div>
     </div>
   `
-  : `<div class="text-sm text-gray-500 mt-2">No additional services</div>`;
+  : "";
 
 
   const content = document.getElementById("issue-modal-content");
@@ -818,35 +786,21 @@ const addonsLabel = addonsNames ? `Add-ons (${escapeHtml(addonsNames)})` : "Add-
     </div>
   </div>
 
-  <!-- Additional services -->
+  <!-- Extra Services / Add-ons -->
   <div class="mb-3">
-    <div class="text-xs text-gray-500 mb-1">Additional services</div>
+    <div class="text-xs text-gray-500 mb-1">Extra Services / Add-ons</div>
     ${
-      extraServices.length
-        ? extraServices.map(s => `
+      combined.length
+        ? combined.map(i => `
             <div class="flex items-center justify-between text-sm py-1">
-              <div class="text-gray-900">${escapeHtml((s?.name || "").trim() || "Service")}</div>
-              <div class="font-semibold">${peso(s?.price || 0)}</div>
+              <div class="text-gray-900">${escapeHtml(i?.name || "Item")}</div>
+              <div class="font-semibold">${peso(i?.price || 0)}</div>
             </div>
           `).join("")
         : `<div class="text-sm text-gray-500">None</div>`
     }
   </div>
 
-  <!-- Add-ons -->
-  <div class="mb-3">
-    <div class="text-xs text-gray-500 mb-1">Add-ons</div>
-    ${
-      addons.length
-        ? addons.map(a => `
-            <div class="flex items-center justify-between text-sm py-1">
-              <div class="text-gray-900">${escapeHtml((a?.name || "").trim() || "Add-on")}</div>
-              <div class="font-semibold">${peso(a?.price || 0)}</div>
-            </div>
-          `).join("")
-        : `<div class="text-sm text-gray-500">None</div>`
-    }
-  </div>
 
   <!-- Total -->
   <div class="flex items-center justify-between border-t pt-3 mt-3">
@@ -943,49 +897,28 @@ function printReceipt(billingId) {
   const service = appt.Service || "-";
   const schedule = formatDateTime(appt.AppointmentSchedule);
   
-// ✅ ADD-ONS (insert here)
-const { addons, extraServices } = splitAddOns(appt.AddOns);
 
-const addonsTotal = addons.reduce((s, a) => s + Number(a?.price || 0), 0);
-const extraTotal  = extraServices.reduce((s, a) => s + Number(a?.price || 0), 0);
+// ✅ Extra Services / Add-ons (combined)
+const { combined, total: extrasTotal } = getExtraServicesCombined(appt.AddOns);
 
-
-const addonsLines = addons.length
-  ? addons.map(a => `
+const extrasLines = combined.length
+  ? combined.map(i => `
       <div class="trow">
-        <div>Add-on: ${escapeHtml(a?.name || "Add-on")}</div>
-        <div><b>${formatCurrency2(a?.price || 0)}</b></div>
+        <div>Additional Service / Add-on: ${escapeHtml(i?.name || "Item")}</div>
+        <div><b>${formatCurrency2(i?.price || 0)}</b></div>
       </div>
     `).join("")
   : "";
 
-const extraLines = extraServices.length
-  ? extraServices.map(a => `
-      <div class="trow">
-        <div>Additional Service: ${escapeHtml(a?.name || "Service")}</div>
-        <div><b>${formatCurrency2(a?.price || 0)}</b></div>
-      </div>
-    `).join("")
-  : "";
-
-const extraTotalLine = extraServices.length
+const extrasTotalLine = combined.length
   ? `
     <div class="trow">
-      <div><b>Additional Services Total</b></div>
-      <div><b>${formatCurrency2(extraTotal)}</b></div>
+      <div><b>Additional Services / Add-ons Total</b></div>
+      <div><b>${formatCurrency2(extrasTotal)}</b></div>
     </div>
   `
   : "";
 
-
-const addonsTotalLine = addons.length
-  ? `
-    <div class="trow">
-      <div><b>Add-ons Total</b></div>
-      <div><b>${formatCurrency2(addonsTotal)}</b></div>
-    </div>
-  `
-  : "";
 
 
   // Optional: clinic details (edit these)
@@ -1069,10 +1002,8 @@ const addonsTotalLine = addons.length
                 '<div>' + escapeHtml(typeLabel) + ' • ' + escapeHtml(service) + '</div>' +
                 '<div><b>' + formatCurrency2(amount) + '</b></div>'+
               '</div>' +
-              extraLines +
-              extraTotalLine +
-              addonsLines +
-              addonsTotalLine +
+                  extrasLines +
+                  extrasTotalLine +
               '</div>' +
 
           '<div class="totals">' +
@@ -1302,12 +1233,12 @@ let rows = issuedBills.map(row => {
   const appt = row.Appointment || {};
   const user = appt.UserAccount || null;
   const apptWhen = appt.AppointmentSchedule ? formatDateTime(appt.AppointmentSchedule) : "-";
-  const { extraServices } = splitAddOns(appt.AddOns);
-  const extraCount = extraServices.length;
+  const { combined } = getExtraServicesCombined(appt.AddOns);
+  const extraCount = combined.length;
 
-  const extraServiceNames = extraServices
-    .map(s => (s?.name || "").trim())
-    .filter(n => n.length > 0);
+const extraServiceNames = combined
+  .map(s => (s?.name || "").trim())
+  .filter(n => n.length > 0);
 
   const patientName = user
     ? `${user.FirstName || ''} ${user.LastName || ''}`.trim() || 'Unknown'
@@ -1425,7 +1356,7 @@ ${renderPatientCell({
 
           ${r.extraServiceNames?.length ? `
             <div class="mb-2">
-              <span class="text-gray-400">Additional Services</span><br>
+              <span class="text-gray-400">Additional Services / Add-ons</span>
               <span class="font-semibold">
                 ${r.extraServiceNames.map(n => escapeHtml(n)).join("<br>")}
               </span>

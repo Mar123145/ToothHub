@@ -163,28 +163,6 @@
   align-items: center;
 }
 
-.sec-tip-box {
-  position: absolute;
-  top: 130%;
-  right: 0;
-  width: 260px;
-  background: #111827; /* gray-900 */
-  color: #fff;
-  border-radius: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.75rem;
-  line-height: 1.2rem;
-  box-shadow: 0 10px 20px rgba(0,0,0,.25);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .15s ease, transform .15s ease;
-  z-index: 50;
-}
-
-.sec-tip:hover .sec-tip-box {
-  opacity: 1;
-  transform: translateY(2px);
-}
 
 .sec-info-dot {
   width: 18px;
@@ -242,6 +220,70 @@
 .status-badge::before {
   color: currentColor;
 }
+
+/* Secretary info tooltip */
+/* i icon wrapper */
+.sec-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* the i icon */
+.sec-info-dot {
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  background: #fff;
+  cursor: default;
+}
+
+/* tooltip */
+.sec-tip-box {
+  position: absolute;
+
+  /* ✅ open to the LEFT instead of the right */
+  right: 100%;
+  left: auto;
+  top: 50%;
+  transform: translate(-6px, -50%);
+
+  width: 240px;
+  max-height: 160px;
+  overflow-y: auto;
+
+  background: #0f172a;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* show on hover */
+.sec-tip:hover .sec-tip-box {
+  opacity: 1;
+  pointer-events: auto;  /* ✅ allows scroll */
+}
+
+/* allow tooltip to escape table scroll */
+.table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
 
 </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
@@ -305,7 +347,9 @@
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
         </a>
-
+        <a href="Settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+        </a>
         <div class="pt-3 mt-3 border-t border-white/15"></div>
 
         <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-colors">
@@ -395,6 +439,31 @@
                     <p class="text-sm font-medium text-gray-600">Dentist</p>
                     <p id="modal-dentist" class="font-semibold text-gray-900"></p>
                   </div>
+
+<div id="resched-dentist-wrap">
+  <!-- Locked view (used when Status = RescheduleRequested) -->
+  <div id="resched-dentist-locked-box" class="hidden">
+    <p class="text-sm font-medium text-gray-600">Preferred dentist (patient chose)</p>
+    <p id="resched-dentist-locked-name" class="font-semibold text-gray-900"></p>
+    <input type="hidden" id="resched-dentist-locked-id" value="">
+  </div>
+
+  <!-- Editable select (used for clinic-initiated reschedule) -->
+  <div id="resched-dentist-select-box">
+    <label for="resched-dentist-select" class="block text-sm font-medium mb-1">
+      Change dentist (optional)
+    </label>
+    <select
+      id="resched-dentist-select"
+      class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary transition-all"
+    >
+      <option value="">Keep current dentist</option>
+    </select>
+    <p class="mt-1 text-xs text-gray-400">
+      Leave blank to keep the current dentist.
+    </p>
+  </div>
+</div>
                   
                   <!-- Patient reschedule request (shows only when Status = RescheduleRequested) -->
                   <div id="patient-request-box" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -475,15 +544,6 @@
   <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm">
     <!-- Header -->
     <div class="flex items-center gap-3 p-4 border-b">
-      <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-      </div>
       <div>
         <h3 id="confirm-title" class="text-lg font-semibold">Confirm action</h3>
         <p id="confirm-subtitle" class="text-xs text-gray-500">
@@ -881,6 +941,8 @@
       "Other"
     ];
 
+let dentistIdForCheck = null;
+
         // --- Auth (shared shell) ---
         async function checkAuth(redirect = true) {
           const storedRole = localStorage.getItem('userRole');
@@ -1013,18 +1075,70 @@ const RESCHEDULE_TIME_SLOTS = [
   "4:00 PM"
 ];
 
- const services = [
-  { id: 1, name: "Oral Prophylaxis", durationMinutes: 60, price: 1500, description: "Professional teeth cleaning and polishing" },
-  { id: 2, name: "Tooth Extraction", durationMinutes: 30, price: 3000, description: "Safe and painless tooth removal" },
-  { id: 3, name: "Restoration", durationMinutes: 90, price: 5000, description: "Dental fillings and restorations" },
-  { id: 4, name: "Root Canal Treatment", durationMinutes: 120, price: 8000, description: "Complete root canal therapy" },
-  { id: 5, name: "Orthodontics", durationMinutes: 45, price: 12000, description: "Braces consultation and adjustment" },
-  { id: 6, name: "Whitening", durationMinutes: 60, price: 6000, description: "Professional teeth whitening treatment" },
-];
+// ✅ services are now DB-driven (mapped by legacy_id)
+let services = [];
+let servicesByLegacyId = new Map();
+
+async function loadServicesFromDb() {
+  const { data, error } = await supabaseClient
+    .from("services")
+    .select("legacy_id, name, category, duration_minutes, base_price, description, is_active, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("loadServicesFromDb error:", error);
+    services = [];
+    servicesByLegacyId = new Map();
+    return;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+
+
+  services = rows
+    .filter(r => r.legacy_id != null) // critical: must exist for mapping
+    .map(r => ({
+      id: Number(r.legacy_id),                 // 👈 keep old “id” behavior
+      name: r.name,
+      category: r.category,
+      durationMinutes: Number(r.duration_minutes || 0),
+      price: Number(r.base_price || 0),
+      description: r.description || ""
+    }));
+
+  servicesByLegacyId = new Map(services.map(s => [s.id, s]));
+
+  const missingLegacy = rows.filter(r => r.legacy_id == null);
+if (missingLegacy.length) {
+  console.warn("Services missing legacy_id (not usable in old flow):", missingLegacy);
+}
+}
+
+async function loadDentistsFromDb() {
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("UserAccountID, FirstName, LastName, Role")
+    .eq("Role", "dentist")
+    .order("LastName", { ascending: true });
+
+  if (error) {
+    console.error("loadDentistsFromDb error:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    userAccountId: r.UserAccountID, // 🔑 IMPORTANT
+    name: `${r.FirstName || ""} ${r.LastName || ""}`.trim() || "Unnamed Dentist"
+  }));
+}
+
 
 function getServiceById(id) {
-  return services.find(s => s.id === id);
+  const n = Number(id);
+  return servicesByLegacyId.get(n);
 }
+
 
 function queueApptReload() {
   if (apptReloadQueued) return;
@@ -1120,19 +1234,20 @@ function computeAppointmentDurationFromIds(serviceTypeCsv) {
   const ids = (serviceTypeCsv || "")
     .toString()
     .split(",")
-    .map(x => parseInt(x))
-    .filter(Boolean);
+    .map(x => parseInt(x, 10))
+    .filter(Number.isFinite);
 
-  if (!ids.length) {
-    // fallback if ServiceType missing
-    return 60;
-  }
+  if (!ids.length) return 60;
 
-  return ids.reduce((sum, id) => {
+  const sum = ids.reduce((acc, id) => {
     const svc = getServiceById(id);
-    return sum + (svc?.durationMinutes || 0);
+    const minutes = Number(svc?.durationMinutes || 0);
+    return acc + (minutes > 0 ? minutes : 0);
   }, 0);
+
+  return sum > 0 ? sum : 60; // ✅ critical safety fallback
 }
+
 
 // convert "9:00 AM" -> "09:00:00"
 function timeStringTo24h(timeStr) {
@@ -1964,12 +2079,12 @@ function formatDateLongPH(value) {
   }
 }
 
-
 async function saveReschedule() {
   const newDate = document.getElementById("new-date").value;
   const noteEl = document.getElementById("reschedule-note");
   const preset = document.getElementById("resched-reason-preset")?.value || "";
 const note = (noteEl ? noteEl.value.trim() : "") || preset;
+const dentistIdForCheck = getReschedChosenDentistId();
 // ✅ Final conflict check (prevents race-condition double booking)
 
 if (!newDate) {
@@ -2054,8 +2169,10 @@ if (!confirmOk?.confirmed) return;
     schedule.getTime() + rescheduleDurationMinutes * 60000
   );
 // ✅ Final conflict check (prevents race-condition double booking)
+const chosenDentistId = dentistIdForCheck;
+
 const freshBooked = await getBookedAppointmentsForReschedule(
-  selectedAppointment.DentistID,
+  chosenDentistId,
   newDate,
   selectedAppointment.AppointmentID
 );
@@ -2079,6 +2196,11 @@ const updatePayload = {
   endschedule: endSchedule.toISOString(),
   Status: "Rescheduled",
 };
+
+
+if (isApprovingPatientRequest) {
+  updatePayload.DentistID = chosenDentistId;
+}
 
 // Clear request fields ONLY if this reschedule is approving a patient request
 if (selectedAppointment.Status === "RescheduleRequested") {
@@ -2414,22 +2536,47 @@ return { title: "Request", lines: [raw] };
 
 }
 
-function buildRequestPanelHTML(status, reqAtText, requestReasonRaw) {
+function buildRequestPanelHTML(status, reqAtText, requestReasonRaw, compact = false) {
   const st = (status || "").toLowerCase();
   const isCancel = st === "cancelrequested";
+  const isClinicUnavailable = st === "clinicunavailable";
   const info = formatRequestReasonPretty(status, requestReasonRaw);
 
-  const isClinicUnavailable = st === "clinicunavailable";
   if (!isCancel && st !== "reschedulerequested" && !isClinicUnavailable) return "";
 
+  const linesHtml = (info.lines || [])
+    .map(line => `<div class="text-xs text-white/90">${escapeHtml(line)}</div>`)
+    .join("");
+
+  if (compact) {
+    const badge = isCancel ? "CANCEL" : (isClinicUnavailable ? "UNAVAILABLE" : "RESCHEDULE");
+    return `
+      <div class="space-y-1">
+        <div class="flex items-start justify-between gap-2">
+          <div class="text-sm font-semibold text-white">
+            ${escapeHtml(info.title || (isCancel ? "Cancellation request" : isClinicUnavailable ? "Clinic unavailable" : "Reschedule request"))}
+          </div>
+          <span class="text-[11px] px-2 py-0.5 rounded-full border border-white/20 text-white/90">
+            ${badge}
+          </span>
+        </div>
+        ${reqAtText ? `<div class="text-[11px] text-white/70">Requested at: ${escapeHtml(reqAtText)}</div>` : ""}
+        <div class="mt-1 space-y-1">
+          ${linesHtml || `<div class="text-xs text-white/70">No reason provided.</div>`}
+        </div>
+      </div>
+    `;
+  }
+
+  // original card look (unchanged) if you ever use it elsewhere
   const boxBg   = isCancel ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200";
   const titleTx = isCancel ? "text-red-700" : "text-amber-900";
   const metaTx  = isCancel ? "text-red-600/80" : "text-amber-700/80";
   const bodyTx  = isCancel ? "text-red-800" : "text-amber-800";
 
-  const linesHtml = (info.lines || []).map(line =>
-    `<div class="text-xs ${bodyTx}">${escapeHtml(line)}</div>`
-  ).join("");
+  const coloredLinesHtml = (info.lines || [])
+    .map(line => `<div class="text-xs ${bodyTx}">${escapeHtml(line)}</div>`)
+    .join("");
 
   return `
     <div class="mt-3 rounded-xl border ${boxBg} p-3">
@@ -2439,11 +2586,7 @@ function buildRequestPanelHTML(status, reqAtText, requestReasonRaw) {
             ${escapeHtml(info.title || (isCancel ? "Cancellation request" : "Reschedule request"))}
           </div>
         </div>
-        ${reqAtText ? `
-  <div class="text-[11px] ${metaTx} mt-0.5">
-    Requested at: ${escapeHtml(reqAtText)}
-  </div>
-` : ""}
+        ${reqAtText ? `<div class="text-[11px] ${metaTx} mt-0.5">Requested at: ${escapeHtml(reqAtText)}</div>` : ""}
         <span class="text-[11px] px-2 py-0.5 rounded-full border ${
           isCancel ? "border-red-200 text-red-700 bg-white" : "border-amber-200 text-amber-800 bg-white"
         }">
@@ -2452,13 +2595,28 @@ function buildRequestPanelHTML(status, reqAtText, requestReasonRaw) {
       </div>
 
       <div class="mt-2 space-y-1">
-        ${linesHtml || `<div class="text-xs ${bodyTx} opacity-80">No reason provided.</div>`}
+        ${coloredLinesHtml || `<div class="text-xs ${bodyTx} opacity-80">No reason provided.</div>`}
       </div>
     </div>
   `;
 }
 
-function buildReceiptReuploadPanelHTML(reqAtText, reason, attempt) {
+function buildReceiptReuploadPanelHTML(reqAtText, reason, attempt, compact = false) {
+  if (compact) {
+    return `
+      <div class="space-y-1">
+        <div class="flex items-start justify-between gap-2">
+          <div class="text-sm font-semibold text-white">Receipt re-upload requested</div>
+          <span class="text-[11px] px-2 py-0.5 rounded-full border border-white/20 text-white/90">
+            ATTEMPT ${attempt}/3
+          </span>
+        </div>
+        ${reqAtText ? `<div class="text-[11px] text-white/70">Requested at: ${escapeHtml(reqAtText)}</div>` : ""}
+        <div class="text-xs text-white/90">${escapeHtml(reason || "No reason provided.")}</div>
+      </div>
+    `;
+  }
+
   return `
     <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
       <div class="flex items-start justify-between gap-3">
@@ -2478,6 +2636,26 @@ function buildReceiptReuploadPanelHTML(reqAtText, reason, attempt) {
       </div>
     </div>
   `;
+}
+
+function wireSecretaryTooltips() {
+  document.querySelectorAll(".sec-tip").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      requestAnimationFrame(() => {
+        const box = el.querySelector(".sec-tip-box");
+        if (!box) return;
+
+        el.classList.remove("up");
+        const r = box.getBoundingClientRect();
+        const pad = 8;
+
+        // if it overflows bottom, flip up (as long as there's space above)
+        if (r.bottom + pad > window.innerHeight) {
+          el.classList.add("up");
+        }
+      });
+    });
+  });
 }
 
 
@@ -2557,18 +2735,17 @@ function renderAppointments(list) {
 const canClinicReschedule =
   ["Approved", "Rescheduled"].includes(status) &&
   !isAnyRequested &&
-  apptStart &&
-  (apptStart > now || isTodayAppt);
+  isTodayAppt;
 
 const canClinicCancel =
   ["Approved", "Rescheduled"].includes(status) &&
   !isAnyRequested &&
-  apptStart &&
-  (apptStart > now || isTodayAppt);
+  isTodayAppt;
 
-    const canMarkNoShow =
-      status === "Approved" &&
-      apptEnd < now;
+
+  const canMarkNoShow =
+    ["Approved", "Rescheduled"].includes(status) &&
+    apptEnd < now;
 
     const canApproveCancelRequest = isCancelRequested;
     const canRejectCancelRequest = isCancelRequested;
@@ -2581,6 +2758,33 @@ const canClinicCancel =
         isTodayAppt &&
         ["Approved", "Rescheduled"].includes(status) &&
         !isAnyRequested; // don’t allow if cancel/resched/clinic-unavailable request is active
+
+
+    const reqAtText = fmtRequestedAtPH(apt.RequestRequestedAt);
+
+const requestPanelHtml =
+  buildRequestPanelHTML(
+    isClinicUnavailable ? "ClinicUnavailable" : status,
+    reqAtText,
+    apt.RequestReason,
+    true // compact for tooltip
+  );
+
+const receiptPanelHtml =
+  apt.ReceiptReuploadRequestedAt
+    ? buildReceiptReuploadPanelHTML(
+        fmtRequestedAtPH(apt.ReceiptReuploadRequestedAt),
+        apt.ReceiptReuploadReason,
+        Number(apt.ReceiptReuploadCount || 1),
+        true // compact for tooltip
+      )
+    : "";
+
+
+    const hasExtraInfo = Boolean(requestPanelHtml || receiptPanelHtml);
+    const tooltipHtml = buildTooltipLinesHTML(apt);
+
+    // --- historical reasons (cancelled / rescheduled / no-show) ---
 
     return `
       <tr class="border-b last:border-b-0 hover:bg-gray-50">
@@ -2603,9 +2807,18 @@ const canClinicCancel =
         </td>
 
         <td class="px-3 py-3 whitespace-nowrap">
-          <span class="status-badge ${statusKey}">
-            ${escapeHtml(status || "—")}
-          </span>
+          <div class="flex items-center gap-2">
+            <span class="status-badge ${statusKey}">
+              ${escapeHtml(status || "—")}
+            </span>
+
+          ${tooltipHtml ? `
+            <span class="sec-tip">
+              <span class="sec-info-dot">i</span>
+              <span class="sec-tip-box">${tooltipHtml}</span>
+            </span>
+          ` : ""}
+          </div>
         </td>
 
         <td class="px-3 py-3 whitespace-nowrap">
@@ -2734,7 +2947,7 @@ const canClinicCancel =
 
   const hasMore = list.length > visibleCount;
   container.innerHTML = `
-    <div class="overflow-x-auto border rounded-xl bg-white">
+    <div class="table-wrap border rounded-xl bg-white">
       <table class="w-full text-left">
         <thead class="bg-gray-100 text-xs text-gray-600 uppercase">
           <tr>
@@ -2764,6 +2977,24 @@ const canClinicCancel =
     </div>
   ` : ""}
   `;
+wireSecretaryTooltips();
+
+  // Tooltip click toggle (no UI redesign)
+container.querySelectorAll(".sec-tip .sec-info-dot").forEach(dot => {
+  dot.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const tip = dot.closest(".sec-tip");
+    // close other open tips
+    container.querySelectorAll(".sec-tip.open").forEach(t => { if (t !== tip) t.classList.remove("open"); });
+    tip.classList.toggle("open");
+  });
+});
+
+// close on outside click
+document.addEventListener("click", () => {
+  container.querySelectorAll(".sec-tip.open").forEach(t => t.classList.remove("open"));
+}, { once: true });
+
 
   lucide.createIcons();
 }
@@ -3374,10 +3605,123 @@ function closeModal() {
     document.getElementById('appointmentModal').classList.add('hidden');
 }
 
+async function loadDentistsFromDb(selectElOrId) {
+  const sel =
+    typeof selectElOrId === "string"
+      ? document.getElementById(selectElOrId)
+      : selectElOrId;
+
+  if (!sel) return;
+
+  sel.innerHTML = `<option value="">Keep current dentist</option>`;
+
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("UserAccountID, FirstName, LastName, Role, is_active")
+    .ilike("Role", "dentist")
+    .eq("is_active", true)
+    .order("FirstName", { ascending: true });
+
+  if (error) {
+    console.error("loadDentistsFromDb error:", error);
+    sel.innerHTML = `<option value="">Failed to load dentists</option>`;
+    return;
+  }
+
+  const dentists = (data || []).filter(
+    (u) => String(u.Role || "").toLowerCase() === "dentist"
+  );
+
+  dentists.forEach((d) => {
+    const opt = document.createElement("option");
+    opt.value = d.UserAccountID;
+    opt.textContent =
+      (`Dr. ${d.FirstName || ""} ${d.LastName || ""}`.trim()) || d.UserAccountID;
+    sel.appendChild(opt);
+  });
+}
+
+function getReschedChosenDentistId() {
+  // If patient request is locked, use hidden value
+  const locked = (document.getElementById("resched-dentist-locked-id")?.value || "").trim();
+  if (locked) return locked;
+
+  // Otherwise use optional dropdown (blank = keep current)
+  const sel = document.getElementById("resched-dentist-select");
+  const picked = (sel?.value || "").trim();
+  return picked || (selectedAppointment?.DentistID || null);
+}
+
+
+function didReschedDentistChange() {
+  const sel = document.getElementById("resched-dentist-select");
+  const picked = (sel?.value || "").trim();
+  return !!picked && picked !== (selectedAppointment?.DentistID || "");
+}
+
+async function fetchDentistsFromDb() {
+  const { data, error } = await supabaseClient
+    .from("UserAccount")
+    .select("UserAccountID, FirstName, LastName, Role, is_active")
+    .eq("Role", "dentist")
+    .eq("is_active", true)
+    .order("LastName", { ascending: true });
+
+  if (error) return [];
+  return (data || []).map(r => ({
+    userAccountId: r.UserAccountID,
+    name: `${r.FirstName || ""} ${r.LastName || ""}`.trim() || "Unnamed Dentist"
+  }));
+}
+
+async function populateActiveDentistsSelect(selectElOrId, opts = {}) {
+  const { includeKeepCurrentOption = true } = opts;
+  const sel = typeof selectElOrId === "string"
+    ? document.getElementById(selectElOrId)
+    : selectElOrId;
+
+  if (!sel) return;
+
+  sel.innerHTML = includeKeepCurrentOption
+    ? `<option value="">Keep current dentist</option>`
+    : `<option value="">Select a dentist…</option>`;
+
+  const dentists = await fetchDentistsFromDb();
+  dentists.forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d.userAccountId;
+    opt.textContent = `Dr. ${d.name}`;
+    sel.appendChild(opt);
+  });
+}
+
+
+
 // ✅ Modal Logic (Unchanged)
 async function showModal(id) {
   selectedAppointment = allAppointments.find(a => a.AppointmentID === id);
   if (!selectedAppointment) return showMessage("Appointment not found.", "error");
+
+  // ✅ Parse request FIRST
+  let requested = null;
+  if ((selectedAppointment.Status || "") === "RescheduleRequested" && selectedAppointment.RequestReason) {
+    try { requested = JSON.parse(selectedAppointment.RequestReason); } 
+    catch { requested = null; }
+  }
+
+  // ✅ Support whatever key you used from patient side
+  const requestedDentistId = (
+    requested?.preferredDentistId ||
+    requested?.requestedDentistId ||
+    requested?.dentistId ||
+    requested?.DentistID ||
+    requested?.newDentistId ||
+    ""
+  ).toString().trim();
+
+  // ✅ This is what ALL conflict checking + saving should use
+  dentistIdForCheck = requestedDentistId || selectedAppointment.DentistID || null;
+
 
   // Patient
   document.getElementById("modal-patient-name").textContent =
@@ -3392,6 +3736,70 @@ async function showModal(id) {
     ? `Dr. ${selectedAppointment.Dentist.FirstName} ${selectedAppointment.Dentist.LastName}`
     : "Unassigned";
   document.getElementById("modal-dentist").textContent = dentistName;
+  
+  // Load dentist dropdown (active dentists only) + preselect
+const st = (selectedAppointment.Status || "");
+const isPatientRequest = st === "RescheduleRequested";
+
+// Load ACTIVE dentists list (for name lookup + optional dropdown)
+const dentists = await fetchDentistsFromDb(); // already filters is_active = true in your file
+
+// helpers
+const findDentistNameById = (id) => {
+  const hit = dentists.find(d => String(d.userAccountId) === String(id));
+  return hit ? `Dr. ${hit.name}` : "";
+};
+
+// UI elements
+const lockedBox = document.getElementById("resched-dentist-locked-box");
+const lockedName = document.getElementById("resched-dentist-locked-name");
+const lockedId   = document.getElementById("resched-dentist-locked-id");
+
+const selectBox  = document.getElementById("resched-dentist-select-box");
+const dentistSel = document.getElementById("resched-dentist-select");
+
+if (dentistSel) {
+  if (requested?.preferredDentistId) {
+    dentistSel.value = requested.preferredDentistId;
+    dentistSel.disabled = true;        // lock it
+    dentistSel.classList.add("opacity-70", "cursor-not-allowed");
+  } else {
+    dentistSel.disabled = false;
+  }
+}
+
+// PATIENT REQUEST: lock dentist (no dropdown)
+if (isPatientRequest) {
+  if (selectBox) selectBox.classList.add("hidden");
+  if (lockedBox) lockedBox.classList.remove("hidden");
+
+  // patient chosen dentist (if any) else fallback to current dentist
+  const preferredDentistId = (requested?.preferredDentistId || "").toString().trim();
+  const finalDentistId = preferredDentistId || (selectedAppointment?.DentistID || "");
+
+  if (lockedId) lockedId.value = finalDentistId;
+
+  // display a nice name (best effort)
+  const display = findDentistNameById(finalDentistId)
+    || (selectedAppointment.Dentist
+        ? `Dr. ${selectedAppointment.Dentist.FirstName} ${selectedAppointment.Dentist.LastName}`
+        : "Unassigned");
+
+  if (lockedName) lockedName.textContent = display;
+
+} else {
+  // CLINIC RESCHEDULE: keep optional dropdown
+  if (lockedBox) lockedBox.classList.add("hidden");
+  if (selectBox) selectBox.classList.remove("hidden");
+  if (lockedId) lockedId.value = "";
+
+  // populate dropdown with ACTIVE dentists
+  await populateActiveDentistsSelect("resched-dentist-select", { includeKeepCurrentOption: true });
+
+  // default = keep current (blank)
+  if (dentistSel) dentistSel.value = "";
+}
+
 
   // Duration for THIS appointment
   // Prefer DB duration based on current schedule
@@ -3410,11 +3818,6 @@ if (selectedAppointment.endschedule && selectedAppointment.AppointmentSchedule) 
 const reqBox = document.getElementById("patient-request-box");
 const reqSchedEl = document.getElementById("patient-request-sched");
 const reqReasonEl = document.getElementById("patient-request-reason");
-
-let requested = null;
-if ((selectedAppointment.Status || "") === "RescheduleRequested" && selectedAppointment.RequestReason) {
-  try { requested = JSON.parse(selectedAppointment.RequestReason); } catch { requested = null; }
-}
 
 // Toggle the patient request box
 if (requested && reqBox) {
@@ -3522,11 +3925,11 @@ if (dateYmd && todayYmd && dateYmd < todayYmd) {
 
   // Fetch booked appts for this dentist & date (excluding this appointment)
   if (dateYmd && selectedAppointment.DentistID) {
-  bookedAppointmentsResched = await getBookedAppointmentsForReschedule(
-    selectedAppointment.DentistID,
-    dateYmd,
-    selectedAppointment.AppointmentID
-  );
+bookedAppointmentsResched = await getBookedAppointmentsForReschedule(
+  dentistIdForCheck,
+  dateYmd,
+  selectedAppointment.AppointmentID
+);
 } else {
   bookedAppointmentsResched = [];
 }
@@ -3580,17 +3983,17 @@ console.log("[RESCHED DEBUG] bookedIntervals:", bookedAppointmentsResched?.lengt
 
 
 async function onRescheduleDateChange(dateYmd) {
-  if (!selectedAppointment || !selectedAppointment.DentistID || !dateYmd) {
-    bookedAppointmentsResched = [];
-    renderRescheduleTimeSlots();
-    return;
-  }
+if (!selectedAppointment || !dentistIdForCheck || !dateYmd) {
+  bookedAppointmentsResched = [];
+  renderRescheduleTimeSlots();
+  return;
+}
 
-  bookedAppointmentsResched = await getBookedAppointmentsForReschedule(
-    selectedAppointment.DentistID,
-    dateYmd,
-    selectedAppointment.AppointmentID
-  );
+bookedAppointmentsResched = await getBookedAppointmentsForReschedule(
+  dentistIdForCheck,
+  dateYmd,
+  selectedAppointment.AppointmentID
+);
 
   // Pick the first AVAILABLE time slot on that date (so we don't auto-select a booked slot)
   const durMin = rescheduleDurationMinutes || computeAppointmentDurationFromIds(selectedAppointment.ServiceType) || 60;
@@ -3921,6 +4324,8 @@ let transferDurationMinutes = 60;
 let selectedTransferTime = null;
 let bookedAppointmentsTransfer = [];
 let transferDateYmd = ""; // today (Manila)
+let dentists = []; // ✅ global cache for transfer + anywhere else
+
 
 async function fetchDentistsList() {
   const { data, error } = await supabaseClient
@@ -3982,14 +4387,25 @@ async function openTransferModal(appointmentId) {
   if (note) note.value = "";
 
   // Load dentists dropdown
-  const dd = document.getElementById("transfer-dentist");
-  dd.innerHTML = `<option value="">Loading dentists…</option>`;
-  const dentists = await fetchDentistsList();
+// Load dentists dropdown
+const dd = document.getElementById("transfer-dentist");
+dd.innerHTML = `<option value="">Loading dentists…</option>`;
 
-  dd.innerHTML = `<option value="">Select a dentist…</option>` + dentists
-    .filter(d => String(d.UserAccountID) !== String(transferAppointment.DentistID)) // don’t show current dentist
-    .map(d => `<option value="${d.UserAccountID}">Dr. ${escapeHtml(d.FirstName || "")} ${escapeHtml(d.LastName || "")}</option>`)
+// ✅ Use the function that ACTUALLY returns a list
+if (!Array.isArray(dentists) || dentists.length === 0) {
+  dentists = await fetchDentistsFromDb(); // returns [{ userAccountId, name }]
+}
+
+const list = (Array.isArray(dentists) ? dentists : [])
+  .filter(d => String(d.userAccountId) !== String(transferAppointment.DentistID)); // hide current dentist
+
+dd.innerHTML =
+  `<option value="">Select a dentist…</option>` +
+  list
+    .map(d => `<option value="${escapeHtml(d.userAccountId)}">${escapeHtml("Dr. " + d.name)}</option>`)
     .join("");
+
+
 
   // Default: try keep the same time if possible
   const sched = new Date(transferAppointment.AppointmentSchedule);
@@ -4011,6 +4427,67 @@ async function openTransferModal(appointmentId) {
 }
 window.openTransferModal = openTransferModal;
 window.closeTransferModal = closeTransferModal;
+
+function buildTooltipLinesHTML(apt) {
+  const lines = [];
+  // --- historical reasons (cancelled / rescheduled / no-show) ---
+const history = tryParseJSON(apt.RescheduleData);
+
+if (history?.reason) {
+  const statusLabel = (apt.Status || "").toLowerCase();
+
+  if (statusLabel === "cancelled") {
+    lines.push(`<div class="font-semibold mt-2">Cancelled</div>`);
+    lines.push(`<div>${escapeHtml(history.reason)}</div>`);
+  }
+
+  if (statusLabel === "rescheduled") {
+    lines.push(`<div class="font-semibold mt-2">Rescheduled</div>`);
+    lines.push(`<div>${escapeHtml(history.reason)}</div>`);
+  }
+
+  if (statusLabel === "noshow") {
+    lines.push(`<div class="font-semibold mt-2">Marked No-Show</div>`);
+    lines.push(`<div>${escapeHtml(history.reason)}</div>`);
+  }
+}
+
+  // request info (cancel/resched/clinic unavailable)
+  const isClinicUnavailable = (apt.RequestType || "") === "ClinicUnavailable";
+  const st = (apt.Status || "");
+  const reqAtText = fmtRequestedAtPH(apt.RequestRequestedAt);
+
+  if (st === "CancelRequested") {
+    lines.push(`<div class="font-semibold">Cancellation request</div>`);
+    if (reqAtText) lines.push(`<div class="opacity-80">Requested at: ${escapeHtml(reqAtText)}</div>`);
+    if (apt.RequestReason) lines.push(`<div>${escapeHtml(apt.RequestReason)}</div>`);
+  }
+
+  if (st === "RescheduleRequested") {
+    const info = formatRequestReasonPretty(st, apt.RequestReason);
+    lines.push(`<div class="font-semibold">${escapeHtml(info.title || "Reschedule request")}</div>`);
+    if (reqAtText) lines.push(`<div class="opacity-80">Requested at: ${escapeHtml(reqAtText)}</div>`);
+    (info.lines || []).forEach(l => lines.push(`<div>${escapeHtml(l)}</div>`));
+  }
+
+  if (isClinicUnavailable) {
+    lines.push(`<div class="font-semibold">Clinic notice: schedule unavailable</div>`);
+    if (reqAtText) lines.push(`<div class="opacity-80">Sent at: ${escapeHtml(reqAtText)}</div>`);
+    if (apt.RequestReason) lines.push(`<div>${escapeHtml(apt.RequestReason)}</div>`);
+  }
+
+  // receipt reupload info
+  if (apt.ReceiptReuploadRequestedAt) {
+    const at = fmtRequestedAtPH(apt.ReceiptReuploadRequestedAt);
+    const attempt = Number(apt.ReceiptReuploadCount || 1);
+    lines.push(`<div class="font-semibold mt-2">Receipt re-upload requested (Attempt ${attempt}/3)</div>`);
+    if (at) lines.push(`<div class="opacity-80">Requested at: ${escapeHtml(at)}</div>`);
+    lines.push(`<div>${escapeHtml(apt.ReceiptReuploadReason || "No reason provided.")}</div>`);
+  }
+
+  return lines.length ? lines.join("") : "";
+}
+
 
 async function onTransferDentistChange(newDentistId) {
   if (!transferAppointment || !newDentistId) {
@@ -4259,8 +4736,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     setInterval(loadNotifications, 15000);
   } catch (e) { console.warn(e); }
 
+    await loadServicesFromDb();
   // existing init
-
+dentists = await loadDentistsFromDb();
   // existing code
   document.getElementById("appointments-list").innerHTML =
     document.getElementById("loading").outerHTML;

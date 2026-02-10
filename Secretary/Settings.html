@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ToothHub Secretary Settings</title>
+  <title>ToothHub Secretary - Service Settings</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -31,8 +31,9 @@
     input:checked + .slider:before{transform:translateX(20px)}
   </style>
 </head>
+
 <body class="min-h-screen bg-gray-50">
-<!-- Top Header (same shell as patient) -->
+  <!-- Top Header (same shell as patient) -->
   <header class="bg-custom-primary text-white sticky top-0 z-50">
     <div class="px-5 h-[72px] flex items-center justify-between">
       <a href="Dashboard.html" class="flex items-center gap-3">
@@ -57,9 +58,10 @@
       </div>
     </div>
   </header>
-<div class="flex min-h-[calc(100vh-72px)]">
-<!-- Sidebar (same sizing as patient) -->
-    <aside class="w-64 bg-custom-primary text-white flex-shrink-0">
+
+  <div class="flex min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-custom-primary text-white flex-shrink-0 sticky top-[72px] self-start h-[calc(100vh-72px)] overflow-y-auto">
       <nav class="p-4 space-y-1">
         <a href="Dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span>
@@ -79,8 +81,8 @@
         <a href="Notifications.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-bell w-5"></i><span>Notifications</span>
         </a>
-        <a href="MedicalIntake.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
-          <i class="fa-regular fa-clipboard w-5"></i><span>Medical Intake</span>
+        <a href="AssessmentForm.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
+          <i class="fa-regular fa-clipboard w-5"></i><span>Assessment Form</span>
         </a>
         <a href="Profile.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-custom-hover transition-colors">
           <i class="fa-regular fa-user w-5"></i><span>Profile</span>
@@ -100,143 +102,351 @@
     <!-- Main Content -->
     <main class="flex-1 p-6">
       <div class="w-full flex justify-center">
-        <div class="w-full max-w-3xl">
-          <div class="mb-8">
+        <div class="w-full max-w-6xl">
+          <div class="mb-6">
             <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Settings</h1>
-            <p class="text-gray-600">Manage your preferences.</p>
+            <p class="text-gray-600">Service management (add, edit, activate/deactivate).</p>
           </div>
 
-          <div class="space-y-6">
-            <!-- Notifications -->
-            <div class="rounded-xl border bg-white shadow-lg">
-              <div class="p-6 border-b">
+          <!-- Services Card -->
+          <div class="rounded-xl border bg-white shadow-lg">
+            <div class="p-6 border-b flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
                 <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                  <i data-lucide="bell" class="w-5 h-5 text-custom-primary"></i>
-                  Notifications
+                  <i data-lucide="layers" class="w-5 h-5 text-custom-primary"></i>
+                  Services
                 </h2>
+                <p class="text-sm text-gray-600 mt-1">
+                  Tip: Don’t delete services. Use <span class="font-medium">Inactive</span> so old appointments that use legacy IDs stay safe.
+                </p>
               </div>
-              <div class="p-6">
-                <div class="space-y-4">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-medium text-gray-800">Email Notifications</h3>
-                      <p class="text-sm text-gray-600">Receive appointment confirmations via email</p>
-                    </div>
-                    <label class="custom-switch">
-                      <input type="checkbox" id="email-switch" checked>
-                      <span class="slider"></span>
-                    </label>
-                  </div>
 
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-medium text-gray-800">Payment Alerts</h3>
-                      <p class="text-sm text-gray-600">Get notified of new payments</p>
-                    </div>
-                    <label class="custom-switch">
-                      <input type="checkbox" id="payment-switch">
-                      <span class="slider"></span>
-                    </label>
-                  </div>
-
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-medium text-gray-800">Appointment Reminders</h3>
-                      <p class="text-sm text-gray-600">Daily appointment schedule reminders</p>
-                    </div>
-                    <label class="custom-switch">
-                      <input type="checkbox" id="reminder-switch" checked>
-                      <span class="slider"></span>
-                    </label>
-                  </div>
-                </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="px-4 py-2 rounded-lg bg-custom-primary text-white text-sm font-medium hover:bg-custom-hover transition-colors"
+                  onclick="openServiceModal()"
+                >
+                  + Add Service
+                </button>
               </div>
             </div>
 
-            <!-- Security -->
-            <div class="rounded-xl border bg-white shadow-lg">
-              <div class="p-6 border-b">
-                <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                  <i data-lucide="shield" class="w-5 h-5 text-custom-primary"></i>
-                  Security
-                </h2>
-              </div>
-              <div class="p-6">
-                <div class="space-y-4">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-medium text-gray-800">Two-Factor Authentication</h3>
-                      <p class="text-sm text-gray-600">Add extra security to your account</p>
-                    </div>
-                    <button onclick="handleSecurityAction('2fa')" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100">Enable</button>
-                  </div>
-                  <button onclick="handleSecurityAction('password')" class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100 bg-white">Change Password</button>
+            <div class="p-6">
+              <div class="flex flex-col lg:flex-row lg:items-center gap-2 mb-4">
+                <div class="flex-1">
+                  <input
+                    id="svcSearch"
+                    class="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="Search name / category / legacy id…"
+                    oninput="renderServicesTable()"
+                  />
                 </div>
+
+                <select id="svcFilterStatus" class="px-3 py-2 border rounded-lg text-sm" onchange="renderServicesTable()">
+                  <option value="ALL">All</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+
+                <select id="svcSort" class="px-3 py-2 border rounded-lg text-sm" onchange="renderServicesTable()">
+                  <option value="SORT_ORDER_ASC">View: Display order</option>
+                  <option value="NAME_ASC">View: Name (A–Z)</option>
+                  <option value="CATEGORY_ASC">View: Category (A–Z)</option>
+                  <option value="LEGACY_ASC">View: Legacy ID (asc)</option>
+                </select>
+
+                <button
+                  type="button"
+                  class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                  onclick="loadServicesForSettings(true)"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <div class="overflow-x-auto border rounded-xl">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th class="text-left px-4 py-3">Name</th>
+                      <th class="text-left px-4 py-3">Category</th>
+                      <th class="text-left px-4 py-3">Legacy</th>
+                      <th class="text-left px-4 py-3">Minutes</th>
+                      <th class="text-left px-4 py-3">Price</th>
+                      <th class="text-left px-4 py-3">#</th>
+                      <th class="text-left px-4 py-3">Active</th>
+                      <th class="text-right px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="svcTbody" class="divide-y bg-white"></tbody>
+                </table>
+              </div>
+
+              <div class="text-xs text-gray-500 mt-3">
+                <span class="font-medium">Ortho safety reminder:</span>
+                Keep legacy IDs stable (e.g., 701 Installation, 702 Adjustment). You can make them inactive, but do not change legacy numbers once in use.
               </div>
             </div>
-
-            <!-- Appearance -->
-            <div class="rounded-xl border bg-white shadow-lg">
-              <div class="p-6 border-b">
-                <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
-                  <i data-lucide="moon" class="w-5 h-5 text-custom-primary"></i>
-                  Appearance
-                </h2>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <h3 class="font-medium text-gray-800">Dark Mode</h3>
-                    <p class="text-sm text-gray-600">Switch to dark theme</p>
-                  </div>
-                  <label class="custom-switch">
-                    <input type="checkbox" id="dark-mode-switch" onclick="toggleDarkMode(this.checked)">
-                    <span class="slider"></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div id="feedback-message" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0"></div>
           </div>
+<!-- Dentists Card -->
+<div class="mt-6 rounded-xl border bg-white shadow-lg">
+  <div class="p-6 border-b flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-lg font-semibold tracking-tight flex items-center gap-2">
+        <i data-lucide="stethoscope" class="w-5 h-5 text-custom-primary"></i>
+        Dentists
+      </h2>
+      <p class="text-sm text-gray-600 mt-1">
+        Create dentist login accounts (Edge Function) and manage profiles.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="px-4 py-2 rounded-lg bg-custom-primary text-white text-sm font-medium hover:bg-custom-hover transition-colors"
+        onclick="openCreateDentistModal()"
+      >
+        + Add Dentist
+      </button>
+
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
+        onclick="loadDentistsForSettings(true)"
+      >
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6">
+    <div class="flex flex-col lg:flex-row lg:items-center gap-2 mb-4">
+      <div class="flex-1">
+        <input
+          id="denSearch"
+          class="w-full px-3 py-2 border rounded-lg text-sm"
+          placeholder="Search dentist name / email…"
+          oninput="renderDentistsTable()"
+        />
+      </div>
+
+      <select id="denFilterStatus" class="px-3 py-2 border rounded-lg text-sm" onchange="renderDentistsTable()">
+        <option value="ALL">All</option>
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+      </select>
+    </div>
+
+    <div class="overflow-x-auto border rounded-xl">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600">
+          <tr>
+            <th class="text-left px-4 py-3">Dentist</th>
+            <th class="text-left px-4 py-3">Email</th>
+            <th class="text-left px-4 py-3">Active</th>
+            <th class="text-right px-4 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="denTbody" class="divide-y bg-white"></tbody>
+      </table>
+    </div>
+
+    <div class="text-xs text-gray-500 mt-3">
+      Tip: “Deactivate” requires <code>UserAccount.is_active</code>. If you haven’t added it yet, add:
+      <code>ALTER TABLE "UserAccount" ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;</code>
+    </div>
+  </div>
+</div>
+
+<!-- Create Dentist Modal -->
+<div id="denCreateModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+  <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg p-5">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-base font-semibold text-gray-800">Create Dentist Account</div>
+      <button class="text-gray-500 hover:text-gray-800" onclick="closeCreateDentistModal()">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Username <span class="text-red-500">*</span></label>
+        <input id="denC_username" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g., dr.juan" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Email <span class="text-red-500">*</span></label>
+        <input id="denC_email" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="dentist@email.com" />
+      </div>
+
+      <div>
+        <label class="text-xs text-gray-500">First name <span class="text-red-500">*</span></label>
+        <input id="denC_first" class="w-full px-3 py-2 border rounded-lg text-sm" />
+      </div>
+
+      <div>
+        <label class="text-xs text-gray-500">Last name <span class="text-red-500">*</span></label>
+        <input id="denC_last" class="w-full px-3 py-2 border rounded-lg text-sm" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Contact number</label>
+        <input id="denC_contact" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="09xxxxxxxxx" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Password <span class="text-red-500">*</span></label>
+        <input id="denC_pass" type="password" class="w-full px-3 py-2 border rounded-lg text-sm" />
+      </div>
+
+    <div class="flex items-center justify-end gap-2 mt-4">
+      <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeCreateDentistModal()">Cancel</button>
+      <button id="denCreateBtn" class="px-4 py-2 rounded-lg bg-custom-primary text-white text-sm font-medium hover:bg-custom-hover transition-colors" onclick="createDentistFromModal()">
+        Create
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Dentist Modal -->
+<div id="denEditModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+  <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg p-5">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-base font-semibold text-gray-800">Edit Dentist</div>
+      <button class="text-gray-500 hover:text-gray-800" onclick="closeEditDentistModal()">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <input type="hidden" id="denE_id" />
+
+      <div>
+        <label class="text-xs text-gray-500">First name</label>
+        <input id="denE_first" class="w-full px-3 py-2 border rounded-lg text-sm" />
+      </div>
+
+      <div>
+        <label class="text-xs text-gray-500">Last name</label>
+        <input id="denE_last" class="w-full px-3 py-2 border rounded-lg text-sm" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-500">Email</label>
+        <input id="denE_email" class="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50" disabled />
+      </div>
+
+      <div class="flex items-center gap-2 md:col-span-2">
+        <input id="denE_active" type="checkbox" class="h-4 w-4" />
+        <label for="denE_active" class="text-sm text-gray-700">Active</label>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 mt-4">
+      <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeEditDentistModal()">Cancel</button>
+      <button id="denSaveBtn" class="px-4 py-2 rounded-lg bg-custom-primary text-white text-sm font-medium hover:bg-custom-hover transition-colors" onclick="saveEditedDentist()">
+        Save
+      </button>
+    </div>
+  </div>
+</div>
+
+          <!-- Feedback -->
+          <div id="feedback-message" class="hidden fixed bottom-4 right-4 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0"></div>
         </div>
       </div>
     </main>
+  </div>
+  
+  <!-- Modal -->
+  <div id="svcModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg p-5">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-base font-semibold text-gray-800" id="svcModalTitle">Add Service</div>
+        <button class="text-gray-500 hover:text-gray-800" onclick="closeServiceModal()">✕</button>
+      </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="hidden" id="svc_service_id" />
+
+        <div class="md:col-span-2">
+          <label class="text-xs text-gray-500">Name <span class="text-red-500">*</span></label>
+          <input id="svc_name" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g., Dental Cleaning" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Category <span class="text-red-500">*</span></label>
+          <input id="svc_category" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g., Cleaning" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Duration (minutes) <span class="text-red-500">*</span></label>
+          <input id="svc_duration" type="number" min="1" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="45" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Base price</label>
+          <input id="svc_price" type="number" min="0" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="1200" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Legacy ID</label>
+          <input id="svc_legacy" type="number" min="1" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="(auto if blank)" />
+          <div class="text-[11px] text-gray-500 mt-1" id="svcLegacyHint"></div>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-xs text-gray-500">Description (optional)</label>
+          <textarea id="svc_desc" class="w-full px-3 py-2 border rounded-lg text-sm" rows="3"></textarea>
+        </div>
+
+        <div class="flex items-center gap-2 md:col-span-2">
+          <input id="svc_active" type="checkbox" class="h-4 w-4" />
+          <label for="svc_active" class="text-sm text-gray-700">Active</label>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 mt-4">
+        <button class="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50" onclick="closeServiceModal()">Cancel</button>
+        <button id="svcSaveBtn" class="px-4 py-2 rounded-lg bg-custom-primary text-white text-sm font-medium hover:bg-custom-hover transition-colors" onclick="saveServiceFromModal()">
+          Save
+        </button>
+      </div>
+    </div>
   </div>
 
+
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://xpruhdgniomsyeufwhtm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwcnVoZGduaW9tc3lldWZ3aHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODU1MDgsImV4cCI6MjA3ODE2MTUwOH0.3obk7zsBdWOty0T_ArDUBAcepOecaeO-duVEG6IthcI";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ===== Auth / Logout (kept) =====
     async function checkAuth(redirect = true) {
-    const storedFirstName = localStorage.getItem('userFirstName');
-    const storedRole = localStorage.getItem('userRole');
-    const storedEmail = localStorage.getItem('userEmail');
+      const storedFirstName = localStorage.getItem('userFirstName');
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
 
-    if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
+      if (storedFirstName && storedRole) return { FirstName: storedFirstName, Role: storedRole, Email: storedEmail };
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) { if (redirect) window.location.href = "/Login.html"; return null; }
 
-    const { data: userData } = await supabaseClient
+      const { data: userData } = await supabaseClient
         .from('UserAccount')
         .select('*')
         .eq('Email', session.user.email)
         .maybeSingle();
 
-    if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
+      if (!userData) { if (redirect) window.location.href = "/Login.html"; return null; }
 
-    localStorage.setItem('userFirstName', userData.FirstName);
-    localStorage.setItem('userRole', userData.Role);
-    localStorage.setItem('userEmail', userData.Email);
-    localStorage.setItem('userId', userData.UserAccountID);
+      localStorage.setItem('userFirstName', userData.FirstName);
+      localStorage.setItem('userRole', userData.Role);
+      localStorage.setItem('userEmail', userData.Email);
+      localStorage.setItem('userId', userData.UserAccountID);
 
-    return userData;
-}
-
+      return userData;
+    }
 
     async function logout() {
       await supabaseClient.auth.signOut();
@@ -244,6 +454,16 @@
       window.location.href = "/Login.html";
     }
 
+    function getNextSortOrder() {
+  const nums = (ALL_SERVICES || [])
+    .map(s => Number(s.sort_order))
+    .filter(n => Number.isFinite(n));
+  const max = nums.length ? Math.max(...nums) : 0;
+  return max + 10; // spacing so future inserts are easy
+}
+
+
+    // ===== Notifications bell (kept) =====
     async function loadNotifications() {
       const bellBtn = document.getElementById("notifBellBtn");
       if (!bellBtn) return;
@@ -320,14 +540,7 @@
       };
     }
 
-    // Settings behavior
-    const settings = {
-      emailNotifications: true,
-      paymentAlerts: false,
-      appointmentReminders: true,
-      darkMode: false
-    };
-
+    // ===== Feedback toast =====
     function showFeedback(message, isError = false) {
       const feedbackBox = document.getElementById('feedback-message');
       feedbackBox.textContent = message;
@@ -336,53 +549,590 @@
       feedbackBox.classList.add('opacity-100');
       setTimeout(() => {
         feedbackBox.classList.remove('opacity-100');
-        setTimeout(() => feedbackBox.classList.add('hidden'), 300);
-      }, 2000);
+        setTimeout(() => feedbackBox.classList.add('hidden'), 250);
+      }, 2200);
     }
 
-    function updateSetting(settingName, value) {
-      settings[settingName] = value;
-      const label = settingName.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-      showFeedback(`${label} ${value ? 'enabled' : 'disabled'}.`);
+    // ===== Service Management =====
+    let ALL_SERVICES = [];
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
     }
 
-    function handleSecurityAction(action) {
-      if (action === '2fa') showFeedback('Two-Factor Authentication setup process started (simulated).');
-      if (action === 'password') showFeedback('Redirecting to Change Password form (simulated).');
+    function formatMoney(n) {
+      const num = Number(n ?? 0);
+      return isNaN(num) ? '0' : num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 
-    function toggleDarkMode(isDark) {
-      if (isDark) {
-        document.body.classList.add('bg-gray-900');
-        document.body.classList.remove('bg-gray-50');
-        showFeedback('Dark Mode activated.');
-      } else {
-        document.body.classList.add('bg-gray-50');
-        document.body.classList.remove('bg-gray-900');
-        showFeedback('Light Mode activated.');
+    async function loadServicesForSettings(showToast=false) {
+      const { data, error } = await supabaseClient
+        .from('services')
+        .select('service_id, legacy_id, name, category, duration_minutes, base_price, description, is_active, sort_order')
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        showFeedback('Failed to load services.', true);
+        return;
       }
-      settings.darkMode = isDark;
+
+      ALL_SERVICES = data || [];
+      renderServicesTable();
+      if (showToast) showFeedback('Services refreshed.');
     }
+
+    function getFilteredServices() {
+      const q = (document.getElementById('svcSearch')?.value || '').trim().toLowerCase();
+      const status = document.getElementById('svcFilterStatus')?.value || 'ALL';
+      const sort = document.getElementById('svcSort')?.value || 'SORT_ORDER_ASC';
+
+      let list = [...(ALL_SERVICES || [])];
+
+      if (status === 'ACTIVE') list = list.filter(s => !!s.is_active);
+      if (status === 'INACTIVE') list = list.filter(s => !s.is_active);
+
+      if (q) {
+        list = list.filter(s => {
+          const name = (s.name || '').toLowerCase();
+          const cat  = (s.category || '').toLowerCase();
+          const leg  = String(s.legacy_id ?? '').toLowerCase();
+          return name.includes(q) || cat.includes(q) || leg.includes(q);
+        });
+      }
+
+      const cmpStr = (a,b) => (a||'').localeCompare(b||'', undefined, { sensitivity:'base' });
+
+      if (sort === 'NAME_ASC') list.sort((a,b) => cmpStr(a.name,b.name));
+      if (sort === 'CATEGORY_ASC') list.sort((a,b) => cmpStr(a.category,b.category) || cmpStr(a.name,b.name));
+      if (sort === 'LEGACY_ASC') list.sort((a,b) => (Number(a.legacy_id||0) - Number(b.legacy_id||0)));
+      if (sort === 'SORT_ORDER_ASC') list.sort((a,b) => (Number(a.sort_order||0) - Number(b.sort_order||0)) || cmpStr(a.name,b.name));
+
+      return list;
+    }
+
+    function renderServicesTable() {
+      const tbody = document.getElementById('svcTbody');
+      if (!tbody) return;
+
+      const list = getFilteredServices();
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-gray-500">No services found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((s, idx) => {
+        const active = !!s.is_active;
+        const badge = active
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">Inactive</span>';
+
+        return `
+          <tr>
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">${escapeHtml(s.name)}</div>
+              ${s.description ? `<div class="text-xs text-gray-500 mt-0.5 line-clamp-2">${escapeHtml(s.description)}</div>` : ''}
+            </td>
+            <td class="px-4 py-3 text-gray-700">${escapeHtml(s.category)}</td>
+            <td class="px-4 py-3 text-gray-700">${escapeHtml(s.legacy_id ?? '')}</td>
+            <td class="px-4 py-3 text-gray-700">${escapeHtml(s.duration_minutes ?? '')}</td>
+            <td class="px-4 py-3 text-gray-700">₱ ${formatMoney(s.base_price)}</td>
+              <td class="px-4 py-3 text-gray-700">
+                ${idx + 1}
+              </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <label class="custom-switch" title="Toggle active">
+                  <input type="checkbox" ${active ? 'checked' : ''} onchange="toggleServiceActive('${s.service_id}', this.checked)">
+                  <span class="slider"></span>
+                </label>
+                ${badge}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <button
+                class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-100"
+                onclick="openServiceModal('${s.service_id}')"
+              >
+                Edit
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleServiceActive(serviceId, isActive) {
+      const { error } = await supabaseClient
+        .from('services')
+        .update({ is_active: !!isActive })
+        .eq('service_id', serviceId);
+
+      if (error) {
+        console.error(error);
+        showFeedback('Failed to update active status.', true);
+        return;
+      }
+
+      const idx = ALL_SERVICES.findIndex(s => s.service_id === serviceId);
+      if (idx >= 0) ALL_SERVICES[idx].is_active = !!isActive;
+
+      showFeedback(isActive ? 'Service activated.' : 'Service deactivated.');
+      renderServicesTable();
+    }
+
+    async function updateSortOrder(serviceId, newValue) {
+      const v = Number(newValue);
+      if (Number.isNaN(v)) return showFeedback('Sort order must be a number.', true);
+
+      const { error } = await supabaseClient
+        .from('services')
+        .update({ sort_order: v })
+        .eq('service_id', serviceId);
+
+      if (error) {
+        console.error(error);
+        showFeedback('Failed to update sort order.', true);
+        return;
+      }
+
+      const idx = ALL_SERVICES.findIndex(s => s.service_id === serviceId);
+      if (idx >= 0) ALL_SERVICES[idx].sort_order = v;
+
+      showFeedback('Sort order updated.');
+      renderServicesTable();
+    }
+
+    // Simple “Up/Down” uses current filtered list order (SORT_ORDER_ASC recommended)
+    async function moveService(serviceId, dir) {
+      const sorted = [...ALL_SERVICES].sort((a,b) => (Number(a.sort_order||0) - Number(b.sort_order||0)) || ((a.name||'').localeCompare(b.name||'')));
+      const i = sorted.findIndex(s => s.service_id === serviceId);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= sorted.length) return;
+
+      const a = sorted[i];
+      const b = sorted[j];
+      const aOrder = Number(a.sort_order ?? 0);
+      const bOrder = Number(b.sort_order ?? 0);
+
+      // swap (if same, nudge)
+      const nextA = (bOrder === aOrder) ? aOrder + dir : bOrder;
+      const nextB = aOrder;
+
+      const { error: e1 } = await supabaseClient.from('services').update({ sort_order: nextA }).eq('service_id', a.service_id);
+      const { error: e2 } = await supabaseClient.from('services').update({ sort_order: nextB }).eq('service_id', b.service_id);
+
+      if (e1 || e2) {
+        console.error(e1 || e2);
+        showFeedback('Failed to move service.', true);
+        return;
+      }
+
+      // update cache
+      const ia = ALL_SERVICES.findIndex(s => s.service_id === a.service_id);
+      const ib = ALL_SERVICES.findIndex(s => s.service_id === b.service_id);
+      if (ia >= 0) ALL_SERVICES[ia].sort_order = nextA;
+      if (ib >= 0) ALL_SERVICES[ib].sort_order = nextB;
+
+      renderServicesTable();
+    }
+
+    function openServiceModal(serviceId = null) {
+      const modal = document.getElementById('svcModal');
+      const title = document.getElementById('svcModalTitle');
+      const hint = document.getElementById('svcLegacyHint');
+
+      // reset
+      document.getElementById('svc_service_id').value = '';
+      document.getElementById('svc_name').value = '';
+      document.getElementById('svc_category').value = '';
+      document.getElementById('svc_duration').value = '';
+      document.getElementById('svc_price').value = '';
+      document.getElementById('svc_desc').value = '';
+      document.getElementById('svc_active').checked = true;
+      document.getElementById('svc_legacy').value = '';
+      document.getElementById('svc_legacy').disabled = false;
+      hint.textContent = 'Leave blank to auto-generate (max legacy_id + 1).';
+
+      if (serviceId) {
+        const s = ALL_SERVICES.find(x => x.service_id === serviceId);
+        if (!s) return;
+
+        title.textContent = 'Edit Service';
+        document.getElementById('svc_service_id').value = s.service_id;
+        document.getElementById('svc_name').value = s.name ?? '';
+        document.getElementById('svc_category').value = s.category ?? '';
+        document.getElementById('svc_duration').value = s.duration_minutes ?? '';
+        document.getElementById('svc_price').value = s.base_price ?? '';
+        document.getElementById('svc_desc').value = s.description ?? '';
+        document.getElementById('svc_active').checked = !!s.is_active;
+
+        document.getElementById('svc_legacy').value = s.legacy_id ?? '';
+        document.getElementById('svc_legacy').disabled = true;
+        hint.textContent = 'Legacy ID is locked on edit to protect old appointments.';
+      } else {
+        title.textContent = 'Add Service';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeServiceModal() {
+      const modal = document.getElementById('svcModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function getNextLegacyId() {
+      const nums = (ALL_SERVICES || []).map(s => Number(s.legacy_id)).filter(n => Number.isFinite(n));
+      const max = nums.length ? Math.max(...nums) : 0;
+      return max + 1;
+    }
+
+    async function saveServiceFromModal() {
+      const btn = document.getElementById('svcSaveBtn');
+      const serviceId = document.getElementById('svc_service_id').value || null;
+
+      const name = document.getElementById('svc_name').value.trim();
+      const category = document.getElementById('svc_category').value.trim();
+      const duration = Number(document.getElementById('svc_duration').value);
+      const price = Number(document.getElementById('svc_price').value || 0);
+      const desc = document.getElementById('svc_desc').value.trim() || null;
+      const isActive = document.getElementById('svc_active').checked;
+
+      // legacy id: allowed on add only
+      let legacyIdRaw = document.getElementById('svc_legacy').value;
+      let legacyId = legacyIdRaw === '' ? null : Number(legacyIdRaw);
+
+      // validation first (important: do not disable until valid)
+      if (!name) return showFeedback('Name is required.', true);
+      if (!category) return showFeedback('Category is required.', true);
+      if (!Number.isFinite(duration) || duration <= 0) return showFeedback('Duration must be a positive number.', true);
+      if (!Number.isFinite(price) || price < 0) return showFeedback('Price must be 0 or more.', true);
+
+      // generate legacy id if adding & blank
+      if (!serviceId && (legacyId === null || !Number.isFinite(legacyId))) {
+        legacyId = await getNextLegacyId();
+      }
+
+      // prevent duplicate legacy IDs
+      if (!serviceId) {
+        const exists = ALL_SERVICES.some(s => Number(s.legacy_id) === Number(legacyId));
+        if (exists) return showFeedback('Legacy ID already exists. Pick a different one.', true);
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        if (serviceId) {
+          const payload = {
+            legacy_id: legacyId,
+            name,
+            category,
+            duration_minutes: duration,
+            base_price: price,
+            description: desc,
+            is_active: isActive,
+            sort_order: getNextSortOrder()
+          };
+
+
+          const { error } = await supabaseClient
+            .from('services')
+            .update(payload)
+            .eq('service_id', serviceId);
+
+          if (error) throw error;
+
+          showFeedback('Service updated.');
+        } else {
+          const payload = {
+            legacy_id: legacyId,
+            name,
+            category,
+            duration_minutes: duration,
+            base_price: price,
+            description: desc,
+            is_active: isActive,
+            sort_order: getNextSortOrder()
+          };
+
+          const { error } = await supabaseClient
+            .from('services')
+            .insert(payload);
+
+          if (error) throw error;
+
+          showFeedback('Service created.');
+        }
+
+        closeServiceModal();
+        await loadServicesForSettings(false);
+      } catch (err) {
+        console.error(err);
+        showFeedback('Save failed. Check console / RLS permissions.', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    }
+
+    // ===== Dentist Management =====
+let ALL_DENTISTS = [];
+
+function dentistNameRow(d) {
+  const fn = d.FirstName || '';
+  const ln = d.LastName || '';
+  return (`${fn} ${ln}`).trim() || 'Unnamed Dentist';
+}
+
+async function loadDentistsForSettings(showToast=false) {
+  // requires UserAccount.is_active; if you don't have it yet, remove it from select and filters
+  const { data, error } = await supabaseClient
+    .from('UserAccount')
+    .select('UserAccountID, Email, FirstName, LastName, Role, is_active')
+    .ilike('Role', 'dentist')
+    .order('LastName', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    showFeedback('Failed to load dentists. Check Role values / RLS / is_active column.', true);
+    return;
+  }
+
+  ALL_DENTISTS = data || [];
+  renderDentistsTable();
+  if (showToast) showFeedback('Dentists refreshed.');
+}
+
+function getFilteredDentists() {
+  const q = (document.getElementById('denSearch')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('denFilterStatus')?.value || 'ALL';
+
+  let list = [...(ALL_DENTISTS || [])];
+
+  if (status === 'ACTIVE') list = list.filter(d => d.is_active !== false);
+  if (status === 'INACTIVE') list = list.filter(d => d.is_active === false);
+
+  if (q) {
+    list = list.filter(d => {
+      const name = dentistNameRow(d).toLowerCase();
+      const email = (d.Email || '').toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }
+
+  return list;
+}
+
+function renderDentistsTable() {
+  const tbody = document.getElementById('denTbody');
+  if (!tbody) return;
+
+  const list = getFilteredDentists();
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">No dentists found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(d => {
+    const active = (d.is_active !== false);
+    const badge = active
+      ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>'
+      : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">Inactive</span>';
+
+    return `
+      <tr>
+        <td class="px-4 py-3">
+          <div class="font-medium text-gray-900">${escapeHtml(dentistNameRow(d))}</div>
+          <div class="text-xs text-gray-500">${escapeHtml(d.UserAccountID)}</div>
+        </td>
+        <td class="px-4 py-3 text-gray-700">${escapeHtml(d.Email || '')}</td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <label class="custom-switch" title="Toggle active">
+              <input type="checkbox" ${active ? 'checked' : ''} onchange="toggleDentistActive('${d.UserAccountID}', this.checked)">
+              <span class="slider"></span>
+            </label>
+            ${badge}
+          </div>
+        </td>
+        <td class="px-4 py-3 text-right">
+          <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-medium hover:bg-gray-100"
+                  onclick="openEditDentistModal('${d.UserAccountID}')">
+            Edit
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleDentistActive(userId, isActive) {
+  const { error } = await supabaseClient
+    .from('UserAccount')
+    .update({ is_active: !!isActive })
+    .eq('UserAccountID', userId);
+
+  if (error) {
+    console.error(error);
+    showFeedback('Failed to update active status (check is_active + RLS).', true);
+    return;
+  }
+
+  const i = ALL_DENTISTS.findIndex(d => d.UserAccountID === userId);
+  if (i >= 0) ALL_DENTISTS[i].is_active = !!isActive;
+
+  showFeedback(isActive ? 'Dentist activated.' : 'Dentist deactivated.');
+  renderDentistsTable();
+}
+
+// --- Create Dentist (Edge Function) ---
+function openCreateDentistModal() {
+  document.getElementById('denC_username').value = '';
+  document.getElementById('denC_email').value = '';
+  document.getElementById('denC_first').value = '';
+  document.getElementById('denC_last').value = '';
+  document.getElementById('denC_contact').value = '';
+  document.getElementById('denC_pass').value = '';
+  const modal = document.getElementById('denCreateModal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+}
+function closeCreateDentistModal() {
+  const modal = document.getElementById('denCreateModal');
+  modal.classList.add('hidden'); modal.classList.remove('flex');
+}
+
+async function createDentistFromModal() {
+  const btn = document.getElementById('denCreateBtn');
+
+  const username = document.getElementById('denC_username').value.trim();
+  const email = document.getElementById('denC_email').value.trim();
+  const firstName = document.getElementById('denC_first').value.trim();
+  const lastName = document.getElementById('denC_last').value.trim();
+  const contactNumber = document.getElementById('denC_contact').value.trim() || null;
+  const password = document.getElementById('denC_pass').value;
+
+  if (!username) return showFeedback('Username is required.', true);
+  if (!email) return showFeedback('Email is required.', true);
+  if (!firstName) return showFeedback('First name is required.', true);
+  if (!lastName) return showFeedback('Last name is required.', true);
+  if (!password) return showFeedback('Password is required.', true);
+
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error('Not logged in');
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-dentist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ username, email, password, firstName, lastName, contactNumber })
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Create failed');
+
+    showFeedback('Dentist account created.');
+    closeCreateDentistModal();
+    await loadDentistsForSettings(false);
+  } catch (e) {
+    console.error(e);
+    showFeedback(String(e.message || e), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create';
+  }
+}
+
+
+// --- Edit Dentist ---
+function openEditDentistModal(userId) {
+  const d = ALL_DENTISTS.find(x => x.UserAccountID === userId);
+  if (!d) return;
+
+  document.getElementById('denE_id').value = d.UserAccountID;
+  document.getElementById('denE_first').value = d.FirstName || '';
+  document.getElementById('denE_last').value = d.LastName || '';
+  document.getElementById('denE_email').value = d.Email || '';
+  document.getElementById('denE_active').checked = (d.is_active !== false);
+
+  const modal = document.getElementById('denEditModal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+}
+
+function closeEditDentistModal() {
+  const modal = document.getElementById('denEditModal');
+  modal.classList.add('hidden'); modal.classList.remove('flex');
+}
+
+async function saveEditedDentist() {
+  const btn = document.getElementById('denSaveBtn');
+  const userId = document.getElementById('denE_id').value;
+  const first = document.getElementById('denE_first').value.trim();
+  const last = document.getElementById('denE_last').value.trim();
+  const active = document.getElementById('denE_active').checked;
+
+  if (!userId) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const { error } = await supabaseClient
+      .from('UserAccount')
+      .update({ FirstName: first, LastName: last, is_active: !!active })
+      .eq('UserAccountID', userId);
+
+    if (error) throw error;
+
+    const i = ALL_DENTISTS.findIndex(d => d.UserAccountID === userId);
+    if (i >= 0) {
+      ALL_DENTISTS[i].FirstName = first;
+      ALL_DENTISTS[i].LastName = last;
+      ALL_DENTISTS[i].is_active = !!active;
+    }
+
+    showFeedback('Dentist updated.');
+    closeEditDentistModal();
+    renderDentistsTable();
+  } catch (e) {
+    console.error(e);
+    showFeedback('Save failed. Check RLS permissions.', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+
+    // close modal when clicking backdrop
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('svcModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      if (e.target === modal) closeServiceModal();
+    });
 
     window.addEventListener('DOMContentLoaded', async () => {
-      const emailSwitch = document.getElementById('email-switch');
-      emailSwitch.checked = settings.emailNotifications;
-      emailSwitch.addEventListener('change', (e) => updateSetting('emailNotifications', e.target.checked));
-
-      const paymentSwitch = document.getElementById('payment-switch');
-      paymentSwitch.checked = settings.paymentAlerts;
-      paymentSwitch.addEventListener('change', (e) => updateSetting('paymentAlerts', e.target.checked));
-
-      const reminderSwitch = document.getElementById('reminder-switch');
-      reminderSwitch.checked = settings.appointmentReminders;
-      reminderSwitch.addEventListener('change', (e) => updateSetting('appointmentReminders', e.target.checked));
-
-      const darkModeSwitch = document.getElementById('dark-mode-switch');
-      darkModeSwitch.checked = settings.darkMode;
-      if (settings.darkMode) toggleDarkMode(true);
-
+      await checkAuth(true);
       await loadNotifications();
       setInterval(loadNotifications, 15000);
+
+      await loadServicesForSettings(false);
+      await loadDentistsForSettings(false);
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
